@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.sportforce3d.component.SfButton?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.sportforce3d.view.DesignsController"
+            fitToWidth="true" styleClass="sf-page">
+    <VBox spacing="24" maxWidth="1200">
+        <padding><Insets top="32" right="24" bottom="64" left="24"/></padding>
+        <HBox alignment="CENTER_LEFT" spacing="12">
+            <VBox spacing="4">
+                <Label text="MIS DISEÑOS" styleClass="display-l, ink"/>
+                <Label fx:id="countLabel" styleClass="body-s, ink-muted"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <SfButton fx:id="newButton" text="Nuevo diseño" variant="ACCENT" size="MD"/>
+        </HBox>
+        <FlowPane fx:id="grid" hgap="16" vgap="16"/>
+    </VBox>
+</ScrollPane>

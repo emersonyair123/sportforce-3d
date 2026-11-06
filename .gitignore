@@ -1,0 +1,21 @@
+# Maven
+target/
+
+# Base de datos local (se recrea sola con datos de prueba)
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# IntelliJ: archivos personales (las configuraciones de .run/ sí se comparten)
+.idea/workspace.xml
+.idea/shelf/
+.idea/usage.statistics.xml
+out/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Blender (tools/blender)
+__pycache__/

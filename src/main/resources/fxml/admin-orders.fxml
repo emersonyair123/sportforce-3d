@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.sportforce3d.component.SfTextField?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.sportforce3d.view.AdminOrdersController"
+      spacing="20" styleClass="sf-page">
+    <padding><Insets top="32" right="24" bottom="24" left="24"/></padding>
+
+    <VBox spacing="8">
+        <Label text="PEDIDOS" styleClass="display-l, ink"/>
+        <Label text="Busca por número, cliente o correo y filtra por estado. Abre un pedido para ver su detalle, el uniforme personalizado y cambiar su estado."
+               styleClass="body-s, ink-muted" wrapText="true"/>
+    </VBox>
+
+    <HBox spacing="16" alignment="BOTTOM_LEFT">
+        <SfTextField fx:id="filterField" label="Buscar" promptText="PED-2026-…, nombre o correo" prefWidth="340"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="countLabel" styleClass="body-s, ink-muted">
+            <HBox.margin><Insets bottom="12"/></HBox.margin>
+        </Label>
+    </HBox>
+    <FlowPane fx:id="statusChips" hgap="6" vgap="6"/>
+
+    <TableView fx:id="table" VBox.vgrow="ALWAYS"/>
+</VBox>

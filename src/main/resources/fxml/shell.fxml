@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.sportforce3d.component.Logo?>
+<?import com.sportforce3d.component.SidebarNav?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.sportforce3d.view.ShellController"
+            styleClass="sf-page">
+    <top>
+        <HBox fx:id="topBar" styleClass="sf-topbar">
+            <Logo fontSize="26"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <HBox fx:id="searchBox" styleClass="sf-search" prefWidth="360" maxWidth="420" HBox.hgrow="SOMETIMES">
+                <TextField fx:id="searchField" HBox.hgrow="ALWAYS"/>
+            </HBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <StackPane fx:id="cartSlot"/>
+            <MenuButton fx:id="userMenu" styleClass="sf-user-menu"/>
+        </HBox>
+    </top>
+    <left>
+        <SidebarNav fx:id="sidebar"/>
+    </left>
+    <center>
+        <StackPane fx:id="contentArea" styleClass="sf-page"/>
+    </center>
+</BorderPane>

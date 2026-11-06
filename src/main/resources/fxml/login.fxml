@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.sportforce3d.component.Logo?>
+<?import com.sportforce3d.component.SfButton?>
+<?import com.sportforce3d.component.SfLink?>
+<?import com.sportforce3d.component.SfTextField?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.sportforce3d.view.LoginController"
+      styleClass="sf-page">
+
+    <!-- Marca -->
+    <StackPane styleClass="sf-band" HBox.hgrow="ALWAYS" minWidth="420">
+        <VBox spacing="24" maxWidth="520" alignment="CENTER_LEFT">
+            <padding><Insets top="48" right="48" bottom="48" left="48"/></padding>
+            <Logo fontSize="32"/>
+            <Label text="FORJA TU EQUIPO" styleClass="display-xl, ink" wrapText="true"/>
+            <Label text="Ropa deportiva que diseñas tú. Elige tu uniforme, personalízalo en 3D y recíbelo en todo el Perú."
+                   styleClass="body, ink-muted" wrapText="true"/>
+            <FlowPane hgap="8" vgap="8">
+                <Label text="DISEÑADOR 3D" styleClass="sf-chip"/>
+                <Label text="ENVÍO A TODO EL PERÚ" styleClass="sf-chip"/>
+                <Label text="YAPE · PLIN · TRANSFERENCIA" styleClass="sf-chip"/>
+            </FlowPane>
+        </VBox>
+    </StackPane>
+
+    <!-- Formulario -->
+    <StackPane HBox.hgrow="ALWAYS" minWidth="440">
+        <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+        <VBox styleClass="sf-auth-panel" maxWidth="420" maxHeight="-Infinity">
+            <Label text="Inicia sesión" styleClass="heading-m, ink"/>
+            <Label text="Entra para seguir tus pedidos y guardar tus diseños." styleClass="body-s, ink-muted" wrapText="true"/>
+
+            <HBox fx:id="errorBox" styleClass="sf-alert-error">
+                <Label fx:id="errorLabel" wrapText="true"/>
+            </HBox>
+
+            <SfTextField fx:id="emailField" label="Correo" promptText="nombre@correo.com"/>
+            <SfTextField fx:id="passwordField" label="Contraseña" password="true"/>
+
+            <SfButton fx:id="loginButton" text="Iniciar sesión" variant="PRIMARY" size="MD"
+                      maxWidth="Infinity" defaultButton="true"/>
+
+            <HBox spacing="6" alignment="CENTER_LEFT">
+                <Label text="¿No tienes cuenta?" styleClass="body-s, ink-muted"/>
+                <SfLink fx:id="registerLink" text="Regístrate"/>
+            </HBox>
+        </VBox>
+    </StackPane>
+</HBox>

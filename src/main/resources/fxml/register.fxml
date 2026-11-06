@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.sportforce3d.component.Logo?>
+<?import com.sportforce3d.component.SfButton?>
+<?import com.sportforce3d.component.SfLink?>
+<?import com.sportforce3d.component.SfTextField?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.sportforce3d.view.RegisterController"
+            fitToWidth="true" fitToHeight="true" styleClass="sf-page">
+    <StackPane>
+        <padding><Insets top="32" right="24" bottom="32" left="24"/></padding>
+        <VBox styleClass="sf-auth-panel" maxWidth="480" maxHeight="-Infinity">
+            <Logo fontSize="24"/>
+            <Label text="Crea tu cuenta" styleClass="heading-m, ink"/>
+            <Label text="Guarda tus diseños 3D y sigue tus pedidos desde un solo lugar."
+                   styleClass="body-s, ink-muted" wrapText="true"/>
+
+            <HBox fx:id="errorBox" styleClass="sf-alert-error">
+                <Label fx:id="errorLabel" wrapText="true"/>
+            </HBox>
+
+            <SfTextField fx:id="fullNameField" label="Nombre completo" promptText="Lucía Quispe"/>
+            <SfTextField fx:id="emailField" label="Correo" promptText="nombre@correo.com"/>
+            <SfTextField fx:id="phoneField" label="Celular (opcional)" promptText="987654321"/>
+            <SfTextField fx:id="passwordField" label="Contraseña" password="true"/>
+            <SfTextField fx:id="confirmationField" label="Repite la contraseña" password="true"/>
+
+            <SfButton fx:id="registerButton" text="Crear cuenta" variant="PRIMARY" size="MD"
+                      maxWidth="Infinity" defaultButton="true"/>
+
+            <HBox spacing="6" alignment="CENTER_LEFT">
+                <Label text="¿Ya tienes cuenta?" styleClass="body-s, ink-muted"/>
+                <SfLink fx:id="loginLink" text="Inicia sesión"/>
+            </HBox>
+        </VBox>
+    </StackPane>
+</ScrollPane>

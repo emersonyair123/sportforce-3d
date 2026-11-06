@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.sportforce3d.component.SfButton?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.sportforce3d.view.HomeController"
+            fitToWidth="true" styleClass="sf-page">
+    <VBox fx:id="page" spacing="48" maxWidth="1280">
+        <padding><Insets top="32" right="24" bottom="64" left="24"/></padding>
+
+        <!-- Hero: el único CTA accent de la vista -->
+        <VBox styleClass="sf-hero">
+            <Label fx:id="greeting" styleClass="label-text, brand-text"/>
+            <Label text="FORJA TU EQUIPO" styleClass="display-xl, ink" wrapText="true"/>
+            <Label text="Personaliza camisetas, shorts, medias y zapatillas sobre un maniquí 3D que puedes girar y ver por delante y por detrás."
+                   styleClass="body, ink-muted" wrapText="true" maxWidth="620"/>
+            <HBox spacing="16" alignment="CENTER_LEFT">
+                <SfButton fx:id="designCta" text="Diseña tu uniforme 3D" variant="ACCENT" size="LG"/>
+                <SfButton fx:id="catalogButton" text="Ver catálogo" variant="GHOST" size="MD"/>
+            </HBox>
+        </VBox>
+
+        <VBox spacing="16">
+            <Label text="Categorías" styleClass="heading-m, ink"/>
+            <FlowPane fx:id="categoriesPane" hgap="8" vgap="8"/>
+        </VBox>
+
+        <VBox spacing="16">
+            <Label text="Destacados" styleClass="heading-m, ink"/>
+            <FlowPane fx:id="featuredPane" hgap="24" vgap="24"/>
+        </VBox>
+    </VBox>
+</ScrollPane>

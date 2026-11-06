@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.sportforce3d.component.SfLink?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.sportforce3d.view.AdminDesignController" styleClass="sf-page">
+
+    <!-- Vista realista o visor 3D, de solo lectura -->
+    <StackPane fx:id="stage" HBox.hgrow="ALWAYS" styleClass="sf-designer-stage">
+        <HBox fx:id="toolbar" styleClass="sf-designer-toolbar" StackPane.alignment="TOP_CENTER"
+              maxWidth="-Infinity" maxHeight="-Infinity">
+            <StackPane.margin><Insets top="16"/></StackPane.margin>
+        </HBox>
+        <Label fx:id="hint" styleClass="sf-designer-hint" StackPane.alignment="BOTTOM_LEFT"
+               text="Solo lectura · copia del diseño tal como se compró · arrastra para girar, rueda para acercar">
+            <StackPane.margin><Insets left="20" bottom="16"/></StackPane.margin>
+        </Label>
+        <VBox fx:id="loadingBox" styleClass="sf-designer-loading" alignment="CENTER"
+              maxWidth="-Infinity" maxHeight="-Infinity">
+            <Label text="Cargando uniforme…" styleClass="body-s, ink-muted"/>
+        </VBox>
+    </StackPane>
+
+    <ScrollPane fitToWidth="true" hbarPolicy="NEVER" minWidth="440" prefWidth="440" maxWidth="440"
+                styleClass="sf-band, sf-designer-side">
+        <VBox fx:id="panel" spacing="24">
+            <padding><Insets top="24" right="24" bottom="32" left="24"/></padding>
+            <SfLink fx:id="backLink" text="Volver al pedido"/>
+        </VBox>
+    </ScrollPane>
+</HBox>

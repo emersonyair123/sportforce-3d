@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.sportforce3d.component.SfButton?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.sportforce3d.view.AdminReportsController"
+            fitToWidth="true" styleClass="sf-page">
+    <VBox spacing="24" maxWidth="1180">
+        <padding><Insets top="32" right="24" bottom="64" left="24"/></padding>
+        <VBox spacing="8">
+            <Label text="REPORTES" styleClass="display-l, ink"/>
+            <Label text="Ventas por rango de fechas, por categoría y por producto. Cuentan los pedidos con pago aprobado, en el día (hora de Lima) en que se aprobó. Exporta a PDF para imprimir o a Excel para seguir trabajando los números."
+                   styleClass="body-s, ink-muted" wrapText="true"/>
+        </VBox>
+
+        <VBox styleClass="sf-card" spacing="16">
+            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+            <HBox spacing="16" alignment="BOTTOM_LEFT">
+                <VBox spacing="6">
+                    <Label text="DESDE" styleClass="label-text, ink-muted"/>
+                    <DatePicker fx:id="fromPicker" prefWidth="180"/>
+                </VBox>
+                <VBox spacing="6">
+                    <Label text="HASTA" styleClass="label-text, ink-muted"/>
+                    <DatePicker fx:id="toPicker" prefWidth="180"/>
+                </VBox>
+                <SfButton fx:id="generateButton" text="Generar reporte" variant="PRIMARY" size="MD"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <SfButton fx:id="pdfButton" text="Exportar PDF" variant="GHOST" size="MD"/>
+                <SfButton fx:id="excelButton" text="Exportar Excel" variant="GHOST" size="MD"/>
+            </HBox>
+            <FlowPane fx:id="presets" hgap="6" vgap="6"/>
+            <Label fx:id="rangeError" styleClass="sf-field-error" wrapText="true"/>
+        </VBox>
+
+        <VBox fx:id="content" spacing="24"/>
+    </VBox>
+</ScrollPane>

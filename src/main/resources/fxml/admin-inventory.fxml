@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.sportforce3d.component.SfTextField?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.sportforce3d.view.AdminInventoryController"
+      spacing="24" styleClass="sf-page">
+    <padding><Insets top="32" right="24" bottom="24" left="24"/></padding>
+
+    <VBox spacing="8">
+        <Label text="INVENTARIO" styleClass="display-l, ink"/>
+        <Label text="Stock por variante. &quot;Reservado&quot; son unidades de pedidos sin pagar; &quot;Disponible&quot; es lo que se puede vender."
+               styleClass="body-s, ink-muted" wrapText="true"/>
+    </VBox>
+
+    <HBox spacing="16" alignment="BOTTOM_LEFT">
+        <SfTextField fx:id="filterField" label="Buscar" promptText="Producto o SKU" prefWidth="320"/>
+        <CheckBox fx:id="lowOnlyCheck" text="Solo stock bajo">
+            <HBox.margin><Insets bottom="12"/></HBox.margin>
+        </CheckBox>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="summaryLabel" styleClass="body-s, ink-muted">
+            <HBox.margin><Insets bottom="12"/></HBox.margin>
+        </Label>
+    </HBox>
+
+    <TableView fx:id="table" VBox.vgrow="ALWAYS"/>
+</VBox>

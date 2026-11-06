@@ -1,0 +1,1516 @@
+/*
+ * SPORTFORCE 3D · Estilos de componentes.
+ * Regla: aquí solo se usan los tokens de tokens-dark.css / tokens-light.css (-sf-*). Nunca un HEX suelto.
+ *
+ * Notas de JavaFX 21:
+ *  - Cada peso de fuente se registra como una familia distinta ("Barlow SemiBold", "Barlow Condensed ExtraBold"…),
+ *    por eso se usa -fx-font-family con el nombre exacto en lugar de -fx-font-weight.
+ *  - No hay letter-spacing ni text-transform: las mayúsculas se escriben en el texto.
+ *  - No hay transiciones CSS: las animaciones (120/200/320 ms) están en component/Motion.java.
+ *  - El interlineado se aproxima con -fx-line-spacing (espacio extra sobre la altura natural ≈ 1.2 × tamaño).
+ */
+
+/* ---------------------------------------------------------------- Base */
+
+.root {
+    -fx-font-family: "Barlow";
+    -fx-font-size: 14px;
+    -fx-background-color: -sf-bg-000;
+
+    /* Puente con Modena para los controles estándar (tablas, menús, scroll). */
+    -fx-base: -sf-bg-200;
+    -fx-background: -sf-bg-000;
+    -fx-control-inner-background: -sf-bg-200;
+    -fx-control-inner-background-alt: -sf-bg-200;
+    -fx-accent: -sf-brand;
+    -fx-default-button: -sf-brand;
+    -fx-focus-color: -sf-focus;
+    -fx-faint-focus-color: transparent;
+    -fx-text-base-color: -sf-ink;
+    -fx-text-background-color: -sf-ink;
+    -fx-text-inner-color: -sf-ink;
+    -fx-mid-text-color: -sf-ink-muted;
+    -fx-dark-text-color: -sf-ink;
+    -fx-light-text-color: -sf-ink;
+    -fx-prompt-text-fill: -sf-ink-subtle;
+    -fx-selection-bar: -sf-brand;
+    -fx-selection-bar-non-focused: -sf-bg-300;
+    -fx-selection-bar-text: -sf-on-brand;
+    -fx-box-border: -sf-line;
+    -fx-outer-border: -sf-line;
+    -fx-table-cell-border-color: -sf-line;
+    -fx-cell-hover-color: -sf-bg-300;
+}
+
+.label {
+    -fx-text-fill: -sf-ink;
+}
+
+/* ---------------------------------------------------------------- Tipografía (tokens type.*) */
+
+.display-xl {
+    -fx-font-family: "Barlow Condensed ExtraBold";
+    -fx-font-size: 72px;
+    -fx-line-spacing: -20px;  /* line-height 0.92 */
+}
+
+.display-l {
+    -fx-font-family: "Barlow Condensed ExtraBold";
+    -fx-font-size: 48px;
+    -fx-line-spacing: -12px;  /* line-height 0.95 */
+}
+
+.heading-m {
+    -fx-font-family: "Barlow Condensed";
+    -fx-font-weight: bold;
+    -fx-font-size: 28px;
+    -fx-line-spacing: -2px;   /* 32px */
+}
+
+.price {
+    -fx-font-family: "Barlow Condensed";
+    -fx-font-weight: bold;
+    -fx-font-size: 24px;
+    -fx-line-spacing: -1px;   /* 28px */
+}
+
+.title-s {
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 18px;
+    -fx-line-spacing: 2px;    /* 24px */
+}
+
+.body {
+    -fx-font-family: "Barlow";
+    -fx-font-size: 16px;
+    -fx-line-spacing: 5px;    /* 24px */
+}
+
+.body-s {
+    -fx-font-family: "Barlow";
+    -fx-font-size: 14px;
+    -fx-line-spacing: 3px;    /* 20px */
+}
+
+.label-text {
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 12px;
+    -fx-line-spacing: 2px;    /* 16px */
+}
+
+.code {
+    -fx-font-family: "JetBrains Mono Medium";
+    -fx-font-size: 13px;
+    -fx-line-spacing: 4px;    /* 20px */
+}
+
+/* Colores de texto (Label usa -fx-text-fill, Text usa -fx-fill). */
+.ink         { -fx-text-fill: -sf-ink;         -fx-fill: -sf-ink; }
+.ink-muted   { -fx-text-fill: -sf-ink-muted;   -fx-fill: -sf-ink-muted; }
+.ink-subtle  { -fx-text-fill: -sf-ink-subtle;  -fx-fill: -sf-ink-subtle; }
+.brand-text  { -fx-text-fill: -sf-brand-text;  -fx-fill: -sf-brand-text; }
+.accent-text { -fx-text-fill: -sf-accent-text; -fx-fill: -sf-accent-text; }
+.danger-text { -fx-text-fill: -sf-danger;      -fx-fill: -sf-danger; }
+.warning-text { -fx-text-fill: -sf-warning;    -fx-fill: -sf-warning; }
+.success-text { -fx-text-fill: -sf-success;    -fx-fill: -sf-success; }
+
+.sf-strong {
+    -fx-font-family: "Barlow SemiBold";
+}
+
+.sf-icon {
+    -fx-icon-color: -sf-ink;
+}
+
+.sf-icon-muted {
+    -fx-icon-color: -sf-ink-muted;
+}
+
+/* ---------------------------------------------------------------- Superficies */
+
+.sf-page {
+    -fx-background-color: -sf-bg-000;
+}
+
+.sf-band {
+    -fx-background-color: -sf-bg-100;
+}
+
+.sf-panel {
+    -fx-background-color: -sf-bg-100;
+    -fx-background-radius: 16;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 16;
+}
+
+.sf-card {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 16;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 16;
+}
+
+.sf-divider {
+    -fx-background-color: -sf-line;
+    -fx-min-height: 1;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+}
+
+.scroll-pane,
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: -sf-line-strong;
+    -fx-background-radius: 999;
+    -fx-background-insets: 2;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-shape: " ";
+    -fx-padding: 0;
+}
+
+.tooltip {
+    -fx-background-color: -sf-bg-300;
+    -fx-background-radius: 6;
+    -fx-text-fill: -sf-ink;
+    -fx-font-family: "Barlow";
+    -fx-font-size: 13px;
+    -fx-padding: 6 10;
+    -fx-effect: dropshadow(gaussian, -sf-shadow-card, 16, 0, 0, 6);
+}
+
+/* ---------------------------------------------------------------- SfButton */
+
+.sf-btn {
+    -fx-background-color: transparent;
+    -fx-background-radius: 10;
+    -fx-border-color: transparent;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+    -fx-font-family: "Barlow SemiBold";
+    -fx-graphic-text-gap: 8;
+    -fx-cursor: hand;
+    -fx-alignment: center;
+}
+
+.sf-btn-sm { -fx-font-size: 14px; -fx-padding: 8 16 8 16; }
+.sf-btn-md { -fx-font-size: 15px; -fx-padding: 12 24 12 24; }
+.sf-btn-lg {
+    -fx-font-family: "Barlow Condensed ExtraBold";
+    -fx-font-size: 20px;
+    -fx-padding: 16 32 16 32;
+}
+
+.sf-btn-primary {
+    -fx-background-color: -sf-brand;
+    -fx-text-fill: -sf-on-brand;
+}
+.sf-btn-primary .ikonli-font-icon { -fx-icon-color: -sf-on-brand; }
+.sf-btn-primary:hover,
+.sf-btn-primary:armed {
+    -fx-background-color: -sf-brand-hover;
+    -fx-border-color: -sf-brand;
+    -fx-effect: dropshadow(gaussian, -sf-glow-brand, 28, 0, 0, 8);
+}
+
+.sf-btn-accent {
+    -fx-background-color: -sf-accent;
+    -fx-text-fill: -sf-on-accent;
+}
+.sf-btn-accent .ikonli-font-icon { -fx-icon-color: -sf-on-accent; }
+.sf-btn-accent:hover,
+.sf-btn-accent:armed {
+    -fx-border-color: -sf-accent;
+    -fx-effect: dropshadow(gaussian, -sf-glow-accent, 32, 0, 0, 8);
+    -fx-translate-y: -1;
+}
+
+.sf-btn-ghost {
+    -fx-text-fill: -sf-ink;
+    -fx-border-color: -sf-line-strong;
+}
+.sf-btn-ghost .ikonli-font-icon { -fx-icon-color: -sf-ink; }
+.sf-btn-ghost:hover,
+.sf-btn-ghost:armed {
+    -fx-background-color: -sf-bg-300;
+}
+
+.sf-btn-danger {
+    -fx-text-fill: -sf-danger;
+    -fx-border-color: -sf-danger;
+}
+.sf-btn-danger .ikonli-font-icon { -fx-icon-color: -sf-danger; }
+.sf-btn-danger:hover,
+.sf-btn-danger:armed {
+    -fx-background-color: -sf-bg-300;
+}
+
+/* Botón de icono sin borde (barra superior, stepper, cerrar). */
+.sf-btn-icon {
+    -fx-background-color: transparent;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-padding: 8;
+}
+.sf-btn-icon .ikonli-font-icon { -fx-icon-color: -sf-ink-muted; }
+.sf-btn-icon:hover { -fx-background-color: -sf-bg-300; }
+.sf-btn-icon:hover .ikonli-font-icon { -fx-icon-color: -sf-ink; }
+
+.sf-btn:disabled {
+    -fx-opacity: 0.45;
+    -fx-effect: null;
+    -fx-translate-y: 0;
+}
+
+/* Anillo de foco de 2 px con 2 px de separación, solo al navegar con teclado. */
+.sf-btn:focus-visible {
+    -fx-border-color: transparent, -sf-focus;
+    -fx-border-width: 1, 2;
+    -fx-border-insets: 0, -4;
+    -fx-border-radius: 10, 14;
+}
+.sf-btn-ghost:focus-visible { -fx-border-color: -sf-line-strong, -sf-focus; }
+.sf-btn-danger:focus-visible { -fx-border-color: -sf-danger, -sf-focus; }
+.sf-btn-icon:focus-visible { -fx-border-radius: 999, 999; }
+
+/* Enlace como botón ("¿No tienes cuenta? Regístrate"). */
+.sf-link {
+    -fx-background-color: transparent;
+    -fx-padding: 2 0 2 0;
+    -fx-text-fill: -sf-brand-text;
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-border-color: transparent;
+    -fx-border-width: 2;
+    -fx-border-radius: 4;
+    -fx-border-insets: -2;
+}
+.sf-link:hover { -fx-underline: true; }
+.sf-link:focus-visible { -fx-border-color: -sf-focus; }
+
+/* ---------------------------------------------------------------- SfBadge */
+
+.sf-badge {
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 12px;
+    -fx-padding: 2 8 2 8;
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 6;
+    -fx-border-color: -sf-line-strong;
+    -fx-border-radius: 6;
+    -fx-text-fill: -sf-ink-muted;
+}
+.sf-badge .ikonli-font-icon { -fx-icon-color: -sf-ink-muted; }
+
+.sf-badge-new {
+    -fx-background-color: -sf-accent;
+    -fx-border-color: transparent;
+    -fx-text-fill: -sf-on-accent;
+}
+.sf-badge-brand {
+    -fx-background-color: -sf-brand;
+    -fx-border-color: transparent;
+    -fx-text-fill: -sf-on-brand;
+}
+.sf-badge-sale,
+.sf-badge-danger {
+    -fx-text-fill: -sf-danger;
+    -fx-border-color: -sf-danger;
+}
+.sf-badge-sale .ikonli-font-icon,
+.sf-badge-danger .ikonli-font-icon { -fx-icon-color: -sf-danger; }
+.sf-badge-warning {
+    -fx-text-fill: -sf-warning;
+    -fx-border-color: -sf-warning;
+}
+.sf-badge-warning .ikonli-font-icon { -fx-icon-color: -sf-warning; }
+.sf-badge-success {
+    -fx-text-fill: -sf-success;
+    -fx-border-color: -sf-success;
+}
+.sf-badge-success .ikonli-font-icon { -fx-icon-color: -sf-success; }
+
+/* ---------------------------------------------------------------- SfTextField */
+
+.sf-field {
+    -fx-spacing: 4;
+}
+
+.sf-field-label {
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 12px;
+    -fx-text-fill: -sf-ink-muted;
+}
+
+.text-field.sf-input,
+.password-field.sf-input {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 10;
+    -fx-background-insets: 0;
+    -fx-border-color: -sf-line-strong;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+    -fx-padding: 11 16 11 16;
+    -fx-text-fill: -sf-ink;
+    -fx-prompt-text-fill: -sf-ink-subtle;
+    -fx-highlight-fill: -sf-brand;
+    -fx-highlight-text-fill: -sf-on-brand;
+    -fx-font-family: "Barlow";
+    -fx-font-size: 16px;
+}
+
+.text-field.sf-input:focused,
+.password-field.sf-input:focused {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-insets: 0;
+    -fx-border-color: -sf-line-strong, -sf-focus;
+    -fx-border-width: 1, 2;
+    -fx-border-insets: 0, -4;
+    -fx-border-radius: 10, 14;
+}
+
+.sf-field:error .sf-input,
+.sf-field:error .sf-input:focused {
+    -fx-border-color: -sf-danger;
+}
+.sf-field:error .sf-input:focused {
+    -fx-border-color: -sf-danger, -sf-focus;
+}
+
+.text-field.sf-input:disabled {
+    -fx-opacity: 0.6;
+}
+
+.text-field.sf-input.code {
+    -fx-font-family: "JetBrains Mono Medium";
+    -fx-font-size: 13px;
+}
+
+.sf-field-hint {
+    -fx-font-size: 13px;
+    -fx-text-fill: -sf-ink-subtle;
+}
+
+.sf-field-error {
+    -fx-font-size: 13px;
+    -fx-text-fill: -sf-danger;
+}
+.sf-field-error .ikonli-font-icon { -fx-icon-color: -sf-danger; }
+
+/* Campo de búsqueda de la barra superior. */
+.sf-search {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 999;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 999;
+    -fx-padding: 0 8 0 14;
+    -fx-spacing: 8;
+    -fx-alignment: center-left;
+}
+.sf-search .text-field {
+    -fx-background-color: transparent;
+    -fx-padding: 9 4 9 0;
+    -fx-text-fill: -sf-ink;
+    -fx-prompt-text-fill: -sf-ink-subtle;
+}
+
+/* ---------------------------------------------------------------- CheckBox */
+
+.check-box {
+    -fx-text-fill: -sf-ink;
+    -fx-font-size: 14px;
+    -fx-label-padding: 0 0 0 8;
+}
+.check-box > .box {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 4;
+    -fx-border-color: -sf-line-strong;
+    -fx-border-radius: 4;
+    -fx-padding: 3;
+}
+.check-box:selected > .box {
+    -fx-background-color: -sf-brand;
+    -fx-border-color: -sf-brand;
+}
+.check-box > .box > .mark {
+    -fx-background-color: transparent;
+}
+.check-box:selected > .box > .mark {
+    -fx-background-color: -sf-on-brand;
+}
+.check-box:focused > .box {
+    -fx-border-color: -sf-line-strong, -sf-focus;
+    -fx-border-width: 1, 2;
+    -fx-border-insets: 0, -4;
+    -fx-border-radius: 4, 8;
+}
+
+/* ---------------------------------------------------------------- ProductCard */
+
+.sf-product-card {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 16;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 16;
+}
+.sf-product-card:hover {
+    -fx-effect: dropshadow(gaussian, -sf-shadow-card, 32, 0, 0, 12);
+}
+
+.sf-product-media {
+    -fx-background-color: -sf-bg-300;
+    -fx-background-radius: 15 15 0 0;
+}
+.sf-product-media .ikonli-font-icon {
+    -fx-icon-color: -sf-line-strong;
+}
+
+.sf-product-body {
+    -fx-padding: 16;
+    -fx-spacing: 8;
+}
+
+.sf-price-was {
+    -fx-font-family: "Barlow";
+    -fx-font-size: 14px;
+    -fx-fill: -sf-ink-subtle;
+}
+
+/* ---------------------------------------------------------------- ColorSwatch */
+
+.sf-swatch {
+    -fx-min-width: 32;
+    -fx-min-height: 32;
+    -fx-pref-width: 32;
+    -fx-pref-height: 32;
+    -fx-max-width: 32;
+    -fx-max-height: 32;
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+    -fx-border-color: -sf-line-strong;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-cursor: hand;
+}
+.sf-swatch:selected,
+.sf-swatch:focus-visible {
+    -fx-border-color: -sf-line-strong, -sf-focus;
+    -fx-border-width: 1, 2;
+    -fx-border-insets: 0, -4;
+    -fx-border-radius: 6, 10;
+}
+
+.sf-swatch-group {
+    -fx-spacing: 8;
+}
+
+/* ---------------------------------------------------------------- GarmentPicker (segmentado) */
+
+.sf-seg {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 999;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 999;
+    -fx-padding: 4;
+    -fx-spacing: 4;
+}
+
+.sf-seg-item {
+    -fx-background-color: transparent;
+    -fx-background-radius: 999;
+    -fx-border-color: transparent;
+    -fx-border-radius: 999;
+    -fx-padding: 8 16 8 16;
+    -fx-text-fill: -sf-ink-muted;
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+}
+.sf-seg-item:hover { -fx-text-fill: -sf-ink; }
+.sf-seg-item:selected {
+    -fx-background-color: -sf-brand;
+    -fx-text-fill: -sf-on-brand;
+}
+.sf-seg-item:focus-visible {
+    -fx-border-color: -sf-focus;
+    -fx-border-width: 2;
+    -fx-border-insets: -2;
+    -fx-border-radius: 999;
+}
+
+/* ---------------------------------------------------------------- MaterialPicker */
+
+.sf-mats {
+    -fx-spacing: 8;
+}
+
+.sf-mat {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 10;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 10;
+    -fx-padding: 8 12 8 12;
+    -fx-cursor: hand;
+    -fx-alignment: center-left;
+}
+.sf-mat:hover { -fx-background-color: -sf-bg-300; }
+.sf-mat:selected {
+    -fx-background-color: -sf-bg-300;
+    -fx-border-color: -sf-brand;
+}
+.sf-mat:focus-visible {
+    -fx-border-color: -sf-line, -sf-focus;
+    -fx-border-width: 1, 2;
+    -fx-border-insets: 0, -4;
+    -fx-border-radius: 10, 14;
+}
+.sf-mat:selected:focus-visible { -fx-border-color: -sf-brand, -sf-focus; }
+
+.sf-mat-name {
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 15px;
+    -fx-text-fill: -sf-ink;
+}
+.sf-mat-note {
+    -fx-font-size: 14px;
+    -fx-text-fill: -sf-ink-muted;
+}
+.sf-mat-price {
+    -fx-font-family: "Barlow Condensed";
+    -fx-font-weight: bold;
+    -fx-font-size: 16px;
+    -fx-text-fill: -sf-ink-muted;
+}
+.sf-mat:selected .sf-mat-price { -fx-text-fill: -sf-brand-text; }
+
+.sf-mat-sample {
+    -fx-background-radius: 6;
+}
+
+/* ---------------------------------------------------------------- QuantityStepper */
+
+.sf-stepper {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 999;
+    -fx-border-color: -sf-line-strong;
+    -fx-border-radius: 999;
+    -fx-padding: 2;
+    -fx-spacing: 4;
+    -fx-alignment: center;
+}
+.sf-stepper-value {
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 16px;
+    -fx-text-fill: -sf-ink;
+    -fx-min-width: 32;
+    -fx-alignment: center;
+}
+
+/* ---------------------------------------------------------------- StatusTimeline */
+
+.sf-timeline-dot {
+    -fx-min-width: 22;
+    -fx-min-height: 22;
+    -fx-max-width: 22;
+    -fx-max-height: 22;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-border-width: 2;
+    -fx-border-color: -sf-line-strong;
+    -fx-background-color: -sf-bg-200;
+    -fx-alignment: center;
+}
+.sf-timeline-dot .ikonli-font-icon { -fx-icon-color: -sf-on-brand; }
+.sf-timeline-step:done .sf-timeline-dot {
+    -fx-background-color: -sf-brand;
+    -fx-border-color: -sf-brand;
+}
+.sf-timeline-step:current .sf-timeline-dot {
+    -fx-border-color: -sf-brand-text;
+    -fx-background-color: -sf-bg-300;
+}
+.sf-timeline-step:current .sf-timeline-dot .ikonli-font-icon { -fx-icon-color: -sf-brand-text; }
+.sf-timeline-step:cancelled .sf-timeline-dot {
+    -fx-border-color: -sf-danger;
+}
+.sf-timeline-step:cancelled .sf-timeline-dot .ikonli-font-icon { -fx-icon-color: -sf-danger; }
+
+.sf-timeline-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: -sf-ink-subtle;
+    -fx-text-alignment: center;
+}
+.sf-timeline-step:done .sf-timeline-label { -fx-text-fill: -sf-ink-muted; }
+.sf-timeline-step:current .sf-timeline-label {
+    -fx-text-fill: -sf-ink;
+    -fx-font-family: "Barlow SemiBold";
+}
+.sf-timeline-step:cancelled .sf-timeline-label { -fx-text-fill: -sf-danger; }
+
+.sf-timeline-line {
+    -fx-background-color: -sf-line;
+    -fx-min-height: 2;
+    -fx-max-height: 2;
+}
+.sf-timeline-line:done { -fx-background-color: -sf-brand; }
+
+/* ---------------------------------------------------------------- EmptyState */
+
+.sf-empty {
+    -fx-spacing: 12;
+    -fx-alignment: center;
+    -fx-padding: 48 24 48 24;
+}
+.sf-empty .ikonli-font-icon { -fx-icon-color: -sf-ink-subtle; }
+
+/* ---------------------------------------------------------------- Toast */
+
+.sf-toast-host {
+    -fx-spacing: 8;
+    -fx-padding: 24;
+    -fx-alignment: bottom-right;
+}
+
+.sf-toast {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 10;
+    -fx-border-color: -sf-line-strong;
+    -fx-border-radius: 10;
+    -fx-padding: 12 16 12 16;
+    -fx-spacing: 12;
+    -fx-alignment: center-left;
+    -fx-effect: dropshadow(gaussian, -sf-shadow-card, 32, 0, 0, 12);
+}
+.sf-toast .label { -fx-text-fill: -sf-ink; -fx-font-size: 14px; }
+.sf-toast-info .ikonli-font-icon { -fx-icon-color: -sf-brand-text; }
+.sf-toast-success { -fx-border-color: -sf-success; }
+.sf-toast-success .ikonli-font-icon { -fx-icon-color: -sf-success; }
+.sf-toast-warning { -fx-border-color: -sf-warning; }
+.sf-toast-warning .ikonli-font-icon { -fx-icon-color: -sf-warning; }
+.sf-toast-error { -fx-border-color: -sf-danger; }
+.sf-toast-error .ikonli-font-icon { -fx-icon-color: -sf-danger; }
+
+/* ---------------------------------------------------------------- ConfirmDialog */
+
+.sf-scrim {
+    -fx-background-color: -sf-scrim;
+}
+
+.sf-dialog {
+    -fx-background-color: -sf-bg-100;
+    -fx-background-radius: 16;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 16;
+    -fx-padding: 24;
+    -fx-spacing: 16;
+    -fx-effect: dropshadow(gaussian, -sf-shadow-card, 32, 0, 0, 12);
+}
+
+/* ---------------------------------------------------------------- SidebarNav */
+
+.sf-sidebar {
+    -fx-background-color: -sf-bg-100;
+    -fx-border-color: transparent -sf-line transparent transparent;
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 16 12 16 12;
+    -fx-spacing: 4;
+}
+
+.sf-nav-section {
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 12px;
+    -fx-text-fill: -sf-ink-subtle;
+    -fx-padding: 16 12 4 12;
+}
+
+.sf-nav-item {
+    -fx-background-color: transparent;
+    -fx-background-radius: 10;
+    -fx-border-color: transparent;
+    -fx-border-radius: 10;
+    -fx-padding: 10 12 10 12;
+    -fx-spacing: 12;
+    -fx-alignment: center-left;
+    -fx-cursor: hand;
+}
+.sf-nav-item .label {
+    -fx-text-fill: -sf-ink-muted;
+    -fx-font-family: "Barlow Medium";
+    -fx-font-size: 15px;
+}
+.sf-nav-item .ikonli-font-icon { -fx-icon-color: -sf-ink-muted; }
+.sf-nav-item:hover { -fx-background-color: -sf-bg-200; }
+.sf-nav-item:hover .label { -fx-text-fill: -sf-ink; }
+.sf-nav-item:selected { -fx-background-color: -sf-bg-300; }
+.sf-nav-item:selected .label { -fx-text-fill: -sf-brand-text; }
+.sf-nav-item:selected .ikonli-font-icon { -fx-icon-color: -sf-brand-text; }
+.sf-nav-item:focus-visible {
+    -fx-border-color: -sf-focus;
+    -fx-border-width: 2;
+}
+.sf-nav-item:disabled { -fx-opacity: 1; -fx-cursor: default; }
+.sf-nav-item:disabled .label { -fx-text-fill: -sf-ink-subtle; }
+.sf-nav-item:disabled .ikonli-font-icon { -fx-icon-color: -sf-ink-subtle; }
+.sf-nav-item .sf-badge {
+    -fx-font-size: 10px;
+    -fx-padding: 1 6 1 6;
+    -fx-text-fill: -sf-ink-subtle;
+    -fx-border-color: -sf-line;
+}
+
+/* ---------------------------------------------------------------- Barra superior y logotipo */
+
+.sf-topbar {
+    -fx-background-color: -sf-bg-100;
+    -fx-border-color: transparent transparent -sf-line transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 12 24 12 16;
+    -fx-spacing: 16;
+    -fx-alignment: center-left;
+}
+
+.sf-logo-word {
+    -fx-font-family: "Barlow Condensed ExtraBold";
+    -fx-fill: -sf-ink;
+}
+.sf-logo-3d {
+    -fx-font-family: "Barlow Condensed ExtraBold";
+    -fx-fill: -sf-accent-text;
+}
+
+.sf-cart-count {
+    -fx-background-color: -sf-brand;
+    -fx-background-radius: 999;
+    -fx-text-fill: -sf-on-brand;
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 11px;
+    -fx-padding: 0 5 0 5;
+    -fx-min-width: 18;
+    -fx-alignment: center;
+}
+
+/* MenuButton del usuario y menús contextuales. */
+.sf-user-menu {
+    -fx-background-color: transparent;
+    -fx-background-radius: 999;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 999;
+    -fx-padding: 4 12 4 4;
+    -fx-cursor: hand;
+}
+.sf-user-menu:hover { -fx-background-color: -sf-bg-200; }
+.sf-user-menu:focused { -fx-border-color: -sf-focus; }
+.sf-user-menu > .label {
+    -fx-text-fill: -sf-ink;
+    -fx-font-family: "Barlow Medium";
+    -fx-font-size: 14px;
+}
+.sf-user-menu > .arrow-button > .arrow { -fx-background-color: -sf-ink-muted; }
+
+.sf-avatar {
+    -fx-background-color: -sf-bg-300;
+    -fx-background-radius: 999;
+    -fx-min-width: 30;
+    -fx-min-height: 30;
+    -fx-max-width: 30;
+    -fx-max-height: 30;
+    -fx-alignment: center;
+}
+.sf-avatar .label {
+    -fx-text-fill: -sf-brand-text;
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 13px;
+}
+
+.context-menu {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 10;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 10;
+    -fx-padding: 6;
+    -fx-effect: dropshadow(gaussian, -sf-shadow-card, 32, 0, 0, 12);
+}
+.menu-item {
+    -fx-background-radius: 6;
+    -fx-padding: 8 12 8 12;
+}
+.menu-item .label { -fx-text-fill: -sf-ink; -fx-font-size: 14px; }
+.menu-item .ikonli-font-icon { -fx-icon-color: -sf-ink-muted; }
+.menu-item:focused { -fx-background-color: -sf-bg-300; }
+.menu-item:focused .label { -fx-text-fill: -sf-ink; }
+.separator-menu-item .line { -fx-border-color: -sf-line transparent transparent transparent; }
+
+/* ---------------------------------------------------------------- Vistas */
+
+.sf-hero {
+    -fx-background-color: -sf-bg-100;
+    -fx-background-radius: 16;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 16;
+    -fx-padding: 48;
+    -fx-spacing: 24;
+}
+
+.sf-chip {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 999;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 999;
+    -fx-padding: 6 14 6 14;
+    -fx-text-fill: -sf-ink-muted;
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 12px;
+}
+
+.sf-auth-panel {
+    -fx-background-color: -sf-bg-100;
+    -fx-background-radius: 16;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 16;
+    -fx-padding: 32;
+    -fx-spacing: 16;
+}
+
+.sf-alert-error {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 10;
+    -fx-border-color: -sf-danger;
+    -fx-border-radius: 10;
+    -fx-padding: 10 14 10 14;
+    -fx-spacing: 10;
+    -fx-alignment: center-left;
+}
+.sf-alert-error .label { -fx-text-fill: -sf-danger; -fx-font-size: 14px; }
+.sf-alert-error .ikonli-font-icon { -fx-icon-color: -sf-danger; }
+
+/* ---------------------------------------------------------------- Tablas (admin) */
+
+.table-view {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 16;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 16;
+    -fx-padding: 0;
+    -fx-table-cell-border-color: transparent;
+}
+.table-view:focused {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-insets: 0;
+}
+.table-view .column-header-background {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 16 16 0 0;
+    -fx-border-color: transparent transparent -sf-line transparent;
+}
+.table-view .column-header,
+.table-view .filler {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-size: 44;
+}
+.table-view .column-header .label {
+    -fx-text-fill: -sf-ink-muted;
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 12px;
+    -fx-alignment: center-left;
+    -fx-padding: 0 12 0 12;
+}
+/*
+ * Filas: solo una hairline horizontal (line) entre filas; nunca bordes verticales entre celdas.
+ * Modena dibuja el borde derecho de cada celda con -fx-table-cell-border-color y lo recolorea en
+ * hover, selección y foco, así que se anula en todos esos estados.
+ */
+.table-row-cell,
+.table-row-cell:hover,
+.table-row-cell:selected,
+.table-row-cell:focused,
+.table-row-cell:filled:hover,
+.table-row-cell:filled:selected,
+.table-row-cell:filled:focused,
+.table-row-cell:filled:focused:selected,
+.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell:filled:focused:selected {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-insets: 0;
+    -fx-table-cell-border-color: transparent;
+    -fx-border-color: transparent transparent -sf-line transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-cell-size: 48;
+}
+.table-row-cell:hover,
+.table-row-cell:selected,
+.table-row-cell:filled:hover,
+.table-row-cell:filled:selected,
+.table-row-cell:filled:focused:selected,
+.table-view:focused > .virtual-flow > .clipped-container > .sheet > .table-row-cell:filled:focused:selected {
+    -fx-background-color: -sf-bg-300;
+}
+.table-row-cell:empty { -fx-background-color: transparent; -fx-border-color: transparent; }
+.table-cell,
+.table-row-cell:selected > .table-cell,
+.table-row-cell:hover > .table-cell,
+.table-row-cell > .table-cell:focused,
+.table-row-cell > .table-cell:selected {
+    -fx-text-fill: -sf-ink;
+    -fx-font-size: 14px;
+    -fx-padding: 0 12 0 12;
+    -fx-alignment: center-left;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+.table-view .placeholder .label { -fx-text-fill: -sf-ink-muted; }
+
+/* ================================================================ Etapa 2 */
+
+/* Filtros del catálogo sobre bg-100 */
+.scroll-pane.sf-band,
+.scroll-pane.sf-band > .viewport {
+    -fx-background-color: -sf-bg-100;
+}
+.scroll-pane.sf-band {
+    -fx-border-color: transparent -sf-line transparent transparent;
+    -fx-border-width: 0 1 0 0;
+}
+
+/* FilterChip */
+.sf-filter-chip {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 999;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 999;
+    -fx-padding: 6 12 6 12;
+    -fx-text-fill: -sf-ink-muted;
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+.sf-filter-chip:hover { -fx-text-fill: -sf-ink; -fx-background-color: -sf-bg-300; }
+.sf-filter-chip:selected {
+    -fx-text-fill: -sf-brand-text;
+    -fx-border-color: -sf-brand;
+    -fx-background-color: -sf-bg-300;
+}
+.sf-filter-chip:focus-visible {
+    -fx-border-color: -sf-line, -sf-focus;
+    -fx-border-width: 1, 2;
+    -fx-border-insets: 0, -4;
+    -fx-border-radius: 999, 999;
+}
+.sf-filter-chip:disabled { -fx-opacity: 1; -fx-text-fill: -sf-ink-subtle; -fx-cursor: default; }
+
+/* Chip de categoría que navega (inicio) */
+.sf-chip-link { -fx-cursor: hand; }
+.sf-chip-link:hover { -fx-text-fill: -sf-ink; -fx-background-color: -sf-bg-300; }
+.sf-chip-link:focus-visible {
+    -fx-border-color: -sf-line, -sf-focus;
+    -fx-border-width: 1, 2;
+    -fx-border-insets: 0, -4;
+    -fx-border-radius: 999, 999;
+}
+
+/* ChoiceCards (direcciones y métodos de pago) */
+.sf-choice {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 10;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 10;
+    -fx-padding: 14 16 14 16;
+    -fx-cursor: hand;
+}
+.sf-choice:hover { -fx-background-color: -sf-bg-300; }
+.sf-choice:selected { -fx-background-color: -sf-bg-300; -fx-border-color: -sf-brand; }
+.sf-choice:focus-visible {
+    -fx-border-color: -sf-line, -sf-focus;
+    -fx-border-width: 1, 2;
+    -fx-border-insets: 0, -4;
+    -fx-border-radius: 10, 14;
+}
+.sf-choice:selected:focus-visible { -fx-border-color: -sf-brand, -sf-focus; }
+.sf-choice:disabled { -fx-opacity: 0.6; -fx-cursor: default; }
+.sf-choice-title {
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 15px;
+    -fx-text-fill: -sf-ink;
+}
+.sf-choice-radio {
+    -fx-min-width: 20;
+    -fx-min-height: 20;
+    -fx-max-width: 20;
+    -fx-max-height: 20;
+    -fx-background-color: -sf-bg-100;
+    -fx-background-radius: 999;
+    -fx-border-color: -sf-line-strong;
+    -fx-border-width: 2;
+    -fx-border-radius: 999;
+}
+.sf-choice-dot {
+    -fx-min-width: 10;
+    -fx-min-height: 10;
+    -fx-max-width: 10;
+    -fx-max-height: 10;
+    -fx-background-radius: 999;
+    -fx-background-color: transparent;
+}
+.sf-choice:selected .sf-choice-radio { -fx-border-color: -sf-brand; }
+.sf-choice:selected .sf-choice-dot { -fx-background-color: -sf-brand; }
+
+/* Miniaturas (carrito, tablas, imágenes de producto) */
+.sf-thumb {
+    -fx-background-color: -sf-bg-300;
+    -fx-background-radius: 10;
+}
+
+.sf-product-hero {
+    -fx-background-radius: 16;
+}
+
+/* Filas de lista que navegan (Mis pedidos) */
+.sf-row-link:hover { -fx-background-color: -sf-bg-300; }
+.sf-row-link:focus-visible {
+    -fx-border-color: -sf-line, -sf-focus;
+    -fx-border-width: 1, 2;
+    -fx-border-insets: 0, -4;
+    -fx-border-radius: 16, 20;
+}
+
+/* Campos compactos (precio de filtros, editor de variantes, inventario) */
+.text-field.sf-input-sm {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 6;
+    -fx-background-insets: 0;
+    -fx-border-color: -sf-line-strong;
+    -fx-border-radius: 6;
+    -fx-padding: 6 8 6 8;
+    -fx-text-fill: -sf-ink;
+    -fx-prompt-text-fill: -sf-ink-subtle;
+    -fx-font-size: 14px;
+}
+.text-field.sf-input-sm:focused {
+    -fx-background-color: -sf-bg-200;
+    -fx-border-color: -sf-focus;
+    -fx-border-width: 2;
+    -fx-padding: 5 7 5 7;
+}
+.text-field.sf-input-sm.code { -fx-font-family: "JetBrains Mono Medium"; -fx-font-size: 13px; }
+
+/* TextArea (notas, descripción) */
+.text-area.sf-textarea {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 10;
+    -fx-background-insets: 0;
+    -fx-border-color: -sf-line-strong;
+    -fx-border-radius: 10;
+    -fx-text-fill: -sf-ink;
+    -fx-prompt-text-fill: -sf-ink-subtle;
+    -fx-font-size: 15px;
+    -fx-highlight-fill: -sf-brand;
+    -fx-highlight-text-fill: -sf-on-brand;
+}
+.text-area.sf-textarea:focused { -fx-border-color: -sf-focus; -fx-border-width: 2; }
+.text-area.sf-textarea .content {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 10;
+    -fx-padding: 8 10 8 10;
+}
+
+/* ComboBox */
+.combo-box {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 10;
+    -fx-background-insets: 0;
+    -fx-border-color: -sf-line-strong;
+    -fx-border-radius: 10;
+    -fx-padding: 4 4 4 8;
+}
+.combo-box:focused {
+    -fx-border-color: -sf-line-strong, -sf-focus;
+    -fx-border-width: 1, 2;
+    -fx-border-insets: 0, -4;
+    -fx-border-radius: 10, 14;
+}
+.combo-box > .list-cell { -fx-text-fill: -sf-ink; -fx-font-size: 14px; -fx-background-color: transparent; }
+.combo-box > .arrow-button { -fx-background-color: transparent; }
+.combo-box > .arrow-button > .arrow { -fx-background-color: -sf-ink-muted; }
+.combo-box-popup > .list-view {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 10;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 10;
+    -fx-effect: dropshadow(gaussian, -sf-shadow-card, 32, 0, 0, 12);
+}
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -sf-ink;
+    -fx-padding: 8 12 8 12;
+}
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:hover,
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:selected {
+    -fx-background-color: -sf-bg-300;
+}
+
+/* ================================================================ Etapa 4: personalización */
+
+.sf-designer-side {
+    -fx-border-color: transparent transparent transparent -sf-line;
+}
+.sf-designer-head {
+    -fx-padding: 24 24 12 24;
+}
+.sf-designer-tabs {
+    -fx-padding: 0 24 4 24;
+}
+.sf-designer-footer {
+    -fx-padding: 16 24 20 24;
+    -fx-background-color: -sf-bg-100;
+    -fx-border-color: -sf-line transparent transparent transparent;
+}
+
+.sf-draft-banner {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 10;
+    -fx-border-color: -sf-brand;
+    -fx-border-radius: 10;
+    -fx-padding: 8 10 8 14;
+    -fx-effect: dropshadow(gaussian, -sf-shadow-card, 24, 0, 0, 8);
+}
+
+/* Fila de zona: muestra de color + nombre; la elegida con borde brand. */
+.sf-zone-row {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 8;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 8;
+    -fx-padding: 8 12 8 10;
+    -fx-text-fill: -sf-ink;
+    -fx-font-family: "Barlow";
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+.sf-zone-row:hover { -fx-background-color: -sf-bg-300; }
+.sf-zone-row:selected {
+    -fx-background-color: -sf-bg-300;
+    -fx-border-color: -sf-brand;
+}
+.sf-zone-row:focus-visible {
+    -fx-border-color: -sf-focus;
+    -fx-border-width: 2;
+}
+.sf-zone-swatch {
+    -fx-stroke: -sf-line-strong;
+    -fx-stroke-width: 1;
+}
+
+.sf-layer-row {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 8;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 8;
+    -fx-padding: 4 4 4 4;
+    -fx-cursor: hand;
+}
+.sf-layer-row:hover { -fx-background-color: -sf-bg-300; }
+.sf-layer-row:selected {
+    -fx-background-color: -sf-bg-300;
+    -fx-border-color: -sf-brand;
+}
+
+.sf-inspector {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 12;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 12;
+    -fx-padding: 16;
+}
+
+/* Pestaña Texto: una tarjeta por opción (nombre o número) con su editor debajo del botón. */
+.sf-text-card {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 12;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 12;
+    -fx-padding: 8;
+}
+.sf-text-card:selected { -fx-border-color: -sf-brand; }
+.sf-text-card-editor { -fx-padding: 8 8 8 8; }
+.sf-btn.sf-text-card-head {
+    -fx-border-color: transparent;
+    -fx-alignment: center-left;
+    -fx-padding: 8;
+}
+.sf-btn.sf-text-card-head:hover { -fx-background-color: -sf-bg-300; }
+.sf-btn.sf-text-card-head:focus-visible { -fx-border-color: transparent, -sf-focus; }
+
+.sf-emblem-btn {
+    -fx-padding: 8;
+    -fx-background-color: -sf-bg-300;
+    -fx-background-radius: 10;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 10;
+}
+.sf-emblem-btn:hover { -fx-border-color: -sf-brand; }
+
+/* Deslizadores (tamaño, giro, contorno, ancho del patrón). */
+.slider .track {
+    -fx-background-color: -sf-bg-300;
+    -fx-background-radius: 999;
+    -fx-background-insets: 0;
+    -fx-pref-height: 4;
+    -fx-padding: 2;
+}
+.slider .thumb {
+    -fx-background-color: -sf-brand;
+    -fx-background-radius: 999;
+    -fx-background-insets: 0;
+    -fx-padding: 7;
+}
+.slider:focused .thumb {
+    -fx-background-color: -sf-focus, -sf-brand;
+    -fx-background-insets: -3, 0;
+}
+
+/* Mis diseños */
+.sf-design-card {
+    /* 1 px para que la captura no tape el borde line de la tarjeta (radius-lg 16). */
+    -fx-padding: 1 1 0 1;
+}
+.sf-design-thumb {
+    -fx-background-color: -sf-bg-000;
+    -fx-background-radius: 15 15 0 0;
+}
+.sf-design-body {
+    -fx-padding: 14 16 16 16;
+}
+
+/* Pestañas del panel del diseñador: cuatro en 312 px, sin recortar el texto. */
+.sf-designer-tabs .sf-seg-item {
+    -fx-padding: 8 6 8 6;
+}
+
+/* ================================================================ Etapa 5: pagos, pedidos y dashboard */
+
+/* Comprobante o captura: marco bg-000 con borde line. */
+.sf-proof {
+    -fx-background-color: -sf-bg-000;
+    -fx-background-radius: 10;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 10;
+}
+.sf-proof:hover { -fx-border-color: -sf-brand; }
+
+.sf-payment-row {
+    -fx-padding: 0 0 14 0;
+    -fx-border-color: transparent transparent -sf-line transparent;
+}
+
+.sf-payment-form {
+    -fx-background-color: -sf-bg-300;
+    -fx-background-radius: 12;
+    -fx-padding: 14;
+}
+
+.sf-kpi:hover { -fx-border-color: -sf-line-strong; }
+
+/* Gráficos: serie principal brand, comparación accent, rejilla line, sin fondo propio. */
+.sf-chart {
+    -fx-padding: 0;
+}
+.sf-chart .chart-plot-background {
+    -fx-background-color: transparent;
+}
+.sf-chart .chart-vertical-grid-lines,
+.sf-chart .chart-horizontal-grid-lines {
+    -fx-stroke: -sf-line;
+    -fx-stroke-dash-array: 2 4;
+}
+.sf-chart .chart-vertical-zero-line,
+.sf-chart .chart-horizontal-zero-line {
+    -fx-stroke: -sf-line-strong;
+}
+.sf-chart .chart-alternative-row-fill,
+.sf-chart .chart-alternative-column-fill {
+    -fx-fill: transparent;
+}
+.sf-chart .axis {
+    -fx-tick-label-fill: -sf-ink-muted;
+    -fx-tick-label-font-family: "Barlow";
+    -fx-tick-label-font-size: 12px;
+    -fx-border-color: transparent;
+}
+.sf-chart .axis-tick-mark,
+.sf-chart .axis-minor-tick-mark {
+    -fx-stroke: -sf-line;
+}
+.sf-chart .chart-legend {
+    -fx-background-color: transparent;
+}
+.sf-chart .chart-legend-item {
+    -fx-text-fill: -sf-ink-muted;
+    -fx-font-family: "Barlow";
+    -fx-font-size: 12px;
+}
+.sf-chart .default-color0.chart-series-line {
+    -fx-stroke: -sf-brand;
+    -fx-stroke-width: 2.5;
+}
+.sf-chart .default-color1.chart-series-line {
+    -fx-stroke: -sf-accent;
+    -fx-stroke-width: 1.5;
+    -fx-stroke-dash-array: 6 4;
+}
+.sf-chart .default-color0.chart-line-symbol {
+    -fx-background-color: -sf-brand, -sf-bg-200;
+    -fx-background-insets: 0, 2;
+    -fx-background-radius: 5;
+    -fx-padding: 4;
+}
+.sf-chart .default-color1.chart-line-symbol {
+    -fx-background-color: -sf-accent, -sf-bg-200;
+    -fx-background-insets: 0, 2;
+    -fx-background-radius: 4;
+    -fx-padding: 3;
+}
+.sf-chart .default-color0.chart-legend-item-symbol {
+    -fx-background-color: -sf-brand;
+}
+.sf-chart .default-color1.chart-legend-item-symbol {
+    -fx-background-color: -sf-accent;
+}
+.sf-chart .default-color0.chart-bar {
+    -fx-bar-fill: -sf-brand;
+    -fx-background-radius: 4 4 0 0;
+}
+.sf-chart .default-color0.chart-bar:hover {
+    -fx-bar-fill: -sf-brand-hover;
+}
+
+/* ================================================================ Etapa 6: reportes y configuración */
+
+/* Aviso (p. ej. datos de pago de prueba): borde warning, texto ink. El estado se dice con texto e icono. */
+.sf-alert-warning {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 10;
+    -fx-border-color: -sf-warning;
+    -fx-border-radius: 10;
+    -fx-padding: 12 16 12 16;
+    -fx-spacing: 12;
+    -fx-alignment: center-left;
+}
+.sf-alert-warning .ikonli-font-icon { -fx-icon-color: -sf-warning; }
+
+/* DatePicker: mismo aspecto que los campos (bg-200, borde line-strong, radio 10). */
+.date-picker {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 10;
+    -fx-background-insets: 0;
+    -fx-border-color: -sf-line-strong;
+    -fx-border-radius: 10;
+    -fx-padding: 0;
+}
+.date-picker:focused,
+.date-picker:contains-focus {
+    -fx-border-color: -sf-line-strong, -sf-focus;
+    -fx-border-width: 1, 2;
+    -fx-border-insets: 0, -4;
+    -fx-border-radius: 10, 14;
+}
+.date-picker > .text-field {
+    -fx-background-color: transparent;
+    -fx-text-fill: -sf-ink;
+    -fx-prompt-text-fill: -sf-ink-subtle;
+    -fx-highlight-fill: -sf-brand;
+    -fx-highlight-text-fill: -sf-on-brand;
+    -fx-font-family: "JetBrains Mono Medium";
+    -fx-font-size: 13px;
+    -fx-padding: 11 4 11 14;
+}
+.date-picker > .arrow-button { -fx-background-color: transparent; -fx-padding: 0 12 0 8; }
+.date-picker > .arrow-button > .arrow { -fx-background-color: -sf-ink-muted; }
+.date-picker:hover > .arrow-button > .arrow { -fx-background-color: -sf-ink; }
+
+.date-picker-popup {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 10;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 10;
+    -fx-effect: dropshadow(gaussian, -sf-shadow-card, 32, 0, 0, 12);
+    -fx-padding: 8;
+}
+.date-picker-popup > .month-year-pane {
+    -fx-background-color: transparent;
+    -fx-padding: 4 4 8 4;
+}
+.date-picker-popup .spinner .label {
+    -fx-text-fill: -sf-ink;
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 14px;
+}
+.date-picker-popup .spinner .button { -fx-background-color: transparent; }
+.date-picker-popup .spinner .button .left-arrow,
+.date-picker-popup .spinner .button .right-arrow { -fx-background-color: -sf-ink-muted; }
+.date-picker-popup .spinner .button:hover .left-arrow,
+.date-picker-popup .spinner .button:hover .right-arrow { -fx-background-color: -sf-ink; }
+.date-picker-popup > * > .calendar-grid {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.date-picker-popup .day-name-cell {
+    -fx-text-fill: -sf-ink-muted;
+    -fx-font-family: "Barlow SemiBold";
+    -fx-font-size: 12px;
+    -fx-background-color: transparent;
+}
+.date-picker-popup .date-cell {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6;
+    -fx-text-fill: -sf-ink;
+    -fx-font-family: "Barlow";
+    -fx-font-size: 14px;
+    -fx-padding: 6 8 6 8;
+}
+.date-picker-popup .date-cell:hover { -fx-background-color: -sf-bg-300; }
+.date-picker-popup .date-cell.previous-month,
+.date-picker-popup .date-cell.next-month { -fx-text-fill: -sf-ink-subtle; }
+.date-picker-popup .date-cell.today { -fx-border-color: -sf-line-strong; -fx-border-radius: 6; }
+.date-picker-popup .date-cell:selected,
+.date-picker-popup .date-cell.selected {
+    -fx-background-color: -sf-brand;
+    -fx-text-fill: -sf-on-brand;
+}
+.date-picker-popup .date-cell:disabled { -fx-opacity: 0.4; }
+
+/* Tablas de reportes: se dibujan completas dentro de la página (sin barra propia). */
+.sf-report-table .virtual-flow .scroll-bar:vertical { -fx-opacity: 0; -fx-pref-width: 0; }
+
+/* ================================================================ Etapa 7: vista realista del diseñador */
+/* Avisos de lo que una vista no puede mostrar (Etapa 11): "Medias tobilleras: ver en Vista 3D". */
+.sf-realistic-notices {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 8;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 8;
+    -fx-padding: 6 10 6 10;
+    -fx-text-alignment: center;
+}
+
+.sf-realistic-photo {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 12;
+}

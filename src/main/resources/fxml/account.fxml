@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.sportforce3d.component.SfButton?>
+<?import com.sportforce3d.component.SfTextField?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.sportforce3d.view.AccountController"
+            fitToWidth="true" styleClass="sf-page">
+    <VBox spacing="32" maxWidth="1280">
+        <padding><Insets top="32" right="24" bottom="64" left="24"/></padding>
+
+        <VBox spacing="8">
+            <Label text="MI CUENTA" styleClass="display-l, ink"/>
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <Label fx:id="emailLabel" styleClass="code, ink-muted"/>
+                <Label fx:id="roleLabel" styleClass="sf-chip"/>
+            </HBox>
+        </VBox>
+
+        <FlowPane hgap="24" vgap="24">
+            <!-- Perfil -->
+            <VBox styleClass="sf-card" spacing="16" prefWidth="440">
+                <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+                <Label text="Perfil" styleClass="title-s, ink"/>
+                <SfTextField fx:id="fullNameField" label="Nombre completo"/>
+                <SfTextField fx:id="phoneField" label="Celular" promptText="987654321"/>
+                <HBox alignment="CENTER_RIGHT">
+                    <SfButton fx:id="saveProfileButton" text="Guardar cambios" variant="PRIMARY" size="MD"/>
+                </HBox>
+            </VBox>
+
+            <!-- Contraseña -->
+            <VBox styleClass="sf-card" spacing="16" prefWidth="440">
+                <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+                <Label text="Cambiar contraseña" styleClass="title-s, ink"/>
+                <SfTextField fx:id="currentPasswordField" label="Contraseña actual" password="true"/>
+                <SfTextField fx:id="newPasswordField" label="Nueva contraseña" password="true"/>
+                <SfTextField fx:id="confirmationField" label="Repite la nueva contraseña" password="true"/>
+                <HBox alignment="CENTER_RIGHT">
+                    <SfButton fx:id="changePasswordButton" text="Cambiar contraseña" variant="GHOST" size="MD"/>
+                </HBox>
+            </VBox>
+
+            <!-- Preferencias -->
+            <VBox styleClass="sf-card" spacing="12" prefWidth="440">
+                <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+                <Label text="Configuración" styleClass="title-s, ink"/>
+                <CheckBox fx:id="reduceMotionCheck" text="Reducir animaciones"/>
+                <Label text="Quita desplazamientos y la auto-rotación del maniquí 3D; solo quedan cambios de opacidad. Se guarda en este equipo."
+                       styleClass="body-s, ink-muted" wrapText="true"/>
+            </VBox>
+        </FlowPane>
+    </VBox>
+</ScrollPane>

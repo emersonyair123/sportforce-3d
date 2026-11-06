@@ -1,0 +1,31 @@
+/*
+ * SPORTFORCE 3D · Tokens de color, tema claro (comprobantes, reportes e impresión).
+ * Valores copiados sin cambios de design/tokens.json.
+ */
+.root {
+    -sf-bg-000: #f4f6f9;
+    -sf-bg-100: #ffffff;
+    -sf-bg-200: #ffffff;
+    -sf-bg-300: #eef1f5;
+    -sf-line: #dde2e9;
+    -sf-line-strong: #8a94a2;
+    -sf-ink: #0b0e13;
+    -sf-ink-muted: #4a5462;
+    -sf-ink-subtle: #646d7a;
+    -sf-brand: #0b57e6;
+    -sf-brand-hover: #0a4cc9;
+    -sf-brand-text: #0b57e6;
+    -sf-on-brand: #ffffff;
+    -sf-accent: #2ee67a;
+    -sf-accent-text: #087a3e;
+    -sf-on-accent: #04140a;
+    -sf-danger: #c8102e;
+    -sf-warning: #8a5a00;
+    -sf-success: -sf-accent-text;
+    -sf-focus: #0b57e6;
+    -sf-scrim: rgba(11, 14, 19, 0.48);
+
+    -sf-shadow-card: rgba(11, 14, 19, 0.10);
+    -sf-glow-brand: rgba(11, 87, 230, 0.25);
+    -sf-glow-accent: rgba(46, 230, 122, 0.35);
+}

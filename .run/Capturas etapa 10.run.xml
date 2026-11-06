@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Capturas etapa 10" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.sportforce3d.tools.Etapa10Tour" />
+    <module name="sportforce3d" />
+    <option name="PROGRAM_PARAMETERS" value="docs/capturas/etapa10 ABCD" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

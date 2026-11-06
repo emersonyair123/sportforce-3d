@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.sportforce3d.component.SfButton?>
+<?import com.sportforce3d.component.SfTextField?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.sportforce3d.view.AdminSettingsController"
+            fitToWidth="true" styleClass="sf-page">
+    <VBox spacing="24" maxWidth="1180">
+        <padding><Insets top="32" right="24" bottom="64" left="24"/></padding>
+        <VBox spacing="8">
+            <Label text="CONFIGURACIÓN" styleClass="display-l, ink"/>
+            <Label text="Datos de pago que ve el cliente al registrar su pago con Yape, Plin o transferencia. Revísalos con cuidado: el cliente paga a estos números y cuentas."
+                   styleClass="body-s, ink-muted" wrapText="true"/>
+        </VBox>
+
+        <HBox fx:id="reviewNotice" styleClass="sf-alert-warning">
+            <Label styleClass="body-s, ink" wrapText="true"
+                   text="Estos son los datos de prueba de la instalación. Cámbialos por los reales antes de recibir pagos."/>
+        </HBox>
+
+        <FlowPane hgap="24" vgap="24">
+            <VBox styleClass="sf-card" spacing="16" prefWidth="440">
+                <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+                <Label fx:id="yapeTitle" text="Yape" styleClass="title-s, ink"/>
+                <SfTextField fx:id="yapePhoneField" label="Número de Yape" promptText="987 654 321"/>
+                <SfTextField fx:id="yapeHolderField" label="Titular de Yape" promptText="Nombre que aparece en Yape"/>
+            </VBox>
+            <VBox styleClass="sf-card" spacing="16" prefWidth="440">
+                <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+                <Label fx:id="plinTitle" text="Plin" styleClass="title-s, ink"/>
+                <SfTextField fx:id="plinPhoneField" label="Número de Plin" promptText="987 654 321"/>
+                <SfTextField fx:id="plinHolderField" label="Titular de Plin" promptText="Nombre que aparece en Plin"/>
+            </VBox>
+            <VBox styleClass="sf-card" spacing="16" prefWidth="904">
+                <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
+                <Label fx:id="bankTitle" text="Transferencia bancaria" styleClass="title-s, ink"/>
+                <GridPane hgap="24" vgap="16">
+                    <columnConstraints>
+                        <ColumnConstraints percentWidth="50"/>
+                        <ColumnConstraints percentWidth="50"/>
+                    </columnConstraints>
+                    <SfTextField fx:id="bankNameField" label="Banco" promptText="BCP, Interbank, BBVA…"
+                                 GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <SfTextField fx:id="bankHolderField" label="Titular de la cuenta" promptText="Razón social o nombre"
+                                 GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                    <SfTextField fx:id="bankAccountField" label="Número de cuenta" promptText="191-12345678-0-12"
+                                 GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <SfTextField fx:id="bankCciField" label="CCI (20 dígitos)" promptText="002-191-001234567801-23"
+                                 GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                </GridPane>
+            </VBox>
+        </FlowPane>
+
+        <VBox fx:id="previewBox" styleClass="sf-card" spacing="8" maxWidth="904">
+            <padding><Insets top="20" right="24" bottom="20" left="24"/></padding>
+            <Label text="ASÍ LO VE EL CLIENTE" styleClass="label-text, ink-muted"/>
+            <VBox fx:id="previewLines" spacing="6"/>
+        </VBox>
+
+        <HBox spacing="12" alignment="CENTER_LEFT" maxWidth="904">
+            <SfButton fx:id="saveButton" text="Guardar datos de pago" variant="PRIMARY" size="MD"/>
+            <SfButton fx:id="resetButton" text="Descartar cambios" variant="GHOST" size="MD"/>
+            <Label fx:id="savedLabel" styleClass="body-s, ink-muted"/>
+        </HBox>
+    </VBox>
+</ScrollPane>
