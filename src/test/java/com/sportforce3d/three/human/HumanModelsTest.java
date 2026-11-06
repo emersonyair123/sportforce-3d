@@ -15,7 +15,6 @@ class HumanModelsTest {
     @ParameterizedTest
     @EnumSource(Persona.class)
     void cadaPersonaTieneSuModeloConPielOjosYPelo(Persona persona) throws IOException {
-        Modelos3d.requierePersonas();
         assertThat(HumanModels.available(persona)).isTrue();
         ObjMtlReader.Result r = HumanModels.readGeometry(persona);
 
@@ -47,7 +46,6 @@ class HumanModelsTest {
 
     @Test
     void laPielEsOpacaYElPeloYLosOjosTienenAlfa() throws IOException {
-        Modelos3d.requierePersonas();
         assertThat(HumanModels.pngHasAlpha(bytes("hombre/textures/young_lightskinned_male_diffuse.png"))).isFalse();
         assertThat(HumanModels.pngHasAlpha(bytes("hombre/textures/short02_diffuse.png"))).isTrue();
         assertThat(HumanModels.pngHasAlpha(bytes("hombre/textures/brown_eye.png"))).isTrue();

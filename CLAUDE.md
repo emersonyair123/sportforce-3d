@@ -27,7 +27,7 @@ Tienda de ropa deportiva con diseñador 3D. **Una sola aplicación de escritorio
 - Prendas simuladas (Etapa 9): `D:\Blender\blender.exe -b --factory-startup -P tools/blender/generar_prendas.py -- --persona hombre|mujer|nino|nina [--vistas carpeta] [--sin-hornear]` (Blender 5.2.2 LTS, 1–4 min por persona). Escribe `models/prendas/<persona>/{camiseta_futbol_v,short_futbol,medias_futbol}/{prenda.obj,ao.png,normal.png}`. Capturas: **Capturas tela simulada** (`CaptureTool docs/capturas/etapa9 TELA`, las 4 personas).
 - Instalador: `powershell -ExecutionPolicy Bypass -File packaging\build-installer.ps1 [-Type exe|msi|app-image] [-SkipTests]`. jpackage del JDK 21 necesita **WiX 3.x** (no 4+); sin WiX genera la carpeta portable. Icono: `src/packaging/windows/sportforce3d.ico` (regenerar con `tools.IconTool`). El script se guarda en UTF-8 **con BOM** (PowerShell 5.1).
 - Pruebas de interfaz TestFX sin ventana (Monocle, `testfx.headless=true` en surefire); `-Dtestfx.headless=false` para verlas. Al fallar dejan captura y textos visibles en `target/ui-fallos/`.
-- **Reconstrucción (2026-11-06):** el proyecto se rehízo tras borrarse D:\tienda-virtual. Faltan `models/humanos` y `models/prendas`: la Vista 3D usa el maniquí de respaldo y las pruebas que los necesitan se **omiten** con `three.human.Modelos3d` (salen como *skipped*, no como aprobadas). Al restaurar los modelos vuelven a ejecutarse solas.
+- **Reconstrucción (2026-11-06):** el proyecto se rehízo tras borrarse D:\tienda-virtual. Las 4 personas se volvieron a exportar de MakeHuman (`E:\rescate\modelos3d`) y todas las prendas simuladas se regeneraron con `tools/blender/generar_prendas.py` (base y `--variantes`, una persona a la vez).
 
 ## Arquitectura (MVVM)
 
