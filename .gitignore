@@ -19,3 +19,6 @@ Thumbs.db
 
 # Blender (tools/blender)
 __pycache__/
+
+# Modelos originales de MakeHuman (la app usa la copia de src/main/resources/models/humanos)
+modelos3d/
