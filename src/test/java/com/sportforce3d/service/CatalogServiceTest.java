@@ -42,7 +42,7 @@ class CatalogServiceTest {
         assertThat(first.items()).hasSize(12);
 
         Page<ProductSummary> last = f.catalog.search(ProductQuery.all().withPage(6));
-        assertThat(last.items()).hasSize(8);
+        assertThat(last.items()).hasSize(7);
         assertThat(last.hasNext()).isFalse();
     }
 

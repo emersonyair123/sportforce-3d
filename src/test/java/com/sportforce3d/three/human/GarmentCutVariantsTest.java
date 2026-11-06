@@ -33,6 +33,11 @@ class GarmentCutVariantsTest {
     private static final GarmentCut MID = GarmentCut.DEFAULT.withSocks(SocksLength.MEDIA);
     private static final List<GarmentCut> VARIANTS = List.of(LONG, SHORT_SHORTS, LONG_SHORTS, ANKLE, MID);
 
+    @org.junit.jupiter.api.BeforeAll
+    static void modelos() {
+        Modelos3d.requierePersonasYPrendas();
+    }
+
     @ParameterizedTest
     @EnumSource(Persona.class)
     void cadaVarianteEstaEmpaquetadaConSusZonasYUvEnSusIslas(Persona p) {

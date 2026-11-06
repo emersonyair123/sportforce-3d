@@ -31,6 +31,7 @@ class OutfitFitterTest {
 
     @BeforeAll
     static void fitAll() {
+        Modelos3d.requierePersonas();
         for (Persona p : Persona.values()) {
             HumanModel human = geometryOnly(p);
             ModelData source = ModelProviders.load(p.fallback());

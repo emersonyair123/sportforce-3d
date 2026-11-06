@@ -127,6 +127,8 @@ class DesignerUiTest {
         assertThat((double) foto.getWidth() / foto.getHeight()).as("foto realista 720 × 900").isCloseTo(0.8, within(0.01));
 
         // Short corto (sin foto realista), sin abrir la Vista 3D: las fotos se toman del 3D con ese corte.
+        // Necesita la persona 3D: con el maniquí de respaldo el diseño no se guarda con otro corte (README).
+        com.sportforce3d.three.human.Modelos3d.requierePersonas();
         robot.interact(() -> vm.edit("Short corto", d -> d.withCut(d.cut().withShorts(
                 com.sportforce3d.design.GarmentCut.ShortsLength.CORTO)), null));
         saveAs(robot, "Short corto");

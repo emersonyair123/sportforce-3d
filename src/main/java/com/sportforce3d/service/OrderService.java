@@ -93,6 +93,9 @@ public class OrderService {
         if (cleanNotes != null && cleanNotes.length() > NOTES_MAX) {
             throw ValidationException.of("notes", "Las notas admiten hasta " + NOTES_MAX + " caracteres.");
         }
+        if (Validators.plainText(cleanNotes, true) != null) {
+            throw ValidationException.of("notes", Validators.plainText(cleanNotes, true));
+        }
         String now = clock.instant().toString();
         int year = clock.instant().atZone(LIMA).getYear();
 
@@ -211,7 +214,14 @@ public class OrderService {
         if (!CANCELLABLE.contains(order.status())) {
             throw new ServiceException("Este pedido ya no se puede cancelar (" + order.status().label().toLowerCase() + ").");
         }
-        String note = Validators.blankToNull(reason) == null
+        String cleanReason = Validators.blankToNull(reason);
+        if (cleanReason != null && cleanReason.length() > NOTES_MAX) {
+            throw ValidationException.of("reason", "El motivo admite hasta " + NOTES_MAX + " caracteres.");
+        }
+        if (Validators.plainText(cleanReason, true) != null) {
+            throw ValidationException.of("reason", Validators.plainText(cleanReason, true));
+        }
+        String note = cleanReason == null
                 ? (order.userId() == me.id() ? "Cancelado por el cliente" : "Cancelado por la tienda")
                 : reason.trim();
         String now = clock.instant().toString();

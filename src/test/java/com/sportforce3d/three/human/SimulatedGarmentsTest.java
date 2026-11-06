@@ -32,6 +32,7 @@ class SimulatedGarmentsTest {
 
     @BeforeAll
     static void load() {
+        Modelos3d.requierePersonasYPrendas();
         for (Persona p : Persona.values()) {
             var pieces = SimulatedGarments.load(p);
             HumanModel human = OutfitFitterTest.geometryOnly(p);

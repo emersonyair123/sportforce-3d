@@ -1,0 +1,666 @@
+{
+ "futbol_hombre_frente": {
+  "vista": "frente",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 355,
+   "cuelloY": 131,
+   "bastaY": 434
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "futbol_hombre_espalda": {
+  "vista": "espalda",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 354,
+   "cuelloY": 122,
+   "bastaY": 427
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "futbol_mujer_frente": {
+  "vista": "frente",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 355,
+   "cuelloY": 157,
+   "bastaY": 419
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "futbol_mujer_espalda": {
+  "vista": "espalda",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 359,
+   "cuelloY": 147,
+   "bastaY": 406
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "futbol_nino_frente": {
+  "vista": "frente",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 356,
+   "cuelloY": 162,
+   "bastaY": 437
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "futbol_nino_espalda": {
+  "vista": "espalda",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 358,
+   "cuelloY": 150,
+   "bastaY": 425
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "futbol_nina_frente": {
+  "vista": "frente",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 357,
+   "cuelloY": 169,
+   "bastaY": 428
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "futbol_nina_espalda": {
+  "vista": "espalda",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 356,
+   "cuelloY": 153,
+   "bastaY": 410
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "buzo_hombre_frente": {
+  "vista": "frente",
+  "zonas": [
+   "principal",
+   "paneles"
+  ],
+  "geometriaCamiseta": {},
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "buzo_mujer_frente": {
+  "vista": "frente",
+  "zonas": [
+   "principal",
+   "paneles"
+  ],
+  "geometriaCamiseta": {},
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "buzo_juvenil_frente": {
+  "vista": "frente",
+  "zonas": [
+   "principal",
+   "paneles"
+  ],
+  "geometriaCamiseta": {},
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "buzo_nino_frente": {
+  "vista": "frente",
+  "zonas": [
+   "principal",
+   "paneles"
+  ],
+  "geometriaCamiseta": {},
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "buzo_nina_frente": {
+  "vista": "frente",
+  "zonas": [
+   "principal",
+   "paneles"
+  ],
+  "geometriaCamiseta": {},
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "producto_zapatilla_fg": {
+  "vista": "producto",
+  "zonas": [
+   "principal"
+  ],
+  "geometriaCamiseta": {},
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "producto_medias": {
+  "vista": "producto",
+  "zonas": [
+   "principal"
+  ],
+  "geometriaCamiseta": {},
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "producto_canilleras": {
+  "vista": "producto",
+  "zonas": [
+   "principal"
+  ],
+  "geometriaCamiseta": {},
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "polo_hombre_frente": {
+  "vista": "frente",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 353,
+   "cuelloY": 123,
+   "bastaY": 426
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "redondo_hombre_frente": {
+  "vista": "frente",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 357,
+   "cuelloY": 138,
+   "bastaY": 427
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "raglan_mujer_frente": {
+  "vista": "frente",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 356,
+   "cuelloY": 149,
+   "bastaY": 400
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "shortlargo_hombre_frente": {
+  "vista": "frente",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 355,
+   "cuelloY": 139,
+   "bastaY": 410
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "licra_mujer_frente": {
+  "vista": "frente",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 354,
+   "cuelloY": 158,
+   "bastaY": 382
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "voley_mujer_frente": {
+  "vista": "frente",
+  "zonas": [
+   "camiseta",
+   "short",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 359,
+   "cuelloY": 147,
+   "bastaY": 391
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "voley_hombre_frente": {
+  "vista": "frente",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 359,
+   "cuelloY": 135,
+   "bastaY": 433
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "basquet_hombre_frente": {
+  "vista": "frente",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 360,
+   "cuelloY": 141,
+   "bastaY": 429
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "mangalarga_hombre_frente": {
+  "vista": "frente",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 359,
+   "cuelloY": 138,
+   "bastaY": 432
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "voley_mujer_espalda": {
+  "vista": "espalda",
+  "zonas": [
+   "camiseta",
+   "short",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 355,
+   "cuelloY": 141,
+   "bastaY": 329
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "voley_hombre_espalda": {
+  "vista": "espalda",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 361,
+   "cuelloY": 130,
+   "bastaY": 423
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "basquet_hombre_espalda": {
+  "vista": "espalda",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 360,
+   "cuelloY": 133,
+   "bastaY": 432
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "mangalarga_hombre_espalda": {
+  "vista": "espalda",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 361,
+   "cuelloY": 130,
+   "bastaY": 429
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "polo_hombre_espalda": {
+  "vista": "espalda",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 357,
+   "cuelloY": 121,
+   "bastaY": 428
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "redondo_hombre_espalda": {
+  "vista": "espalda",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 360,
+   "cuelloY": 126,
+   "bastaY": 420
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "raglan_mujer_espalda": {
+  "vista": "espalda",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 364,
+   "cuelloY": 146,
+   "bastaY": 405
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "shortlargo_hombre_espalda": {
+  "vista": "espalda",
+  "zonas": [
+   "camiseta",
+   "short",
+   "paneles"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 356,
+   "cuelloY": 127,
+   "bastaY": 419
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "licra_mujer_espalda": {
+  "vista": "espalda",
+  "zonas": [
+   "camiseta",
+   "short"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 361,
+   "cuelloY": 146,
+   "bastaY": 375
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "arquero_hombre_frente": {
+  "vista": "frente",
+  "zonas": [
+   "camiseta",
+   "short",
+   "medias"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 360,
+   "cuelloY": 140,
+   "bastaY": 434
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "compresion_hombre_frente": {
+  "vista": "frente",
+  "zonas": [
+   "camiseta"
+  ],
+  "geometriaCamiseta": {
+   "centroX": 348,
+   "cuelloY": 205,
+   "bastaY": 580
+  },
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "casaca_hombre_frente": {
+  "vista": "frente",
+  "zonas": [
+   "principal"
+  ],
+  "geometriaCamiseta": {},
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "producto_media_cana": {
+  "vista": "producto",
+  "zonas": [
+   "principal"
+  ],
+  "geometriaCamiseta": {},
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "producto_zapatilla_futsal": {
+  "vista": "producto",
+  "zonas": [
+   "principal"
+  ],
+  "geometriaCamiseta": {},
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "producto_zapatilla_running": {
+  "vista": "producto",
+  "zonas": [
+   "principal",
+   "paneles"
+  ],
+  "geometriaCamiseta": {},
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "producto_brazalete": {
+  "vista": "producto",
+  "zonas": [
+   "principal"
+  ],
+  "geometriaCamiseta": {},
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "producto_guantes": {
+  "vista": "producto",
+  "zonas": [
+   "principal"
+  ],
+  "geometriaCamiseta": {},
+  "tamano": [
+   720,
+   900
+  ]
+ },
+ "producto_mochila": {
+  "vista": "producto",
+  "zonas": [
+   "principal"
+  ],
+  "geometriaCamiseta": {},
+  "tamano": [
+   720,
+   900
+  ]
+ }
+}
