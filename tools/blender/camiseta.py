@@ -384,10 +384,12 @@ def construir(c, corte=Corte):
     # ---------------------------------------------------------------- mangas
     mangas = {}
     sisa_bordes = set()
+    sisa_tope = []  # punto más alto de cada sisa (hombro): ahí la manga larga deja un pliegue al caer
     for lado, (a, b) in zip((1, -1), sisas):
         borde = [(r_a, j) for j in range(a, b)] + [(r, b) for r in range(r_a, r_s)] + \
                 [(r_s, j) for j in range(b, a, -1)] + [(r, a) for r in range(r_s, r_a, -1)]
         sisa_bordes |= {idx[q] for q in borde}
+        sisa_tope.append(max((idx[q] for q in borde), key=lambda i: m.v[i][1]))
         mangas[lado] = _manga(c, m, lado, [idx[q] for q in borde], corte, k)
 
     # Escote: entre cada esquina y la punta, el borde va sobre la recta (el corte por columnas deja escalones);
@@ -462,8 +464,7 @@ def construir(c, corte=Corte):
     bordes |= {v for fin in mangas.values() for v in fin}
     m.suavizar(corte.suavizado, 0.5, set(range(len(m.v))) - bordes)
 
-    datos = {"filas": filas, "columnas": n, "escala_uv": escala,
-
+    datos = {"filas": filas, "columnas": n, "escala_uv": escala, "sisa_tope": sisa_tope,
              "escote": _bucle_borde(m, idx[(filas - 1, j90)]),
              "esquinas_v": [escote[e] for e in esquinas],
              "ruedo": [idx[(0, j)] for j in range(n)], "mangas": mangas}

@@ -2,7 +2,7 @@
 
 -- Datos para pagar (los ve el cliente al registrar su pago). Valores de prueba: cámbialos por los reales.
 INSERT INTO store_settings (key, value) VALUES
-    ('payment_holder', 'SPORTFORCE 3D S.A.C. (datos de prueba)'),
+    ('payment_holder', 'SPORTFORCE 3D S.A.C. — datos de prueba'),
     ('yape_phone', '987 654 321'),
     ('plin_phone', '987 654 321'),
     ('bank_name', 'Banco de prueba'),

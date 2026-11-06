@@ -125,7 +125,7 @@ class PaymentServiceTest {
 
         assertThat(paid.status()).isEqualTo(OrderStatus.PAGADO);
         assertThat(paid.currentPayment().status()).isEqualTo(PaymentStatus.APROBADO);
-        assertThat(paid.currentPayment().verifiedBy()).isEqualTo("Administrador SPORTFORCE");
+        assertThat(paid.currentPayment().verifiedBy()).isEqualTo("Administrador SportForce");
         assertThat(paid.currentPayment().verifiedAt()).isNotNull();
         assertThat(paid.history()).last().satisfies(h -> {
             assertThat(h.to()).isEqualTo(OrderStatus.PAGADO);
@@ -187,7 +187,7 @@ class PaymentServiceTest {
         assertThat(prod.history()).last().satisfies(h -> {
             assertThat(h.from()).isEqualTo(OrderStatus.PAGADO);
             assertThat(h.note()).isEqualTo("Corte y sublimado");
-            assertThat(h.changedBy()).isEqualTo("Administrador SPORTFORCE");
+            assertThat(h.changedBy()).isEqualTo("Administrador SportForce");
         });
         assertThatThrownBy(() -> f.adminOrders.changeStatus(order.id(), OrderStatus.CANCELADO, "Sin tela"))
                 .hasMessageContaining("No se puede pasar");

@@ -5,6 +5,7 @@ import com.sportforce3d.app.Routes;
 import com.sportforce3d.component.EmptyState;
 import com.sportforce3d.component.SfButton;
 import com.sportforce3d.model.Category;
+import com.sportforce3d.model.Garment;
 import com.sportforce3d.model.ProductSummary;
 import com.sportforce3d.util.Texts;
 import com.sportforce3d.viewmodel.HomeViewModel;
@@ -35,8 +36,8 @@ public class HomeController {
     @FXML
     private void initialize() {
         context.session().current().ifPresent(user -> greeting.setText(Texts.upper("Hola, " + user.firstName())));
-        // El diseñador 3D llega en la Etapa 3.
-        designCta.comingSoon();
+        designCta.withIcon(Feather.BOX);
+        designCta.setOnAction(e -> context.router().go(Routes.DESIGNER, Routes.DesignerParams.focus(Garment.JERSEY)));
         catalogButton.withIcon(Feather.GRID);
         catalogButton.setOnAction(e -> context.router().go(Routes.CATALOG));
 

@@ -44,13 +44,20 @@ public final class DesignDefaults {
                 0.090, number, DesignFonts.DEFAULT, color, outlineColor, 0, null, null, null);
     }
 
-    /**
-     * Número pequeño en la pierna izquierda del short, al frente del muslo y cerca del ruedo: ahí la tela es casi
-     * plana. Más arriba la cadera curva la isla UV y el número se ve inclinado; hacia adentro cae en la entrepierna.
-     */
+    /** Número del short con el largo medio. */
     public static DesignElement shortsNumber(String number, String color, String outlineColor) {
-        return new DesignElement(newId(), ElementType.NUMBER, Area.SHORTS_LEFT, 0.60, 0.70, 1.0, 0, true, false,
-                0.070, number, DesignFonts.DEFAULT, color, outlineColor, 0, null, null, null);
+        return shortsNumber(number, color, outlineColor, GarmentCut.ShortsLength.MEDIO);
+    }
+
+    /**
+     * Número pequeño en la pierna delantera izquierda del short, a media altura de lo que se ve del short (entre el
+     * ruedo de la camiseta y la basta) para ese largo ({@link GarmentCut.ShortsLength#numberV()}); hacia adentro
+     * caería en la entrepierna.
+     */
+    public static DesignElement shortsNumber(String number, String color, String outlineColor,
+                                             GarmentCut.ShortsLength length) {
+        return new DesignElement(newId(), ElementType.NUMBER, Area.SHORTS_LEFT, length.numberU(), length.numberV(),
+                1.0, 0, true, false, 0.070, number, DesignFonts.DEFAULT, color, outlineColor, 0, null, null, null);
     }
 
     /** Emblema en el pecho izquierdo del jugador (escudo). */

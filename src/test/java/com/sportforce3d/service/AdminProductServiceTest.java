@@ -1,7 +1,9 @@
 package com.sportforce3d.service;
 
+import com.sportforce3d.model.AdminProductRow;
 import com.sportforce3d.model.Garment;
 import com.sportforce3d.model.InventoryRow;
+import com.sportforce3d.model.LowStockVariant;
 import com.sportforce3d.model.PaymentMethod;
 import com.sportforce3d.model.ProductDetail;
 import com.sportforce3d.model.ProductForm;
@@ -124,6 +126,27 @@ class AdminProductServiceTest {
                 List.of(variant(variantId, sizeM, "SF-HAL-010-M", 1)))))
                 .isInstanceOfSatisfying(ValidationException.class,
                         e -> assertThat(e.fieldErrors().get("variants")).contains("reservadas"));
+    }
+
+    /** Etapa 12B: la suela de la zapatilla de running (zona "paneles") es blanca y el ADMIN puede cambiarla. */
+    @Test
+    void adminChangesTheZoneColorsOfTheRealisticPhoto() {
+        long id = f.productId("SF-ZAP-003");
+        f.loginClient();
+        assertThatThrownBy(() -> f.admin.updateZoneColors(id, java.util.Map.of("paneles", "#0B0E13")))
+                .isInstanceOf(AccessDeniedException.class);
+        f.loginAdmin();
+        assertThat(f.admin.look(id).orElseThrow().zoneColors()).containsEntry("paneles", "#f2f5f8");
+
+        var look = f.admin.updateZoneColors(id, java.util.Map.of("paneles", "#0b0e13"));
+        assertThat(look.modelKey()).isEqualTo("producto_zapatilla_running");
+        assertThat(look.zoneColors()).containsEntry("paneles", "#0b0e13").containsEntry("principal", "#1f5fff");
+        assertThat(f.catalog.realisticLook(id).orElseThrow().zoneColors()).containsEntry("paneles", "#0b0e13");
+
+        assertThatThrownBy(() -> f.admin.updateZoneColors(id, java.util.Map.of("camiseta", "#0B0E13")))
+                .as("zona que la foto no tiene").isInstanceOf(ValidationException.class);
+        assertThatThrownBy(() -> f.admin.updateZoneColors(id, java.util.Map.of("paneles", "blanco")))
+                .as("HEX inválido").isInstanceOf(ValidationException.class);
     }
 
     @Test

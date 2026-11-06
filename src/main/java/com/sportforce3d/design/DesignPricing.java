@@ -9,7 +9,8 @@ import java.util.Map;
 /**
  * Recargo por materiales de un diseño. Regla: el material por defecto de cada ranura va incluido en el precio base
  * (p. ej. la licra de las medias, que es su único material); los demás suman su recargo del catálogo. Solo cuentan
- * las ranuras de la prenda que se compra (el uniforme completo cuenta todas).
+ * las ranuras de la prenda que se compra: un uniforme (KIT) es camiseta, short y medias; sin producto (vista previa
+ * del diseñador) cuentan todas.
  */
 public final class DesignPricing {
 
@@ -17,7 +18,13 @@ public final class DesignPricing {
     }
 
     public static List<MaterialSlot> slotsFor(Garment garment) {
-        return garment == null || garment == Garment.KIT ? List.of(MaterialSlot.values()) : MaterialSlot.of(garment);
+        if (garment == null) {
+            return List.of(MaterialSlot.values());
+        }
+        if (garment == Garment.KIT) {
+            return List.of(MaterialSlot.JERSEY, MaterialSlot.SHORTS, MaterialSlot.SOCKS);
+        }
+        return MaterialSlot.of(garment);
     }
 
     /** Suma en céntimos; un código que no está en {@code materials} no suma (se valida al guardar). */

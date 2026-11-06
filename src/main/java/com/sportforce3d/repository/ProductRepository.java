@@ -1,5 +1,8 @@
 package com.sportforce3d.repository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sportforce3d.db.Database;
 import com.sportforce3d.model.AdminProductRow;
 import com.sportforce3d.model.Garment;
@@ -24,6 +27,7 @@ import java.sql.Statement;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,7 +57,8 @@ public class ProductRepository {
                    (SELECT v2.color_hex FROM product_variants v2
                      WHERE v2.product_id = p.id AND v2.active = 1 ORDER BY v2.id LIMIT 1) AS color_hex,
                    (SELECT pi.path FROM product_images pi
-                     WHERE pi.product_id = p.id ORDER BY pi.sort_order, pi.id LIMIT 1) AS image_path
+                     WHERE pi.product_id = p.id ORDER BY pi.sort_order, pi.id LIMIT 1) AS image_path,
+                   p.model_key, p.zone_colors, p.pattern, p.pattern_color
             """;
 
     private static final String PUBLIC_FROM = """
@@ -684,6 +689,26 @@ public class ProductRepository {
                 rs.getString("color_hex"),
                 rs.getInt("variant_count"),
                 Jdbc.getLongOrNull(rs, "single_variant_id"),
-                rs.getString("image_path"));
+                rs.getString("image_path"),
+                look(rs));
+    }
+
+    private static final ObjectMapper JSON = new ObjectMapper();
+    private static final TypeReference<LinkedHashMap<String, String>> ZONE_COLORS = new TypeReference<>() {
+    };
+
+    /** Vista realista del producto; null si no tiene modelo (o su JSON de colores es inválido). */
+    private static RealisticLook look(ResultSet rs) throws SQLException {
+        String model = rs.getString("model_key");
+        if (model == null || model.isBlank()) {
+            return null;
+        }
+        String colors = rs.getString("zone_colors");
+        try {
+            Map<String, String> zones = colors == null ? Map.of() : JSON.readValue(colors, ZONE_COLORS);
+            return new RealisticLook(model, zones, rs.getString("pattern"), rs.getString("pattern_color"));
+        } catch (JsonProcessingException e) {
+            return null;
+        }
     }
 }

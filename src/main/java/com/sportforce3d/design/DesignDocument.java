@@ -113,8 +113,21 @@ public record DesignDocument(int schemaVersion, BodyType bodyType, Long productI
         return new DesignDocument(schemaVersion, bodyType, productId, colors, patterns, materials, elements, spec, cut);
     }
 
+    /**
+     * Cambia el corte. Si cambia el largo del short, los números del short que siguen en la posición por defecto del
+     * largo anterior pasan a la del nuevo (a media altura de lo que se ve); los que el cliente movió no se tocan.
+     */
     public DesignDocument withCut(GarmentCut c) {
-        return new DesignDocument(schemaVersion, bodyType, productId, colors, patterns, materials, elements, realistic, c);
+        GarmentCut next = c == null ? GarmentCut.DEFAULT : c;
+        List<DesignElement> list = elements;
+        if (next.shorts() != cut.shorts()) {
+            GarmentCut.ShortsLength from = cut.shorts();
+            GarmentCut.ShortsLength to = next.shorts();
+            list = elements.stream().map(e -> e.type() == ElementType.NUMBER && e.area() == Area.SHORTS_LEFT
+                    && Math.abs(e.v() - from.numberV()) < 0.01 && Math.abs(e.u() - from.numberU()) < 0.01
+                    ? e.at(to.numberU(), to.numberV()) : e).toList();
+        }
+        return new DesignDocument(schemaVersion, bodyType, productId, colors, patterns, materials, list, realistic, next);
     }
 
     public DesignDocument addElement(DesignElement e) {

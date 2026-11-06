@@ -95,12 +95,12 @@ public class CheckoutController {
                 section("1. Dirección de envío", new VBox(12, addressCards, addAddress, addressForm)),
                 section("2. Método de pago", new VBox(12, paymentCards, paymentNote())),
                 section("3. Notas para la tienda (opcional)", new VBox(6, notes, notesCount)));
-        left.setPrefWidth(720);
-        left.setMinWidth(520);
+        left.setPrefWidth(580);
+        left.setMinWidth(500);
 
         summaryPanel.getStyleClass().add("sf-panel");
         summaryPanel.setPadding(new Insets(24));
-        summaryPanel.setPrefWidth(380);
+        summaryPanel.setPrefWidth(360);
         summaryPanel.setMinWidth(320);
         summaryPanel.setMaxHeight(Region.USE_PREF_SIZE);
 
@@ -172,7 +172,9 @@ public class CheckoutController {
             Label name = new Label(l.quantity() + " × " + l.productName());
             name.getStyleClass().addAll("body-s", "ink");
             name.setWrapText(true);
-            Label meta = new Label("Talla " + l.sizeName() + " · " + l.colorName());
+            Label meta = new Label("Talla " + l.sizeName() + (l.hasDesign()
+                    ? " · Diseño: " + l.designName() + (l.surchargeCents() == 0 ? "" : " · " + Money.surcharge(l.surchargeCents()) + " c/u")
+                    : " · " + l.colorName()));
             meta.getStyleClass().addAll("body-s", "ink-subtle");
             Label price = new Label(Money.format(l.lineTotalCents()));
             price.getStyleClass().addAll("body-s", "ink");

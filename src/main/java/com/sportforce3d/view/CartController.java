@@ -66,8 +66,8 @@ public class CartController {
             return;
         }
         VBox lines = new VBox(12);
-        lines.setPrefWidth(720);
-        lines.setMinWidth(560);
+        lines.setPrefWidth(600);
+        lines.setMinWidth(520);
         for (CartLine line : summary.lines()) {
             lines.getChildren().add(lineRow(line));
         }
@@ -79,8 +79,13 @@ public class CartController {
         thumb.getStyleClass().add("sf-thumb");
         thumb.setMinSize(88, 110);
         thumb.setMaxSize(88, 110);
-        Image image = ProductImages.load(context.storage(), line.imagePath(), 88, 110);
-        if (image != null) {
+        // Las líneas personalizadas muestran la captura frontal del diseño, recortada al uniforme.
+        ImageView designView = line.hasDesign()
+                ? ProductImages.designCapture(context.storage(), line.designThumbnail(), 88, 110) : null;
+        Image image = line.hasDesign() ? null : ProductImages.load(context.storage(), line.imagePath(), 88, 110);
+        if (designView != null) {
+            thumb.getChildren().add(designView);
+        } else if (image != null) {
             ImageView view = new ImageView(image);
             view.setFitWidth(88);
             view.setFitHeight(110);
@@ -89,21 +94,41 @@ public class CartController {
         } else {
             thumb.getChildren().add(new GarmentArt(line.garment(), line.colorHex(), 80));
         }
-        thumb.setOnMouseClicked(e -> context.router().go(Routes.PRODUCT, line.productId()));
+        thumb.setOnMouseClicked(e -> {
+            if (line.hasDesign()) {
+                context.router().go(Routes.DESIGNER, Routes.DesignerParams.open(line.designId()));
+            } else {
+                context.router().go(Routes.PRODUCT, line.productId());
+            }
+        });
         thumb.setCursor(javafx.scene.Cursor.HAND);
 
         Label name = new Label(line.productName());
         name.getStyleClass().addAll("title-s", "ink");
         name.setWrapText(true);
-        Label meta = new Label("Talla " + line.sizeName() + " · " + line.colorName());
+        Label meta = new Label("Talla " + line.sizeName() + (line.hasDesign() ? "" : " · " + line.colorName()));
         meta.getStyleClass().addAll("body-s", "ink-muted");
         Label sku = new Label(line.sku());
         sku.getStyleClass().addAll("code", "ink-subtle");
         Label unit = new Label(Money.format(line.unitPriceCents()) + " c/u");
         unit.getStyleClass().addAll("body-s", "ink-muted");
         VBox text = new VBox(4, name, meta, sku, unit);
+        if (line.hasDesign()) {
+            Label design = new Label("Diseño: " + (line.designName() == null ? "eliminado" : line.designName()));
+            design.getStyleClass().addAll("body-s", "brand-text");
+            Label surcharge = new Label("Recargo por materiales: " + Money.surcharge(line.surchargeCents())
+                    + (line.surchargeCents() == 0 ? "" : " c/u"));
+            surcharge.getStyleClass().addAll("body-s", "ink-muted");
+            text.getChildren().add(1, new VBox(2, design, surcharge));
+            if (line.designName() != null && line.purchasable()) {
+                com.sportforce3d.component.SfLink edit = new com.sportforce3d.component.SfLink("Editar diseño");
+                edit.setOnAction(e -> context.router().go(Routes.DESIGNER, Routes.DesignerParams.open(line.designId())));
+                text.getChildren().add(edit);
+            }
+        }
         if (!line.purchasable()) {
-            text.getChildren().add(new SfBadge("Ya no está disponible", SfBadge.Kind.DANGER).withIcon(Feather.SLASH));
+            text.getChildren().add(new SfBadge(line.hasDesign() ? "El diseño o el producto ya no está disponible"
+                    : "Ya no está disponible", SfBadge.Kind.DANGER).withIcon(Feather.SLASH));
         } else if (!line.enoughStock()) {
             text.getChildren().add(new SfBadge(line.available() == 0 ? "Agotado"
                     : "Solo quedan " + line.available(), SfBadge.Kind.WARNING).withIcon(Feather.ALERT_TRIANGLE));
@@ -144,7 +169,7 @@ public class CartController {
         VBox panel = new VBox(12);
         panel.getStyleClass().add("sf-panel");
         panel.setPadding(new Insets(24));
-        panel.setPrefWidth(360);
+        panel.setPrefWidth(340);
         panel.setMinWidth(320);
         panel.setMaxHeight(Region.USE_PREF_SIZE);
 

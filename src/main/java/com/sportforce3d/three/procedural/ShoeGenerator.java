@@ -25,19 +25,19 @@ import static com.sportforce3d.three.geom.Curve.smoothstep;
 final class ShoeGenerator {
 
     static final double LENGTH = 0.285;
-    static final double HEEL_BACK = -0.078;
+    static final double HEEL_BACK = -0.072;
     static final double SOLE_BOTTOM = 0.0125;
     static final double SOLE_TOP = 0.027;
     static final double TOE_OUT_DEG = 6;
 
     /** Medio ancho de la capellada a lo largo del pie. */
-    static final Curve WIDTH = Curve.of(0, .000, .012, .020, .035, .030, .09, .037, .22, .040, .42, .044,
+    static final Curve WIDTH = Curve.of(0, .000, .012, .022, .035, .034, .09, .041, .22, .044, .42, .045,
             .58, .048, .71, .0500, .83, .0465, .92, .0375, .965, .026, .99, .013, 1.0, .000);
     /** Alto de la capellada sobre la suela. */
-    static final Curve HEIGHT = Curve.of(0, .072, .03, .082, .10, .089, .20, .088, .30, .083, .42, .070,
+    static final Curve HEIGHT = Curve.of(0, .070, .03, .076, .10, .080, .20, .080, .30, .078, .42, .068,
             .55, .055, .68, .044, .80, .036, .90, .029, 1.0, .018);
     /** Medio ancho de la suela (sobresale un poco). */
-    static final Curve SOLE_WIDTH = Curve.of(-.022, .000, -.010, .020, .010, .033, .06, .039, .22, .044, .42, .048,
+    static final Curve SOLE_WIDTH = Curve.of(-.022, .000, -.010, .022, .010, .036, .06, .043, .22, .048, .42, .049,
             .58, .052, .71, .0545, .83, .0510, .92, .0420, .97, .0300, 1.0, .018, 1.022, .000);
 
     private ShoeGenerator() {
@@ -67,14 +67,22 @@ final class ShoeGenerator {
 
     /** Punto de la sección de la capellada; {@code a} ∈ [0, 2π), arriba en π/2. */
     static Vec3 upperPoint(Foot foot, double t, double a, double extra, double heightCap) {
+        // Alrededor de la abertura del tobillo el tope es plano y más cuadrado: la pierna lo corta en un
+        // óvalo limpio que tapa el collarín. Hacia el empeine vuelve a ser redondeado.
+        double opening = 1 - smoothstep(0.30, 0.46, t);
         double w = WIDTH.at(t) + extra;
-        double h = HEIGHT.at(t) + extra;
+        double h = Math.min(HEIGHT.at(t), OPENING_HEIGHT + 0.004 * (1 - opening)) + extra;
         double c = Math.cos(a);
         double s = Math.sin(a);
-        double x = w * Math.signum(c) * Math.pow(Math.abs(c), 2.0 / 2.4);
-        double y = s >= 0 ? Math.min(h * Math.pow(s, 2.0 / 2.25), heightCap) : -0.003 * Math.abs(s);
+        double topExp = 2.0 / (2.25 + 2.6 * opening);
+        double sideExp = 2.0 / (2.4 + 0.8 * opening);
+        double x = w * Math.signum(c) * Math.pow(Math.abs(c), sideExp);
+        double y = s >= 0 ? Math.min(h * Math.pow(s, topExp), heightCap) : -0.003 * Math.abs(s);
         return foot.at(t, x, SOLE_TOP + y + toeSpring(t));
     }
+
+    /** Altura del tope plano alrededor del tobillo (sobre la suela); el collarín se apoya ahí. */
+    static final double OPENING_HEIGHT = 0.072;
 
     static Map<Zone, MeshData> build(BodyShape b) {
         Map<Zone, List<MeshData>> parts = new EnumMap<>(Zone.class);
@@ -84,7 +92,7 @@ final class ShoeGenerator {
             add(parts, Zone.SHOE_UPPER, tongue(b, foot));
             add(parts, Zone.SHOE_TOE, overlay(b, foot, 0.755, 1.0, 0.0018, 9, UvLayout.SHOE_TOE));
             add(parts, Zone.SHOE_HEEL, overlay(b, foot, 0.0, 0.245, 0.0018, 0.058, UvLayout.SHOE_HEEL));
-            add(parts, Zone.SHOE_HEEL, collar(b, foot));
+            add(parts, Zone.SHOE_UPPER, collar(b, foot, side));
             add(parts, Zone.SHOE_LACES, laces(b, foot));
             add(parts, Zone.SHOE_SOLE, sole(b, foot));
             add(parts, Zone.SHOE_SOLE, studs(b, foot));
@@ -147,31 +155,41 @@ final class ShoeGenerator {
         });
     }
 
-    /** Collarín acolchado alrededor del tobillo. */
-    private static MeshData collar(BodyShape b, Foot foot) {
-        int ring = 72;
-        int section = 14;
-        double tube = 0.0072;
-        Vec3 center = foot.at(0.14, 0, SOLE_TOP + 0.083);
+    /** Altura de diseño donde la pierna entra en la capellada (borde del collarín). */
+    static final double COLLAR_Y = SOLE_TOP + OPENING_HEIGHT;
+
+    /**
+     * Collarín acolchado: un anillo alrededor de la pierna justo donde entra en la capellada. Tapa la línea de
+     * intersección entre la media y la zapatilla, que de otro modo se vería dentada.
+     */
+    private static MeshData collar(BodyShape b, Foot foot, Side side) {
+        Tube leg = b.leg(side);
+        double f = 1.0;
+        Vec3 c0 = leg.center(f);
+        Vec3 center = new Vec3(c0.x(), COLLAR_Y, c0.z());
+        Vec3 sideAxis = leg.sideAxis(f);
+        Vec3 frontAxis = leg.frontAxis(f);
+        double rx = leg.radiusSide(f) + 0.0085;
+        double rz = leg.radiusFront(f) + 0.0085;
+        int ring = 80;
+        int section = 16;
+        double tube = 0.0068;
         GridSurface g = new GridSurface(section + 1, ring, true);
         for (int r = 0; r <= section; r++) {
             double s = 2 * Math.PI * r / section;
             for (int c = 0; c < ring; c++) {
                 double a = 2 * Math.PI * c / ring;
-                // Óvalo inclinado: más alto atrás, más bajo hacia el empeine.
-                double rx = 0.039;
-                double rz = 0.052;
-                Vec3 radial = foot.lateral().mul(Math.sin(a) * rx).add(foot.forward().mul(Math.cos(a) * rz));
-                Vec3 ringPoint = center.add(radial).add(new Vec3(0, 0.010 * -Math.cos(a), 0));
-                Vec3 out = radial.normalize();
-                Vec3 p = ringPoint.addScaled(out, Math.cos(s) * tube).add(new Vec3(0, Math.sin(s) * tube * 1.15, 0));
+                Vec3 radial = sideAxis.mul(Math.sin(a) * rx).add(frontAxis.mul(Math.cos(a) * rz));
+                Vec3 ringPoint = center.add(radial);
+                Vec3 out = new Vec3(radial.x(), 0, radial.z()).normalize();
+                Vec3 p = ringPoint.addScaled(out, Math.cos(s) * tube).add(new Vec3(0, Math.sin(s) * tube * 0.9, 0));
                 g.set(r, c, b.out(p), p.sub(ringPoint));
             }
         }
-        UvRect rect = UvLayout.SHOE_HEEL;
+        UvRect rect = UvLayout.SHOE_UPPER;
         return g.build(1, (r, c) -> 0, (r, c, island, out) -> {
-            out[0] = rect.u((double) c / ring);
-            out[1] = rect.v((double) r / section);
+            out[0] = rect.u(0.10 + 0.20 * c / ring);
+            out[1] = rect.v(0.90 + 0.10 * r / section);
         });
     }
 
@@ -207,9 +225,9 @@ final class ShoeGenerator {
             List<Vec3> path = new ArrayList<>();
             int samples = 9;
             for (int k = 0; k < samples; k++) {
-                double a = Math.PI / 2 + 0.78 * (2.0 * k / (samples - 1) - 1);
+                double a = Math.PI / 2 + 0.40 * (2.0 * k / (samples - 1) - 1);
                 double tt = ts[i] + skew * (2.0 * k / (samples - 1) - 1);
-                path.add(upperPoint(foot, tt, a, 0.0032, 1));
+                path.add(upperPoint(foot, tt, a, 0.0022, 1));
             }
             Tube lace = new Tube(path, Curve.of(0, .0024, 1, .0024), Curve.of(0, .0031, 1, .0031),
                     Curve.of(0, 0, 1, 0), new Vec3(0, 1, 0));
@@ -221,8 +239,11 @@ final class ShoeGenerator {
                 double endTaper = 1 - 0.6 * Math.pow(Math.abs(2 * f - 1), 8);
                 for (int c = 0; c < cols; c++) {
                     double ang = 2 * Math.PI * c / cols;
-                    Vec3 p = lace.center(f).addScaled(lace.sideAxis(f), 0.0031 * endTaper * Math.sin(ang))
-                            .addScaled(lace.frontAxis(f), 0.0023 * endTaper * Math.cos(ang));
+                    // Cordón plano: ancho sobre la capellada, delgado hacia arriba.
+                    Vec3 up = lace.sideAxis(f);
+                    Vec3 across = lace.frontAxis(f);
+                    Vec3 p = lace.center(f).addScaled(across, 0.0034 * endTaper * Math.sin(ang))
+                            .addScaled(up, 0.0016 * endTaper * Math.cos(ang));
                     g.set(r, c, b.out(p), p.sub(lace.center(f)));
                 }
             }

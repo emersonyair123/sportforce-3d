@@ -30,13 +30,16 @@ public class CartRepository {
                    p.base_price_cents + v.price_delta_cents AS unit_price_cents,
                    ci.surcharge_cents, ci.quantity,
                    max(COALESCE(i.quantity, 0) - COALESCE(i.reserved, 0), 0) AS available,
-                   (p.active = 1 AND p.deleted_at IS NULL AND v.active = 1) AS purchasable
+                   (p.active = 1 AND p.deleted_at IS NULL AND v.active = 1
+                    AND (ci.design_id IS NULL OR (d.id IS NOT NULL AND d.deleted_at IS NULL))) AS purchasable,
+                   ci.design_id, d.name AS design_name, d.thumbnail_front AS design_thumbnail
             FROM carts c
             JOIN cart_items ci ON ci.cart_id = c.id
             JOIN product_variants v ON v.id = ci.variant_id
             JOIN products p ON p.id = v.product_id
             JOIN sizes s ON s.id = v.size_id
             LEFT JOIN inventory i ON i.variant_id = v.id
+            LEFT JOIN designs d ON d.id = ci.design_id
             WHERE c.user_id = ?
             ORDER BY ci.created_at, ci.id
             """;
@@ -62,7 +65,9 @@ public class CartRepository {
                             Garment.valueOf(rs.getString("garment_type")), rs.getString("size_name"),
                             rs.getString("color_name"), rs.getString("color_hex"), rs.getString("image_path"),
                             rs.getLong("unit_price_cents"), rs.getLong("surcharge_cents"), rs.getInt("quantity"),
-                            rs.getInt("available"), rs.getInt("purchasable") == 1));
+                            rs.getInt("available"), rs.getInt("purchasable") == 1,
+                            Jdbc.getLongOrNull(rs, "design_id"), rs.getString("design_name"),
+                            rs.getString("design_thumbnail")));
                 }
                 return lines;
             }
@@ -95,6 +100,54 @@ public class CartRepository {
                 try (ResultSet rs = ps.executeQuery()) {
                     return rs.next() ? Optional.of(new ExistingItem(rs.getLong(1), rs.getInt(2))) : Optional.empty();
                 }
+            }
+        });
+    }
+
+    /** Línea de la misma variante con el mismo diseño (se suma la cantidad). */
+    public Optional<ExistingItem> findDesignItem(long userId, long variantId, long designId) {
+        return db.withConnection(c -> {
+            try (PreparedStatement ps = c.prepareStatement("""
+                    SELECT ci.id, ci.quantity FROM carts c JOIN cart_items ci ON ci.cart_id = c.id
+                    WHERE c.user_id = ? AND ci.variant_id = ? AND ci.design_id = ?
+                    """)) {
+                ps.setLong(1, userId);
+                ps.setLong(2, variantId);
+                ps.setLong(3, designId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    return rs.next() ? Optional.of(new ExistingItem(rs.getLong(1), rs.getInt(2))) : Optional.empty();
+                }
+            }
+        });
+    }
+
+    public void addDesignItem(long userId, long variantId, long designId, int quantity, long unitPriceCents,
+                              long surchargeCents) {
+        db.inTransaction(c -> {
+            long cartId = ensureCart(c, userId);
+            try (PreparedStatement ps = c.prepareStatement("""
+                    INSERT INTO cart_items (cart_id, variant_id, design_id, quantity, unit_price_cents, surcharge_cents)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """)) {
+                Jdbc.bind(ps, List.of(cartId, variantId, designId, quantity, unitPriceCents, surchargeCents));
+                ps.executeUpdate();
+            }
+            touch(c, cartId);
+            return null;
+        });
+    }
+
+    /** Recargo por unidad de una línea con diseño (se recalcula cuando cambia el diseño). */
+    public void updateSurcharge(long userId, long itemId, long surchargeCents) {
+        db.withConnection(c -> {
+            try (PreparedStatement ps = c.prepareStatement("""
+                    UPDATE cart_items SET surcharge_cents = ?
+                    WHERE id = ? AND cart_id IN (SELECT id FROM carts WHERE user_id = ?)
+                    """)) {
+                ps.setLong(1, surchargeCents);
+                ps.setLong(2, itemId);
+                ps.setLong(3, userId);
+                return ps.executeUpdate();
             }
         });
     }

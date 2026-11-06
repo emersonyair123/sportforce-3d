@@ -54,12 +54,12 @@ public class AdminInventoryController {
         table.setPlaceholder(new EmptyState(Feather.ARCHIVE, "Sin variantes", "No hay variantes que coincidan con la búsqueda."));
         table.setFixedCellSize(60);
         table.getColumns().setAll(List.of(
-                column("PRODUCTO", 300, this::productCell),
-                column("TALLA", 90, r -> label(r.sizeName(), "body-s")),
-                column("COLOR", 170, this::colorCell),
+                column("PRODUCTO", 260, this::productCell),
+                column("TALLA", 70, r -> label(r.sizeName(), "body-s")),
+                column("COLOR", 150, this::colorCell),
                 column("DISPONIBLE", 160, this::availableCell),
-                column("RESERVADO", 100, r -> label(String.valueOf(r.reserved()), "body-s")),
-                column("STOCK · AVISO", 300, this::editCell)));
+                column("RESERVADO", 90, r -> label(String.valueOf(r.reserved()), "body-s")),
+                column("STOCK · AVISO", 250, this::editCell)));
         load();
     }
 

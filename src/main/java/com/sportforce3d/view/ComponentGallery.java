@@ -4,7 +4,12 @@ import com.sportforce3d.app.Theme;
 import com.sportforce3d.component.AppRoot;
 import com.sportforce3d.component.ColorSwatchGroup;
 import com.sportforce3d.component.ConfirmDialog;
+import com.sportforce3d.component.ChoiceCards;
 import com.sportforce3d.component.EmptyState;
+import com.sportforce3d.component.FilterChip;
+import com.sportforce3d.component.GarmentArt;
+import com.sportforce3d.component.OrderStatusBadge;
+import com.sportforce3d.component.PageNav;
 import com.sportforce3d.component.GarmentPicker;
 import com.sportforce3d.component.Logo;
 import com.sportforce3d.component.MaterialPicker;
@@ -70,6 +75,9 @@ public final class ComponentGallery {
                 section("SfButton", buttons(root)),
                 section("SfBadge", badges()),
                 section("ProductCard", productCards()),
+                section("GarmentArt (sin foto)", garmentArt()),
+                section("FilterChip y PageNav", filtersAndPaging(root)),
+                section("ChoiceCards y OrderStatusBadge", choiceCards()),
                 section("SfTextField", textFields()),
                 section("ColorSwatch", new ColorSwatchGroup()),
                 section("GarmentPicker", garmentPicker()),
@@ -170,11 +178,54 @@ public final class ComponentGallery {
     private static Node productCards() {
         return row(
                 new ProductCard(new ProductSummary(1, "SF-CAM-001", "Camiseta Pro Dry-Fit", "Camisetas deportivas",
-                        Garment.JERSEY, 7990, null, true, true, 40), null),
+                        Garment.JERSEY, 7990, null, true, true, 40, "#1F5FFF", 6, null, null, null), null),
                 new ProductCard(new ProductSummary(2, "SF-UFU-002", "Uniforme Fútbol Clásico Franjas", "Uniformes de fútbol",
-                        Garment.KIT, 12990, 15990L, false, true, 12), null),
+                        Garment.KIT, 12990, 15990L, false, true, 12, "#D7192A", 6, null, null, null), null),
                 new ProductCard(new ProductSummary(3, "SF-ZAP-003", "Zapatillas Running Pulse", "Zapatillas",
-                        Garment.SHOES, 27990, null, true, false, 0), null));
+                        Garment.SHOES, 27990, null, true, false, 0, "#1F5FFF", 9, null, null, null), null));
+    }
+
+    private static Node garmentArt() {
+        FlowPane pane = row();
+        String[] colors = {"#1F5FFF", "#D7192A", "#F2F5F8", "#0B0E13", "#FFD400", "#0E7C3A", "#7B2CBF"};
+        Garment[] garments = {Garment.JERSEY, Garment.KIT, Garment.SHORTS, Garment.SOCKS, Garment.SHOES,
+                Garment.HOODIE, Garment.ACCESSORY};
+        for (int i = 0; i < garments.length; i++) {
+            javafx.scene.layout.StackPane tile = new javafx.scene.layout.StackPane(new GarmentArt(garments[i], colors[i], 110));
+            tile.getStyleClass().add("sf-product-media");
+            tile.setPrefSize(120, 150);
+            Label caption = label(garments[i].label());
+            pane.getChildren().add(new VBox(6, tile, caption));
+        }
+        return pane;
+    }
+
+    private static Node filtersAndPaging(Node anyNode) {
+        javafx.scene.control.ToggleGroup group = new javafx.scene.control.ToggleGroup();
+        FlowPane chips = row();
+        for (String text : new String[]{"Todas", "Uniformes de fútbol", "Shorts", "Zapatillas"}) {
+            FilterChip chip = new FilterChip(text);
+            chip.setToggleGroup(group);
+            chips.getChildren().add(chip);
+        }
+        ((FilterChip) chips.getChildren().get(0)).setSelected(true);
+        PageNav nav = new PageNav(page -> Toast.info(anyNode, "Ir a la página " + page));
+        nav.show(new com.sportforce3d.model.Page<>(java.util.List.of(), 2, 12, 50));
+        return new VBox(16, chips, nav);
+    }
+
+    private static Node choiceCards() {
+        ChoiceCards<com.sportforce3d.model.PaymentMethod> cards = new ChoiceCards<>();
+        for (com.sportforce3d.model.PaymentMethod m : com.sportforce3d.model.PaymentMethod.values()) {
+            cards.add(m, m.label(), m.available() ? "Verificación manual por un administrador." : null, null, m.available());
+        }
+        cards.setSelected(com.sportforce3d.model.PaymentMethod.YAPE);
+        cards.setMaxWidth(520);
+        FlowPane badges = row();
+        for (OrderStatus status : OrderStatus.values()) {
+            badges.getChildren().add(OrderStatusBadge.of(status));
+        }
+        return new VBox(16, cards, badges);
     }
 
     private static Node textFields() {
@@ -196,6 +247,8 @@ public final class ComponentGallery {
 
     private static Node garmentPicker() {
         GarmentPicker picker = new GarmentPicker();
+        picker.setPrefWrapLength(560);
+        picker.setMaxWidth(Region.USE_PREF_SIZE);
         Label selected = label("");
         selected.textProperty().bind(javafx.beans.binding.Bindings.createStringBinding(
                 () -> "Elegida: " + picker.getSelected().label(), picker.selectedProperty()));

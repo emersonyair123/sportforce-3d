@@ -50,6 +50,66 @@ public record ClothShading(int size, float[] shade, float[] height, int[] normal
         return new ClothShading(size, shade, new float[size * size], n);
     }
 
+    /**
+     * Copia con el normal map horneado suavizado (dos pasadas de caja separable de {@code radius} px, como una
+     * gaussiana): con una tela lisa y brillante los escalones del horneado (aristas de los pliegues a 1024 px) se ven
+     * dentados. Sin normal map devuelve el mismo sombreado.
+     */
+    public ClothShading withSmoothedNormals(int radius) {
+        if (normals == null || radius <= 0) {
+            return this;
+        }
+        int n = size * size;
+        float[][] c = new float[3][n];
+        for (int i = 0; i < n; i++) {
+            int p = normals[i];
+            c[0][i] = ((p >> 16) & 0xFF) / 255f * 2 - 1;
+            c[1][i] = ((p >> 8) & 0xFF) / 255f * 2 - 1;
+            c[2][i] = (p & 0xFF) / 255f * 2 - 1;
+        }
+        float[] tmp = new float[n];
+        for (float[] ch : c) {
+            for (int pass = 0; pass < 2; pass++) {
+                boxBlur(ch, tmp, radius, true);
+                boxBlur(tmp, ch, radius, false);
+            }
+        }
+        int[] out = new int[n];
+        for (int i = 0; i < n; i++) {
+            double x = c[0][i];
+            double y = c[1][i];
+            double z = c[2][i];
+            double len = Math.max(1e-6, Math.sqrt(x * x + y * y + z * z));
+            out[i] = 0xFF000000 | (channel(x / len) << 16) | (channel(y / len) << 8) | channel(z / len);
+        }
+        return new ClothShading(size, shade, height, out);
+    }
+
+    private static int channel(double v) {
+        return (int) Math.max(0, Math.min(255, Math.round((v * 0.5 + 0.5) * 255)));
+    }
+
+    /** Media móvil de 2r+1 píxeles en filas ({@code rows}) o columnas, con el borde repetido. */
+    private void boxBlur(float[] src, float[] dst, int r, boolean rows) {
+        float k = 1f / (2 * r + 1);
+        for (int line = 0; line < size; line++) {
+            float acc = 0;
+            for (int t = -r; t <= r; t++) {
+                acc += src[at(line, Math.max(0, Math.min(size - 1, t)), rows)];
+            }
+            for (int t = 0; t < size; t++) {
+                dst[at(line, t, rows)] = acc * k;
+                int add = Math.min(size - 1, t + r + 1);
+                int drop = Math.max(0, t - r);
+                acc += src[at(line, add, rows)] - src[at(line, drop, rows)];
+            }
+        }
+    }
+
+    private int at(int line, int t, boolean rows) {
+        return rows ? line * size + t : t * size + line;
+    }
+
     /** Normal horneada en (u, v) como (x, y, z) en [-1, 1] con interpolación bilineal; null si no hay. */
     public double[] normalAt(double u, double v) {
         if (normals == null) {

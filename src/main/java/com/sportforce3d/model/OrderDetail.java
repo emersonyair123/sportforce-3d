@@ -7,11 +7,21 @@ public record OrderDetail(long id, String orderNumber, long userId, String custo
                           long subtotalCents, long surchargeCents, long shippingCents, long totalCents,
                           String shipRecipient, String shipPhone, String shipDepartment, String shipProvince,
                           String shipDistrict, String shipLine1, String shipReference, String notes, String placedAt,
-                          List<OrderItem> items, List<StatusChange> history) {
+                          List<OrderItem> items, List<StatusChange> history, List<Payment> payments) {
 
     public OrderDetail {
         items = List.copyOf(items);
         history = List.copyOf(history);
+        payments = List.copyOf(payments);
+    }
+
+    /** Último intento de pago (el vigente), o null. */
+    public Payment currentPayment() {
+        return payments.isEmpty() ? null : payments.get(payments.size() - 1);
+    }
+
+    public boolean hasDesigns() {
+        return items.stream().anyMatch(OrderItem::hasDesign);
     }
 
     public String shippingOneLine() {

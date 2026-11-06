@@ -256,8 +256,9 @@ abstract class BodyFrame {
     // ================================================================ Malla medida (MakeHuman)
 
     /** Mide una persona en pose A sobre los vértices de su piel (espacio del modelo). */
-    static BodyFrame measure(double[] v, double floor, double height) {
-        return new Measured(v, floor, height);
+    static BodyFrame measure(double[] v, int[] tri, double floor, double height) {
+        Slices s = new Slices(v, tri);
+        return new Measured(s, floor, height, s.armpit(floor, height));
     }
 
     private static final class Measured extends BodyFrame {
@@ -268,14 +269,8 @@ abstract class BodyFrame {
         private final Vec3[] armOrigin = new Vec3[2];
         private final Vec3[] armDir = new Vec3[2];
 
-        Measured(double[] v, double floor, double h) {
-            this(new Slices(v), floor, h);
-        }
-
-        private Measured(Slices s, double floor, double h) {
-            super(floor, lowestCenter(s.v, h + floor), s.armpit(floor, h), Double.NaN, floor + h);
-            // neck depende de la axila medida: se recalcula abajo con el valor final.
-            this.neckMeasured = neckBase(s.v, armpit, top);
+        Measured(Slices s, double floor, double h, double armpit) {
+            super(floor, lowestCenter(s.v, h + floor), armpit, neckBase(s.v, armpit, floor + h), floor + h);
             int n = (int) Math.ceil(h / STEP) + 2;
             torsoZ = new double[n];
             for (int i = 0; i < n; i++) {
@@ -301,50 +296,49 @@ abstract class BodyFrame {
             }
         }
 
-        private final double neckMeasured;
-
         private void fitArm(Slices s, int k, int sign, double h) {
-            // Brazo (sin el torso) entre la axila y el codo: componente principal = dirección del brazo.
-            double y0 = armpit - 0.11 * h;
-            double y1 = armpit - 0.015 * h;
-            double[] sum = new double[3];
-            int count = 0;
-            double[][] pts = s.armVertices(sign, y0, y1);
-            for (double[] p : pts) {
-                sum[0] += p[0];
-                sum[1] += p[1];
-                sum[2] += p[2];
-                count++;
+            // Brazo (sin el torso) entre la axila y el codo. La sección horizontal de un brazo inclinado es una
+            // elipse centrada en su eje: se ajusta una recta x(y), z(y) a los centros de esas secciones.
+            int n = 0;
+            double sy = 0;
+            double syy = 0;
+            double sx = 0;
+            double sxy = 0;
+            double sz = 0;
+            double szy = 0;
+            for (double y = armpit - 0.11 * h; y < armpit - 0.015 * h; y += 0.006) {
+                double w = s.torsoHalfWidth(y, sign);
+                if (Double.isNaN(w)) {
+                    continue;
+                }
+                double[] box = sign > 0 ? s.contour(y, w + 0.004, 10) : s.contour(y, -10, -(w + 0.004));
+                if (box == null) {
+                    continue;
+                }
+                double cx = (box[0] + box[1]) / 2;
+                double cz = (box[2] + box[3]) / 2;
+                n++;
+                sy += y;
+                syy += y * y;
+                sx += cx;
+                sxy += cx * y;
+                sz += cz;
+                szy += cz * y;
             }
-            if (count < 20) {
+            double det = n * syy - sy * sy;
+            if (n < 4 || Math.abs(det) < 1e-12) {
                 // Sin brazo separado del torso: dirección del maniquí (casi vertical, un poco hacia afuera).
                 armOrigin[k] = new Vec3(sign * 0.11 * h, armpit, 0);
                 armDir[k] = new Vec3(sign * 0.25, -1, 0).normalize();
                 return;
             }
-            Vec3 m = new Vec3(sum[0] / count, sum[1] / count, sum[2] / count);
-            double[][] cov = new double[3][3];
-            for (double[] p : pts) {
-                double[] d = {p[0] - m.x(), p[1] - m.y(), p[2] - m.z()};
-                for (int a = 0; a < 3; a++) {
-                    for (int b = 0; b < 3; b++) {
-                        cov[a][b] += d[a] * d[b];
-                    }
-                }
-            }
-            Vec3 dir = new Vec3(sign * 0.6, -0.8, 0);
-            for (int it = 0; it < 60; it++) {
-                dir = new Vec3(cov[0][0] * dir.x() + cov[0][1] * dir.y() + cov[0][2] * dir.z(),
-                        cov[1][0] * dir.x() + cov[1][1] * dir.y() + cov[1][2] * dir.z(),
-                        cov[2][0] * dir.x() + cov[2][1] * dir.y() + cov[2][2] * dir.z()).normalize();
-            }
-            if (dir.y() > 0) {
-                dir = dir.mul(-1);
-            }
-            // Origen: donde el eje cruza la altura de la axila.
-            double t = (armpit - m.y()) / dir.y();
-            armOrigin[k] = m.addScaled(dir, t);
-            armDir[k] = dir;
+            double bx = (n * sxy - sx * sy) / det;
+            double ax = (sx - bx * sy) / n;
+            double bz = (n * szy - sz * sy) / det;
+            double az = (sz - bz * sy) / n;
+            // Origen: donde el eje cruza la altura de la axila; dirección hacia la mano (y decreciente).
+            armOrigin[k] = new Vec3(ax + bx * armpit, armpit, az + bz * armpit);
+            armDir[k] = new Vec3(-bx, -1, -bz).normalize();
         }
 
         @Override
@@ -376,10 +370,6 @@ abstract class BodyFrame {
             return p.sub(armOrigin[k]).dot(armDir[k]);
         }
 
-        double neckMeasured() {
-            return neckMeasured;
-        }
-
         private double sample(double[] table, double y) {
             double f = (y - floor) / STEP;
             int i = (int) Math.floor(f);
@@ -394,56 +384,18 @@ abstract class BodyFrame {
         }
     }
 
-    /** Copia del cuerpo medido con el cuello medido (el constructor no lo puede pasar a super). */
-    static BodyFrame measureWithNeck(double[] v, double floor, double height) {
-        Measured m = new Measured(v, floor, height);
-        return new Delegate(m, m.neckMeasured());
-    }
-
-    private static final class Delegate extends BodyFrame {
-        private final BodyFrame d;
-
-        Delegate(BodyFrame d, double neck) {
-            super(d.floor, d.crotch, d.armpit, neck, d.top);
-            this.d = d;
-        }
-
-        @Override
-        Vec3 torsoCenter(double y) {
-            return d.torsoCenter(y);
-        }
-
-        @Override
-        Vec3 legCenter(int sign, double y) {
-            return d.legCenter(sign, y);
-        }
-
-        @Override
-        Vec3 armPoint(int sign, double s) {
-            return d.armPoint(sign, s);
-        }
-
-        @Override
-        Vec3 armDirection(int sign, double s) {
-            return d.armDirection(sign, s);
-        }
-
-        @Override
-        double armProject(int sign, Vec3 p) {
-            return d.armProject(sign, p);
-        }
-    }
-
     // ================================================================ Mediciones
 
     /** Vértices ordenados por altura para consultar franjas horizontales. */
     private static final class Slices {
         final double[] v;
+        final int[] tri;
         final int[] order;
         final double[] ys;
 
-        Slices(double[] v) {
+        Slices(double[] v, int[] tri) {
             this.v = v;
+            this.tri = tri;
             int n = v.length / 3;
             Integer[] idx = new Integer[n];
             for (int i = 0; i < n; i++) {
@@ -522,31 +474,88 @@ abstract class BodyFrame {
         }
 
         /**
-         * Medio ancho del torso en la franja: el último |x| antes del primer hueco de más de 1 cm entre el torso y
-         * el brazo; NaN si no hay hueco (el brazo está unido o no hay brazo a esa altura).
+         * Medio ancho del torso a la altura y: el contorno de la malla en ese plano (un segmento por triángulo que
+         * lo cruza) se une en tramos de |x|; si el primero (el torso) termina y hay otro más afuera (el brazo)
+         * separado por más de 8 mm, devuelve dónde termina el torso. NaN si el brazo está unido o no hay brazo.
          */
         double torsoHalfWidth(double y, int sign) {
-            double half = 0.004;
-            int from = lower(y - half);
-            int to = from;
-            while (to < ys.length && ys[to] <= y + half) {
-                to++;
-            }
-            double[] u = new double[to - from];
+            double[] start = new double[64];
+            double[] end = new double[64];
             int n = 0;
-            for (int i = from; i < to; i++) {
-                double x = v[order[i] * 3] * sign;
-                if (x > 0.02) {
-                    u[n++] = x;
+            double[] xs = new double[3];
+            for (int t = 0; t < tri.length; t += 3) {
+                int a = tri[t] * 3;
+                int b = tri[t + 1] * 3;
+                int c = tri[t + 2] * 3;
+                double ya = v[a + 1];
+                double yb = v[b + 1];
+                double yc = v[c + 1];
+                if (Math.min(ya, Math.min(yb, yc)) > y || Math.max(ya, Math.max(yb, yc)) < y) {
+                    continue;
                 }
-            }
-            Arrays.sort(u, 0, n);
-            for (int i = 1; i < n; i++) {
-                if (u[i] - u[i - 1] > 0.01 && u[i - 1] > 0.05 && u[n - 1] - u[i - 1] > 0.03) {
-                    return u[i - 1];
+                int k = 0;
+                k = cross(a, b, y, xs, k);
+                k = cross(b, c, y, xs, k);
+                k = cross(c, a, y, xs, k);
+                if (k < 2) {
+                    continue;
                 }
+                double u0 = Math.min(xs[0], xs[1]) * sign;
+                double u1 = Math.max(xs[0], xs[1]) * sign;
+                double lo = Math.min(u0, u1);
+                double hi = Math.max(u0, u1);
+                if (hi <= 0) {
+                    continue;
+                }
+                if (n == start.length) {
+                    start = Arrays.copyOf(start, n * 2);
+                    end = Arrays.copyOf(end, n * 2);
+                }
+                start[n] = Math.max(0, lo);
+                end[n] = hi;
+                n++;
             }
-            return Double.NaN;
+            if (n == 0) {
+                return Double.NaN;
+            }
+            Integer[] order = new Integer[n];
+            for (int i = 0; i < n; i++) {
+                order[i] = i;
+            }
+            final double[] st = start;
+            Arrays.sort(order, (p, q) -> Double.compare(st[p], st[q]));
+            double torsoEnd = Double.NaN;
+            double curEnd = -1;
+            double lastEnd = -1;
+            for (int i = 0; i < n; i++) {
+                double s0 = start[order[i]];
+                double e0 = end[order[i]];
+                if (curEnd < 0) {
+                    curEnd = e0;
+                } else if (s0 > curEnd + 0.008 && Double.isNaN(torsoEnd)) {
+                    torsoEnd = curEnd;
+                    curEnd = e0;
+                } else {
+                    curEnd = Math.max(curEnd, e0);
+                }
+                lastEnd = Math.max(lastEnd, e0);
+            }
+            if (Double.isNaN(torsoEnd) || torsoEnd < 0.05 || lastEnd - torsoEnd < 0.03) {
+                return Double.NaN;
+            }
+            return torsoEnd;
+        }
+
+        /** Agrega la x donde la arista a–b cruza la altura y. */
+        private int cross(int a, int b, double y, double[] xs, int k) {
+            double ya = v[a + 1];
+            double yb = v[b + 1];
+            if (k >= 2 || (ya - y) * (yb - y) > 0 || ya == yb) {
+                return k;
+            }
+            double t = (y - ya) / (yb - ya);
+            xs[k] = v[a] + t * (v[b] - v[a]);
+            return k + 1;
         }
 
         /**
@@ -572,25 +581,6 @@ abstract class BodyFrame {
                 }
             }
             return floor + 0.73 * h;
-        }
-
-        /** Vértices del brazo (más allá del hueco con el torso) entre y0 e y1. */
-        double[][] armVertices(int sign, double y0, double y1) {
-            java.util.List<double[]> out = new java.util.ArrayList<>();
-            double step = 0.008;
-            for (double y = y0; y < y1; y += step) {
-                double w = torsoHalfWidth(y + step / 2, sign);
-                if (Double.isNaN(w)) {
-                    continue;
-                }
-                for (int i = lower(y); i < ys.length && ys[i] < y + step; i++) {
-                    int p = order[i] * 3;
-                    if (v[p] * sign > w + 0.004) {
-                        out.add(new double[]{v[p], v[p + 1], v[p + 2]});
-                    }
-                }
-            }
-            return out.toArray(new double[0][]);
         }
     }
 

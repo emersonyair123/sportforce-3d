@@ -59,7 +59,9 @@ import java.util.Set;
 public class AdminProductEditController implements Router.Routable {
 
     /** Anchos de las columnas del editor de variantes (cabecera y filas). */
-    private static final double[] COLS = {110, 150, 110, 170, 90, 80, 70, 70, 40};
+    private static final double[] COLS = {100, 140, 104, 160, 80, 70, 64, 56, 40};
+    /** Orden de las zonas en "Foto realista". */
+    private static final List<String> ZONE_ORDER = List.of("camiseta", "principal", "short", "paneles", "medias");
 
     private final AppContext context;
     private final AdminProductEditViewModel viewModel;
@@ -130,17 +132,17 @@ public class AdminProductEditController implements Router.Routable {
 
     private void buildForm() {
         category.setItems(FXCollections.observableArrayList(reference.categories()));
-        category.setConverter(converter(Category::name));
+        category.setConverter(converter(Category::name, ""));
         category.setMaxWidth(Double.MAX_VALUE);
         category.setPromptText("Elige…");
         List<Sport> sports = new ArrayList<>();
         sports.add(null);
         sports.addAll(reference.sports());
         sport.setItems(FXCollections.observableArrayList(sports));
-        sport.setConverter(converter(s -> s == null ? "Sin deporte" : s.name()));
+        sport.setConverter(converter(Sport::name, "Sin deporte"));
         sport.setMaxWidth(Double.MAX_VALUE);
         garment.setItems(FXCollections.observableArrayList(Garment.values()));
-        garment.setConverter(converter(Garment::label));
+        garment.setConverter(converter(Garment::label, ""));
         garment.setMaxWidth(Double.MAX_VALUE);
         garment.valueProperty().addListener((obs, old, g) -> {
             refreshCustomizable();
@@ -200,7 +202,7 @@ public class AdminProductEditController implements Router.Routable {
                 + "la tienda muestra esta foto. Los cambios se aplican al guardar."), lookBody, lookError);
         lookCard.getChildren().setAll(lookBox);
 
-        VBox images = card("Imágenes", note("PNG o JPG de hasta 5 MB. La primera es la portada. Sin imágenes, la tienda muestra la ilustración de la prenda."),
+        VBox images = card("Imágenes", note("PNG o JPG de hasta 5 MB. La primera es la portada. Sin imágenes, la tienda muestra la foto realista (o, si no tiene, la ilustración de la prenda)."),
                 imagesPane);
 
         saveButton.withIcon(Feather.SAVE);
@@ -261,7 +263,13 @@ public class AdminProductEditController implements Router.Routable {
         if (!has) {
             return;
         }
-        for (Map.Entry<String, String> e : look.zoneColors().entrySet()) {
+        // Orden fijo (el mapa guardado no conserva el orden): prenda principal primero.
+        List<Map.Entry<String, String>> entries = new ArrayList<>(look.zoneColors().entrySet());
+        entries.sort(java.util.Comparator.comparingInt(e -> {
+            int i = ZONE_ORDER.indexOf(e.getKey());
+            return i < 0 ? ZONE_ORDER.size() : i;
+        }));
+        for (Map.Entry<String, String> e : entries) {
             ColorSwatchGroup group = new ColorSwatchGroup();
             group.setValue(Color.web(e.getValue()));
             group.valueProperty().addListener((obs, old, c) -> paintLook(look));
@@ -389,7 +397,7 @@ public class AdminProductEditController implements Router.Routable {
             super(8);
             this.id = v == null ? null : v.id();
             setAlignment(Pos.CENTER_LEFT);
-            size.setConverter(converter(Size::name));
+            size.setConverter(converter(Size::name, "Elige"));
             refreshSizes();
             size.setValue(v == null ? null : reference.sizes().stream().filter(s -> s.id() == v.sizeId()).findFirst().orElse(null));
             colorName.setText(v != null ? v.colorName() : template != null ? template.colorName.getText() : "Azul eléctrico");
@@ -456,14 +464,8 @@ public class AdminProductEditController implements Router.Routable {
         }
 
         void refreshSizes() {
-            String group = switch (garment.getValue() == null ? Garment.JERSEY : garment.getValue()) {
-                case SHOES -> "CALZADO";
-                case SOCKS -> "MEDIAS";
-                case ACCESSORY -> "UNICA";
-                default -> "ROPA";
-            };
             Size current = size.getValue();
-            List<Size> options = reference.sizes().stream().filter(s -> s.group().equals(group)).toList();
+            List<Size> options = sizeOptions();
             size.setItems(FXCollections.observableArrayList(options));
             if (current != null && options.contains(current)) {
                 size.setValue(current);
@@ -516,11 +518,21 @@ public class AdminProductEditController implements Router.Routable {
         variantRows.getChildren().add(row);
     }
 
+    /** Tallas que corresponden al tipo de prenda elegido. */
+    private List<Size> sizeOptions() {
+        String group = switch (garment.getValue() == null ? Garment.JERSEY : garment.getValue()) {
+            case SHOES -> "CALZADO";
+            case SOCKS -> "MEDIAS";
+            case ACCESSORY -> "UNICA";
+            default -> "ROPA";
+        };
+        return reference.sizes().stream().filter(s -> s.group().equals(group)).toList();
+    }
+
     private void addAllSizes() {
         VariantRow template = rows.isEmpty() ? null : rows.get(rows.size() - 1);
         String hex = template == null ? "#1F5FFF" : template.colorHex.getText().trim().toUpperCase();
-        VariantRow probe = new VariantRow(null, template);
-        for (Size s : probe.size.getItems()) {
+        for (Size s : sizeOptions()) {
             boolean exists = rows.stream().anyMatch(r -> Objects.equals(r.size.getValue(), s)
                     && r.colorHex.getText().trim().equalsIgnoreCase(hex));
             if (!exists) {
@@ -589,8 +601,8 @@ public class AdminProductEditController implements Router.Routable {
         });
         return new ProductForm(current == null ? null : current.id(), category.getValue().id(),
                 sport.getValue() == null ? null : sport.getValue().id(), sku.getText().trim().toUpperCase(),
-                name.getText() == null ? "" : name.getText().trim(), Texts.searchKey(description.getText()).isEmpty()
-                ? null : description.getText().trim(), garment.getValue(), base, compare, customizable.isSelected(),
+                name.getText() == null ? "" : name.getText().trim(),
+                description.getText() == null || description.getText().isBlank() ? null : description.getText().trim(), garment.getValue(), base, compare, customizable.isSelected(),
                 isNew.isSelected(), featured.isSelected(), active.isSelected(), materials, variants);
     }
 
@@ -692,11 +704,11 @@ public class AdminProductEditController implements Router.Routable {
         return label;
     }
 
-    private static <T> StringConverter<T> converter(java.util.function.Function<T, String> toText) {
+    private static <T> StringConverter<T> converter(java.util.function.Function<T, String> toText, String nullText) {
         return new StringConverter<>() {
             @Override
             public String toString(T value) {
-                return toText.apply(value);
+                return value == null ? nullText : toText.apply(value);
             }
 
             @Override

@@ -130,6 +130,9 @@ public class DesignService {
     /** Sube un logo (PNG o SVG, máx. 5 MB). El cliente debe declarar que tiene derecho a usarlo. */
     public DesignAsset uploadLogo(Path file, boolean rightsDeclared) {
         User me = session.requireUser();
+        if (file == null || !Files.isRegularFile(file)) {
+            throw ValidationException.of("file", "No se encontró el archivo.");
+        }
         if (!rightsDeclared) {
             throw ValidationException.of("rights", "Debes declarar que tienes derecho a usar este logo.");
         }

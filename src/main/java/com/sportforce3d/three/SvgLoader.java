@@ -26,7 +26,7 @@ import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node.*;
+import static org.w3c.dom.Node.TEXT_NODE;
 import org.w3c.dom.NodeList;
 
 import javax.xml.XMLConstants;

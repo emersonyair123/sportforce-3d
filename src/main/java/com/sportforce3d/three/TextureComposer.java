@@ -65,6 +65,8 @@ public final class TextureComposer {
     /** Tamaño físico aproximado (ancho, alto en m) de cada isla con patrón. */
     private static final Map<UvRect, double[]> PHYSICAL = physical();
     private static final Map<String, Font> FONTS = new ConcurrentHashMap<>();
+    /** Mismo valor que -sf-focus en tokens-dark.css (design/tokens.json): el resaltado del elemento elegido. */
+    private static final Color FOCUS = new Color(0x5C, 0x9B, 0xFF);
 
     private final ElementImages images;
     private final Map<Garment, BufferedImage> rasters = new EnumMap<>(Garment.class);
@@ -74,6 +76,8 @@ public final class TextureComposer {
     private final Map<Image, BufferedImage> awtImages = new WeakHashMap<>();
     /** Caja de cada elemento en UV de su prenda: [u0, v0, u1, v1]. */
     private final Map<String, double[]> bounds = new HashMap<>();
+    /** Elemento elegido en el diseñador: se dibuja con un contorno sutil (nunca en capturas ni en pedidos). */
+    private String highlight;
 
     public TextureComposer(ElementImages images) {
         this.images = images;
@@ -164,6 +168,15 @@ public final class TextureComposer {
 
     public double[] bounds(String elementId) {
         return bounds.get(elementId);
+    }
+
+    /** Elemento a resaltar en la próxima composición (null = ninguno). */
+    public void setHighlight(String elementId) {
+        this.highlight = elementId;
+    }
+
+    public String highlight() {
+        return highlight;
     }
 
     // ---------------------------------------------------------------- Patrones
@@ -320,6 +333,9 @@ public final class TextureComposer {
                 at.scale(wPx / awtImg.getWidth(), hPx / awtImg.getHeight());
                 g.drawImage(awtImg, at, null);
             }
+            if (e.id().equals(highlight)) {
+                drawHighlight(g, wPx, hPx, s);
+            }
         } finally {
             g.dispose();
         }
@@ -331,6 +347,24 @@ public final class TextureComposer {
         double bw = (wPx * cos + hPx * sin) * (ax / ay) / 2;
         double bh = (wPx * sin + hPx * cos) / 2;
         bounds.put(e.id(), new double[]{(cx - bw) / s, (cy - bh) / s, (cx + bw) / s, (cy + bh) / s});
+    }
+
+    /**
+     * Contorno redondeado en el color de foco con un halo suave, en el mismo marco girado del elemento: sigue su
+     * rotación y la curva de la prenda.
+     */
+    private static void drawHighlight(Graphics2D g, double w, double h, int s) {
+        double pad = s * 0.006;
+        java.awt.geom.RoundRectangle2D box = new java.awt.geom.RoundRectangle2D.Double(-w / 2 - pad, -h / 2 - pad,
+                w + 2 * pad, h + 2 * pad, pad * 2, pad * 2);
+        float line = (float) (s * 0.0018);
+        g.setColor(new Color(FOCUS.getRed(), FOCUS.getGreen(), FOCUS.getBlue(), 70));
+        g.setStroke(new BasicStroke(line * 4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g.draw(box);
+        g.setColor(FOCUS);
+        g.setStroke(new BasicStroke(line, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10f,
+                new float[]{line * 5f, line * 3f}, 0f));
+        g.draw(box);
     }
 
     /** Copia los píxeles de una imagen de JavaFX (ya cargada) a una imagen de Java2D. */

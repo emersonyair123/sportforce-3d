@@ -63,6 +63,8 @@ Antes de atender clientes reales:
 
 > **Precios de ejemplo.** Los 44 productos del catálogo realista (`V6`, de `sportforce-realista/catalogo.json`, SKU `SF-001` a `SF-044`, más *Zapatillas Fútbol FG Strike* y *Canilleras Pro*, que ya existían y se actualizaron) vienen marcados como **precio de ejemplo**: se cargaron tal cual, pero el ADMIN debe revisarlos y corregirlos en **Productos** antes de vender. Su stock inicial (5 a 40 unidades por talla) también es de ejemplo.
 >
+> **Productos con foto provisional (Etapa 12A).** `V8` dio foto realista a los productos antiguos. Siete usan la foto más parecida mientras no tengan una propia: SF-UFU-003 (arquero, foto de manga larga), SF-CAM-003 (running reflectiva, cuello redondo), SF-ENT-002 (compresión manga larga, manga larga suelta), SF-SHO-003 (short 2 en 1, short de fútbol), SF-MED-002 (media caña, media alta), SF-BUZ-002 (casaca, buzo con pantalón) y SF-ZAP-002 (futsal, zapatilla con tacos). Siguen con dibujo, sin foto parecida: SF-ACC-002 (brazalete), SF-ACC-003 (guantes), SF-ACC-004 (mochila) y SF-ZAP-003 (zapatillas de running). SF-BUZ-001 duplicaba a SF-037 y quedó oculto (borrado lógico).
+>
 > **Tela "Poliéster liso" sin precio definido.** La sección **Tela** del diseñador ofrece Dry-fit (incluido), Poliéster liso, Algodón (incluido) y Malla deportiva (+S/ 5.00 por prenda, el recargo que ya tenía la malla). Poliéster liso no existía en el catálogo: `V7` lo agrega **sin recargo** (S/ 0.00). Si debe costar más, define su recargo en la tabla `materials` (columna `surcharge_cents`, código `POLIESTER_LISO`) con una migración nueva.
 
 ## 3. Uso como CLIENTE
@@ -339,7 +341,7 @@ Las claves son `hombre`, `mujer`, `nino` y `nina` (las mismas categorías que la
 
 ### Exportar desde MakeHuman
 
-1. Ajusta la persona (sexo, edad, proporciones, piel, ojos, pelo). En **Pose/Animate › Pose** deja la pose predeterminada (A); sin esqueleto.
+1. Ajusta la persona (sexo, edad, proporciones, piel, ojos, pelo). En **Pose/Animate › Pose** deja "None" (la pose de reposo de MakeHuman, en A); no hace falta esqueleto.
 2. **Files › Export › Wavefront obj**. En las opciones: escala **meter**, **Feet on ground** activado y sin "helper geometry". Escribe un nombre sin espacios ni ñ.
 3. MakeHuman crea el `.obj`, el `.mtl` y la carpeta `textures/`.
 

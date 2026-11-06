@@ -157,6 +157,11 @@ final class TriangleIndex {
         return v;
     }
 
+    /** Índices de vértice de cada triángulo (tres por triángulo). */
+    int[] triangles() {
+        return tri;
+    }
+
     /** Punto de piel más cercano y la normal de su cara (hacia afuera, por el sentido de los triángulos). */
     record Hit(Vec3 point, Vec3 normal, double distance) {
     }

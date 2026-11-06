@@ -11,6 +11,7 @@ import com.sportforce3d.component.SfButton;
 import com.sportforce3d.component.SfTextField;
 import com.sportforce3d.component.Toast;
 import com.sportforce3d.model.AdminProductRow;
+import com.sportforce3d.model.LowStockVariant;
 import com.sportforce3d.util.Money;
 import com.sportforce3d.viewmodel.ErrorMessages;
 import javafx.animation.PauseTransition;
@@ -23,6 +24,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -34,6 +36,7 @@ import org.kordamp.ikonli.feather.Feather;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class AdminProductsController {
 
@@ -61,12 +64,12 @@ public class AdminProductsController {
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         table.setPlaceholder(new EmptyState(Feather.TAG, "Sin productos", "No hay productos que coincidan con la búsqueda."));
         table.getColumns().setAll(List.of(
-                column("PRODUCTO", 280, this::productCell),
-                column("CATEGORÍA", 150, r -> text(r.categoryName(), "body-s")),
-                column("PRECIO", 100, r -> text(Money.format(r.priceCents()), "body-s")),
-                column("STOCK", 140, this::stockCell),
+                column("PRODUCTO", 250, this::productCell),
+                column("CATEGORÍA", 170, r -> text(r.categoryName(), "body-s")),
+                column("PRECIO", 90, r -> text(Money.format(r.priceCents()), "body-s")),
+                column("STOCK", 170, this::stockCell),
                 column("ESTADO", 110, this::statusCell),
-                column("ACCIONES", 190, this::actionsCell)));
+                column("ACCIONES", 180, this::actionsCell)));
         table.setFixedCellSize(72);
         load();
     }

@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 
 public class ProductController implements Router.Routable {
 
-    private static final double MEDIA_W = 440;
+    private static final double MEDIA_W = 400;
     private static final double MEDIA_H = MEDIA_W * 5 / 4;
 
     private final AppContext context;
@@ -80,7 +80,10 @@ public class ProductController implements Router.Routable {
                 body.getChildren().setAll(new EmptyState(Feather.SLASH, "Producto no disponible", error, catalog));
             }
         });
-        viewModel.colorHexProperty().addListener((obs, old, hex) -> renderSizes());
+        viewModel.colorHexProperty().addListener((obs, old, hex) -> {
+            renderSizes();
+            refreshSelection();
+        });
         viewModel.variantProperty().addListener((obs, old, v) -> refreshSelection());
 
         stepper.valueProperty().bindBidirectional(viewModel.quantityProperty());
@@ -191,9 +194,8 @@ public class ProductController implements Router.Routable {
 
         VBox buy = new VBox(8, qtyLabel, actions);
         if (d.customizable()) {
-            // El diseñador 3D llega en la Etapa 3: se dice en texto visible.
             SfButton customize = new SfButton("Personalizar en 3D", SfButton.Variant.GHOST).withIcon(Feather.BOX);
-            customize.comingSoon();
+            customize.setOnAction(e -> context.router().go(Routes.DESIGNER, new Routes.DesignerParams(designerFocus(d.garment()), null, d.id())));
             buy.getChildren().add(customize);
         }
 
@@ -209,8 +211,8 @@ public class ProductController implements Router.Routable {
         shipping.getStyleClass().addAll("body-s", "ink-subtle");
         shipping.setWrapText(true);
         info.getChildren().add(shipping);
-        info.setMaxWidth(520);
-        info.setPrefWidth(520);
+        info.setMaxWidth(500);
+        info.setPrefWidth(480);
 
         layout.getChildren().setAll(gallery, info);
         renderSizes();
@@ -258,7 +260,7 @@ public class ProductController implements Router.Routable {
         }
         String hex = viewModel.colorHexProperty().get();
         colorLabel.setText(viewModel.colors().getOrDefault(hex, "") + (hex == null ? "" : "  ·  " + hex));
-        if (d.images().isEmpty() && (viewModel.look() == null || media.getChildren().isEmpty())) {
+        if (d.images().isEmpty() && viewModel.look() == null) {
             showImage(d, null); // la ilustración toma el color elegido; la foto realista no cambia
         }
         ToggleGroup group = new ToggleGroup();
@@ -286,8 +288,9 @@ public class ProductController implements Router.Routable {
         ProductVariant v = viewModel.variantProperty().get();
         priceLabel.setText(Money.format(viewModel.unitPrice()));
         stockLabel.getStyleClass().setAll("body-s");
-        boolean allSoldOut = viewModel.variantsFor(viewModel.colorHexProperty().get()).stream()
-                .allMatch(x -> x.available() == 0);
+        List<ProductVariant> forColor = viewModel.variantsFor(viewModel.colorHexProperty().get());
+        // Sin color elegido aún (la ficha se está cargando) no hay nada que decir como agotado.
+        boolean allSoldOut = !forColor.isEmpty() && forColor.stream().allMatch(x -> x.available() == 0);
         if (v == null && allSoldOut) {
             stockLabel.setText("Agotado en todas las tallas de este color.");
             stockLabel.getStyleClass().add("danger-text");
@@ -315,6 +318,14 @@ public class ProductController implements Router.Routable {
                 chip.setSelected(v != null && Objects.equals(chip.getUserData(), v.id()));
             }
         }
+    }
+
+    /** Prenda que el diseñador enfoca al abrirlo desde un producto. */
+    static com.sportforce3d.model.Garment designerFocus(com.sportforce3d.model.Garment g) {
+        return switch (g) {
+            case SHORTS, SOCKS, SHOES, ACCESSORY -> g;
+            default -> com.sportforce3d.model.Garment.JERSEY;
+        };
     }
 
     private static VBox section(String title, javafx.scene.Node content) {

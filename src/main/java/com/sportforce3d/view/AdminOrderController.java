@@ -83,8 +83,9 @@ public class AdminOrderController implements Router.Routable {
         Label date = new Label("Realizado el " + OrdersController.DATE.format(Instant.parse(o.placedAt()))
                 + " · " + o.customerName() + " · " + o.customerEmail());
         date.getStyleClass().addAll("body-s", "ink-muted");
-        HBox header = new HBox(16, new VBox(4, number, date), OrderStatusBadge.of(o.status()));
-        header.setAlignment(Pos.CENTER_LEFT);
+        HBox titleRow = new HBox(16, number, OrderStatusBadge.of(o.status()));
+        titleRow.setAlignment(Pos.CENTER_LEFT);
+        VBox header = new VBox(4, titleRow, date);
 
         StatusTimeline timeline = new StatusTimeline();
         if (o.status() == OrderStatus.CANCELADO) {
@@ -110,12 +111,8 @@ public class AdminOrderController implements Router.Routable {
         VBox items = new VBox(12);
         for (OrderItem i : o.items()) {
             Node marker;
-            Image img = i.hasDesign() ? ProductImages.load(context.storage(), i.designFrontPath(), 72, 96) : null;
-            if (img != null) {
-                ImageView view = new ImageView(img);
-                view.setFitWidth(72);
-                view.setFitHeight(96);
-                view.setPreserveRatio(true);
+            ImageView view = i.hasDesign() ? ProductImages.designCapture(context.storage(), i.designFrontPath(), 72, 96) : null;
+            if (view != null) {
                 StackPane thumb = new StackPane(view);
                 thumb.getStyleClass().add("sf-thumb");
                 thumb.setMinSize(72, 96);
@@ -138,10 +135,10 @@ public class AdminOrderController implements Router.Routable {
             if (i.hasDesign()) {
                 Label design = new Label("Uniforme personalizado: " + i.designName() + " (versión " + i.designVersion() + ")");
                 design.getStyleClass().addAll("body-s", "brand-text");
-                SfButton view = new SfButton("Ver uniforme 3D y ficha técnica", SfButton.Variant.GHOST, SfButton.Size.SM)
+                SfButton open3d = new SfButton("Ver uniforme 3D y ficha técnica", SfButton.Variant.GHOST, SfButton.Size.SM)
                         .withIcon(Feather.BOX);
-                view.setOnAction(e -> context.router().go(Routes.ADMIN_DESIGN, i.id()));
-                text.getChildren().addAll(design, view);
+                open3d.setOnAction(e -> context.router().go(Routes.ADMIN_DESIGN, i.id()));
+                text.getChildren().addAll(design, open3d);
             }
             HBox.setHgrow(text, Priority.ALWAYS);
             text.setMinWidth(0);

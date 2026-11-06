@@ -115,8 +115,8 @@ public class AdminDashboardController {
         HBox.setHgrow(states, Priority.ALWAYS);
         HBox.setHgrow(top, Priority.ALWAYS);
         FlowPane row = new FlowPane(24, 24, states, top);
-        ((Region) states).setPrefWidth(560);
-        ((Region) top).setPrefWidth(560);
+        ((Region) states).setPrefWidth(540);
+        ((Region) top).setPrefWidth(540);
         content.getChildren().setAll(kpis, sales, row);
     }
 
@@ -251,26 +251,30 @@ public class AdminDashboardController {
         };
     }
 
+    /** Barras horizontales: los nombres de estado se leen completos (en vertical se giraban 90°). */
     private Node statusChart(Map<OrderStatus, Integer> counts) {
-        CategoryAxis x = new CategoryAxis();
-        NumberAxis y = new NumberAxis();
-        y.setTickUnit(1);
-        y.setMinorTickVisible(false);
-        y.setTickLabelFormatter(integers());
-        BarChart<String, Number> chart = new BarChart<>(x, y);
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        NumberAxis x = new NumberAxis();
+        x.setTickUnit(1);
+        x.setMinorTickVisible(false);
+        x.setTickLabelFormatter(integers());
+        CategoryAxis y = new CategoryAxis();
+        BarChart<Number, String> chart = new BarChart<>(x, y);
+        XYChart.Series<Number, String> series = new XYChart.Series<>();
         series.setName("Pedidos");
-        for (OrderStatus s : OrderStatus.values()) {
-            XYChart.Data<String, Number> d = new XYChart.Data<>(s.label(), counts.getOrDefault(s, 0));
+        OrderStatus[] all = OrderStatus.values();
+        // El eje de categorías dibuja de abajo hacia arriba: se agregan al revés para leer el flujo de arriba abajo.
+        for (int i = all.length - 1; i >= 0; i--) {
+            OrderStatus s = all[i];
+            XYChart.Data<Number, String> d = new XYChart.Data<>(counts.getOrDefault(s, 0), s.label());
             d.setExtraValue(s.label() + ": " + counts.getOrDefault(s, 0));
             series.getData().add(d);
         }
         chart.getData().add(series);
+        integerRange(x, counts.values().stream().mapToInt(Integer::intValue).max().orElse(0));
         chart.setLegendVisible(false);
         chart.setAnimated(false);
         chart.setPrefHeight(300);
-        chart.setCategoryGap(18);
-        x.setTickLabelRotation(-30);
+        chart.setCategoryGap(12);
         chart.getStyleClass().add("sf-chart");
         addTooltips(chart);
         return chart;
@@ -298,9 +302,12 @@ public class AdminDashboardController {
             series.getData().add(d);
         }
         chart.getData().add(series);
+        integerRange(x, top.stream().mapToInt(TopProduct::units).max().orElse(0));
         chart.setLegendVisible(false);
         chart.setAnimated(false);
-        chart.setPrefHeight(300);
+        // Alto según la cantidad de productos: con uno solo, la barra no ocupa todo el gráfico.
+        chart.setPrefHeight(Math.max(150, 70 + 46 * top.size()));
+        chart.setMaxHeight(Region.USE_PREF_SIZE);
         chart.setCategoryGap(14);
         chart.getStyleClass().add("sf-chart");
         addTooltips(chart);
@@ -308,6 +315,15 @@ public class AdminDashboardController {
         VBox box = new VBox(chart);
         box.setAlignment(Pos.CENTER_LEFT);
         return box;
+    }
+
+    /** Eje de conteos: de 0 a máx + 1 con marcas enteras (unas 6 como mucho). */
+    private static void integerRange(NumberAxis axis, int max) {
+        int upper = Math.max(1, max + 1);
+        axis.setAutoRanging(false);
+        axis.setLowerBound(0);
+        axis.setUpperBound(upper);
+        axis.setTickUnit(Math.max(1, (int) Math.ceil(upper / 6.0)));
     }
 
     private static StringConverter<Number> integers() {

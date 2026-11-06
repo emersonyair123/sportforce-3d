@@ -199,7 +199,10 @@ public final class GridSurface {
         return f;
     }
 
-    /** Convención verificada con capturas: ver {@code three/README} en docs/modelos-blender.md. */
+    /**
+     * Convención verificada con capturas (docs/capturas): la normal geométrica cross(b − a, c − a) de cada
+     * triángulo apunta hacia afuera, igual que en un OBJ exportado por Blender (caras antihorarias).
+     */
     static final boolean FRONT_IS_CCW_IN_MODEL = true;
 
     private int colNext(int c) {

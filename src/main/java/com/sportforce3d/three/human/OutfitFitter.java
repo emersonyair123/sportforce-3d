@@ -34,68 +34,96 @@ import java.util.stream.IntStream;
 public final class OutfitFitter {
 
     /** Persona (con los pies ocultos dentro del calzado) y uniforme ajustado a ella. */
-    public record DressedPerson(HumanModel body, ModelData outfit) {
+    public record DressedPerson(HumanModel body, ModelData outfit, Map<Garment, ClothShading> shading) {
     }
 
     private static final double CELL = 0.02;
     private static final double MIN_EASE = 0.002;
-    private static final double MAX_EASE = 0.045;
-    /** Distancia mínima entre la tela y la piel después de ajustar. */
+    private static final double MAX_EASE = 0.035;
+    private static final double SHOULDER_MAX_EASE = 0.012;
+    /** Por encima de esta distancia bajo la axila (fracción de la altura) la manga es un tubo de sección fija. */
+    private static final double SLEEVE_TUBE = 0.02;
+    /** Apertura de la manga: metros de radio extra por metro a lo largo del brazo. */
+    private static final double SLEEVE_FLARE = 0.10;
+    /** Inclinación con que la camiseta cae desde el pecho hacia la cintura (m hacia adentro por m de bajada). */
+    private static final double DRAPE_SLOPE = 0.10;
+    /** Sección del ribete del cuello respecto del maniquí: más delgado y bajo, pegado al cuello. */
+    private static final double COLLAR_THICKNESS = 0.55;
+    private static final double COLLAR_HEIGHT = 0.6;
+    private static final double COLLAR_LOWER = 0.003;
+    /** Distancia mínima entre la tela y la piel al terminar. */
     private static final double GAP = 0.004;
     private static final double SOCK_GAP = 0.0025;
+    /** Ribetes, paneles, puños, pretina y bandas: distancia mínima a la piel. */
+    private static final double FOLLOWER_GAP = 0.002;
     private static final int SMOOTH_PASSES = 4;
+    /** Ángulo (rad) de los rayos vecinos que "puentean" surcos del cuerpo (columna, glúteos). */
+    private static final double BRIDGE = Math.toRadians(9);
 
-    private enum Region { TORSO, LEG, ARM, BLEND, SHOE }
+    private enum Region { JERSEY, TORSO, LEG, ARM, BLEND, SHOE }
+
+    /** Prenda base: holgura sobre la piel antes de suavizar y pasadas de Taubin. */
+    private record Cloth(double ease, int taubin) {
+    }
+
+    private static final Map<Zone, Cloth> BASES = Map.of(
+            Zone.JERSEY_BODY, new Cloth(0.011, 60),
+            Zone.JERSEY_SLEEVES, new Cloth(0.008, 15),
+            Zone.SHORTS_BASE, new Cloth(0.010, 30),
+            Zone.SOCKS_LEG, new Cloth(SOCK_GAP, 0));
+
+    /** Pieza secundaria → prenda base a la que sigue. */
+    private static final Map<Zone, Zone> FOLLOWS = Map.of(
+            Zone.JERSEY_COLLAR, Zone.JERSEY_BODY,
+            Zone.JERSEY_SIDES, Zone.JERSEY_BODY,
+            Zone.JERSEY_CUFFS, Zone.JERSEY_SLEEVES,
+            Zone.SHORTS_WAIST, Zone.SHORTS_BASE,
+            Zone.SHORTS_STRIPE, Zone.SHORTS_BASE,
+            Zone.SOCKS_BAND, Zone.SOCKS_LEG);
 
     private final BodyFrame from;
     private final BodyFrame to;
-    private final TriangleIndex mannequin;
     private final TriangleIndex skin;
     private final double ratio;
     private final double blendTop;
     private final double blendBottom;
-    private final ThreadLocal<TriangleIndex.Query> mannequinQ;
+    private final double hipFreeze;
+    private final double drapeTop;
+    private final double drapeBottom;
     private final ThreadLocal<TriangleIndex.Query> skinQ;
 
-    private OutfitFitter(BodyFrame from, BodyFrame to, TriangleIndex mannequin, TriangleIndex skin, BodyShape shape) {
+    private OutfitFitter(BodyFrame from, BodyFrame to, TriangleIndex skin, BodyShape shape) {
         this.from = from;
         this.to = to;
-        this.mannequin = mannequin;
         this.skin = skin;
         this.ratio = to.height() / from.height();
         double scale = shape.height() / 1.812;
         blendTop = (ProceduralModelProvider.SHORTS_CROTCH + 0.03) * scale;
         blendBottom = (ProceduralModelProvider.SHORTS_CROTCH - 0.07) * scale;
-        mannequinQ = ThreadLocal.withInitial(this.mannequin::query);
+        hipFreeze = ProceduralModelProvider.SHORTS_HIP_FREEZE * scale;
+        drapeTop = ProceduralModelProvider.JERSEY_DRAPE_TOP * scale;
+        drapeBottom = ProceduralModelProvider.JERSEY_DRAPE_BOTTOM * scale;
         skinQ = ThreadLocal.withInitial(this.skin::query);
     }
 
     /** Ajusta el uniforme de {@code source} (modelo procedural) a la persona. Lento (~1–3 s): segundo plano. */
     public static DressedPerson fit(HumanModel human, ModelData source) {
+        return fit(human, source, Map.of());
+    }
+
+    /**
+     * Igual, pero las prendas de {@code simulated} (tela simulada en Blender para esta persona) reemplazan a las
+     * ajustadas: se usan sus mallas, su oclusión y su normal map, y ocultan la piel que tapan.
+     */
+    public static DressedPerson fit(HumanModel human, ModelData source,
+                                    Map<Garment, SimulatedGarments.Piece> simulated) {
         BodyShape shape = BodyShape.of(source.bodyType());
         HumanModel.Part skinPart = skinOf(human);
         TriangleIndex skin = TriangleIndex.of(List.of(skinPart.mesh()), CELL);
         TriangleIndex mannequin = TriangleIndex.of(source.mannequin().stream().map(Part::mesh).toList(), CELL);
         BodyFrame from = BodyFrame.of(shape, mannequin.vertices());
-        BodyFrame to = BodyFrame.measure(skin.vertices(), human.minY(), human.height());
-        return new OutfitFitter(from, to, mannequin, skin, shape).dress(human, skinPart, source);
-    }
-
-    /** Diagnóstico temporal. */
-    static String debug(HumanModel human, ModelData source, Vec3 p) {
-        BodyShape shape = BodyShape.of(source.bodyType());
-        TriangleIndex skin = TriangleIndex.of(List.of(skinOf(human).mesh()), CELL);
-        TriangleIndex mannequin = TriangleIndex.of(source.mannequin().stream().map(Part::mesh).toList(), CELL);
-        OutfitFitter f = new OutfitFitter(BodyFrame.of(shape, mannequin.vertices()),
-                BodyFrame.measure(skin.vertices(), skin.triangles(), human.minY(), human.height()), mannequin, skin, shape);
-        Vec3 c = f.from.torsoCenter(p.y());
-        Vec3 h = new Vec3(p.x() - c.x(), 0, p.z() - c.z());
-        Vec3 dir = h.normalize();
-        double rFrom = f.mannequinQ.get().ray(c, dir, 0.6);
-        Vec3 ct = f.to.torsoCenter(f.mapY(p.y()));
-        double rTo = f.skinQ.get().ray(ct, dir, 0.6);
-        return String.format("p=%s c=%s d=%.3f rFrom=%.3f yTo=%.3f cTo=%s rTo=%.3f placed=%s", p, c, h.length(), rFrom,
-                f.mapY(p.y()), ct, rTo, f.transfer(p, Region.BLEND));
+        BodyFrame to = BodyFrame.measure(skin.vertices(), skin.triangles(), human.minY(), human.height());
+        return new OutfitFitter(from, to, skin, shape).dress(human, skinPart, source, simulated);
     }
 
     /** La piel: la parte opaca con más caras. */
@@ -109,49 +137,244 @@ public final class OutfitFitter {
         return best != null ? best : human.parts().get(0);
     }
 
-    private DressedPerson dress(HumanModel human, HumanModel.Part skinPart, ModelData source) {
-        Map<Zone, List<Part>> zones = new EnumMap<>(Zone.class);
+    /** Prenda ajustada: posiciones soldadas en el maniquí ({@code src}) y en la persona ({@code dst}). */
+    private record Fitted(MeshData mesh, int[] canon, double[] src, double[] dst, boolean[] inside) {
+    }
+
+    private DressedPerson dress(HumanModel human, HumanModel.Part skinPart, ModelData source,
+                                Map<Garment, SimulatedGarments.Piece> simulated) {
         Shoes shoes = new Shoes(source);
+        Map<Zone, List<Fitted>> base = new EnumMap<>(Zone.class);
+        BASES.forEach((zone, cloth) -> {
+            if (!simulated.containsKey(zone.garment())) {
+                base.put(zone, source.zones().get(zone).stream().map(p -> fitBase(zone, cloth, p.mesh())).toList());
+            }
+        });
+        if (!simulated.containsKey(Garment.JERSEY)) {
+            hideSleeveTops(base.get(Zone.JERSEY_SLEEVES), base.get(Zone.JERSEY_BODY));
+        }
+
+        Map<Zone, List<Part>> zones = new EnumMap<>(Zone.class);
+        // Las medias simuladas bajan hasta dentro de la zapatilla: esa parte se quita como en las ajustadas.
+        simulated.forEach((g, piece) -> piece.zones().forEach((zone, parts) -> zones.put(zone, g != Garment.SOCKS
+                ? parts : parts.stream().map(p -> new Part(p.name(), removeBelow(p.mesh(), shoes, 0.55))).toList())));
+        double h = human.height();
         source.zones().forEach((zone, parts) -> {
-            List<Part> fitted = new ArrayList<>();
-            for (Part part : parts) {
-                MeshData mesh = zone.garment() == Garment.SHOES ? shoes.place(part.mesh()) : fitGarment(zone, part.mesh());
+            if (simulated.containsKey(zone.garment())) {
+                return;
+            }
+            List<Part> out = new ArrayList<>();
+            for (int i = 0; i < parts.size(); i++) {
+                Part part = parts.get(i);
+                MeshData mesh;
+                if (zone.garment() == Garment.SHOES) {
+                    mesh = shoes.place(part.mesh());
+                } else if (base.containsKey(zone)) {
+                    mesh = toMesh(base.get(zone).get(i));
+                } else if (zone == Zone.JERSEY_COLLAR) {
+                    mesh = followNeckline(part.mesh(), base.get(Zone.JERSEY_BODY));
+                } else {
+                    mesh = follow(part.mesh(), base.get(FOLLOWS.get(zone)));
+                }
                 if (zone.garment() == Garment.SOCKS) {
                     mesh = removeBelow(mesh, shoes, 0.55);
                 }
-                fitted.add(new Part(part.name(), mesh));
+                // Basta doblada hacia adentro: ruedo de la camiseta y de cada pierna del short.
+                if (zone == Zone.JERSEY_BODY) {
+                    mesh = ClothOps.hemFold(mesh, lowest(mesh, 0.06 * h), 0.005, 0.006);
+                } else if (zone == Zone.SHORTS_BASE) {
+                    mesh = ClothOps.hemFold(mesh, lowest(mesh, 0.03 * h), 0.005, 0.006);
+                }
+                out.add(new Part(part.name(), mesh));
             }
-            zones.put(zone, fitted);
+            zones.put(zone, out);
         });
 
+        List<Vec3> openings = new ArrayList<>();
+        simulated.values().forEach(piece -> openings.addAll(piece.openings()));
         List<HumanModel.Part> parts = new ArrayList<>();
         for (HumanModel.Part p : human.parts()) {
-            parts.add(p == skinPart ? new HumanModel.Part(p.name(), hideCovered(removeBelow(p.mesh(), shoes, 0.75), zones), p.diffuse(),
-                    p.specular(), p.specularPower(), p.texture(), p.transparent()) : p);
+            parts.add(p == skinPart ? new HumanModel.Part(p.name(),
+                    hideCovered(removeBelow(p.mesh(), shoes, 0.75), zones, openings, simulated.keySet()),
+                    p.diffuse(), p.specular(), p.specularPower(), p.texture(), p.transparent()) : p);
         }
         HumanModel body = new HumanModel(human.persona(), parts, human.minY(), human.height());
         ModelData outfit = new ModelData(source.bodyType(), List.of(), zones, focus(zones, human), human.height());
-        return new DressedPerson(body, outfit);
+        Map<Garment, ClothShading> shading = shading(zones, OutfitFitter.skinOf(body).mesh(), simulated.keySet());
+        simulated.forEach((g, piece) -> shading.put(g, piece.shading()));
+        return new DressedPerson(body, outfit, shading);
+    }
+
+    // ---------------------------------------------------------------- Sombreado horneado
+
+    /** Lado de los mapas de sombreado por prenda (la textura es de 2048 en camiseta y short, 1024 en medias). */
+    private static final Map<Garment, Integer> SHADING_SIZE = Map.of(Garment.JERSEY, 1024, Garment.SHORTS, 1024,
+            Garment.SOCKS, 512);
+    private static final int AO_RAYS = 14;
+    private static final double AO_DISTANCE = 0.12;
+
+    /**
+     * Oclusión ambiental por vértice (rayos en el hemisferio de su normal contra la piel visible y todas las prendas)
+     * y pliegues por zona, horneados en el espacio UV de cada prenda ({@link ClothShading#bake}).
+     */
+    private Map<Garment, ClothShading> shading(Map<Zone, List<Part>> zones, MeshData visibleSkin,
+                                               java.util.Set<Garment> baked) {
+        List<MeshData> all = new ArrayList<>();
+        all.add(visibleSkin);
+        zones.values().forEach(parts -> parts.forEach(pt -> all.add(pt.mesh())));
+        TriangleIndex occluders = TriangleIndex.of(all, CELL);
+        ThreadLocal<TriangleIndex.Query> q = ThreadLocal.withInitial(occluders::query);
+        Vec3[] hemisphere = hemisphere(AO_RAYS);
+        Map<Garment, ClothShading> out = new EnumMap<>(Garment.class);
+        SHADING_SIZE.forEach((garment, size) -> {
+            if (baked.contains(garment)) {
+                return; // ya horneado en Blender
+            }
+            List<MeshData> meshes = new ArrayList<>();
+            List<ClothShading.PointData> data = new ArrayList<>();
+            zones.forEach((zone, parts) -> {
+                if (zone.garment() != garment) {
+                    return;
+                }
+                for (Part pt : parts) {
+                    meshes.add(pt.mesh());
+                    data.add(pointData(zone, pt.mesh(), q, hemisphere));
+                }
+            });
+            if (!meshes.isEmpty()) {
+                out.put(garment, ClothShading.bake(meshes, data, size));
+            }
+        });
+        return out;
+    }
+
+    /** Direcciones repartidas en el hemisferio +Z (espiral de Fibonacci), más densas cerca de la normal. */
+    private static Vec3[] hemisphere(int n) {
+        Vec3[] d = new Vec3[n];
+        double golden = Math.PI * (3 - Math.sqrt(5));
+        for (int i = 0; i < n; i++) {
+            double z = 1 - (i + 0.5) / n * 0.85;
+            double r = Math.sqrt(1 - z * z);
+            double a = golden * i;
+            d[i] = new Vec3(Math.cos(a) * r, Math.sin(a) * r, z);
+        }
+        return d;
+    }
+
+    /** Apertura (oclusión ambiental), peso y ángulo de los pliegues de cada punto de una malla de la prenda. */
+    private ClothShading.PointData pointData(Zone zone, MeshData mesh, ThreadLocal<TriangleIndex.Query> q,
+                                             Vec3[] hemisphere) {
+        int n = mesh.pointCount();
+        float[] open = new float[n];
+        float[] wrinkle = new float[n];
+        float[] angle = new float[n];
+        float[] pts = mesh.points();
+        float[] nrm = mesh.normals();
+        int[] normalOf = new int[n];
+        int[] f = mesh.faces();
+        for (int k = 0; k < f.length; k += 3) {
+            normalOf[f[k]] = f[k + 1];
+        }
+        double h = to.height();
+        IntStream.range(0, n).parallel().forEach(i -> {
+            Vec3 p = new Vec3(pts[i * 3], -pts[i * 3 + 1], -pts[i * 3 + 2]);
+            int ni = normalOf[i] * 3;
+            Vec3 nv = new Vec3(nrm[ni], -nrm[ni + 1], -nrm[ni + 2]).normalize();
+            // Marco del hemisferio.
+            Vec3 t = Math.abs(nv.y()) < 0.9 ? Vec3.UP.cross(nv).normalize() : new Vec3(1, 0, 0).cross(nv).normalize();
+            Vec3 b = nv.cross(t);
+            Vec3 o = p.addScaled(nv, 0.003);
+            double occ = 0;
+            for (Vec3 d : hemisphere) {
+                Vec3 dir = t.mul(d.x()).add(b.mul(d.y())).add(nv.mul(d.z()));
+                double hit = q.get().ray(o, dir, AO_DISTANCE);
+                if (!Double.isNaN(hit)) {
+                    occ += 1 - hit / AO_DISTANCE;
+                }
+            }
+            open[i] = (float) Math.max(0, 1 - 1.4 * occ / hemisphere.length);
+
+            // Pliegues donde la tela se dobla.
+            double y = p.y();
+            int sign = p.x() >= 0 ? 1 : -1;
+            double side = Math.abs(nv.x());
+            double inner = Math.max(0, -nv.x() * sign);
+            double w = 0;
+            double a = Math.PI / 2; // valles horizontales (varían a lo largo de v)
+            switch (zone.garment()) {
+                case JERSEY -> {
+                    if (zone == Zone.JERSEY_SLEEVES || zone == Zone.JERSEY_CUFFS) {
+                        // Codo de la manga: hacia el lado interior, más cerca de la punta.
+                        w = 0.65 * inner * (0.4 + 0.6 * smoothstep(to.armpit - 0.02 * h, to.armpit - 0.10 * h, y));
+                    } else if (zone != Zone.JERSEY_COLLAR) {
+                        double armpit = bell(y, to.armpit - 0.04 * h, 0.045 * h) * smoothstep(0.35, 0.85, side);
+                        double waist = 0.5 * bell(y, to.floor + 0.585 * h, 0.04 * h) * (0.3 + 0.7 * side);
+                        if (armpit > waist) {
+                            a = (p.x() > 0) == (p.z() > 0) ? Math.toRadians(55) : Math.toRadians(125);
+                        }
+                        w = Math.max(w, Math.max(armpit, waist));
+                    } else {
+                        w = 0;
+                    }
+                }
+                case SHORTS -> {
+                    double crotch = bell(y, to.crotch - 0.03 * h, 0.045 * h) * (0.3 + 0.7 * inner);
+                    double hip = 0.5 * bell(y, to.crotch + 0.04 * h, 0.04 * h) * smoothstep(0.2, 0.7, nv.z());
+                    if (crotch > 0.2) {
+                        a = sign > 0 ? Math.toRadians(60) : Math.toRadians(120);
+                    }
+                    w = Math.max(crotch, hip);
+                }
+                case SOCKS -> {
+                    double knee = bell(y, to.floor + 0.285 * h, 0.035 * h) * smoothstep(0.1, 0.7, -nv.z());
+                    double ankle = 0.45 * bell(y, to.floor + 0.075 * h, 0.03 * h);
+                    w = Math.max(knee, ankle);
+                }
+                default -> w = 0;
+            }
+            wrinkle[i] = (float) w;
+            angle[i] = (float) a;
+        });
+        return new ClothShading.PointData(open, wrinkle, angle);
+    }
+
+    private static double bell(double x, double center, double width) {
+        double d = (x - center) / width;
+        return Math.exp(-d * d);
+    }
+
+    /** Puntos de la malla a menos de {@code band} de su punto más bajo (el ruedo). */
+    private static java.util.function.IntPredicate lowest(MeshData mesh, double band) {
+        float[] p = mesh.points();
+        double min = Double.MAX_VALUE;
+        for (int i = 1; i < p.length; i += 3) {
+            min = Math.min(min, -p[i]);
+        }
+        double limit = min + band;
+        return i -> -p[i * 3 + 1] < limit;
     }
 
     // ---------------------------------------------------------------- Prendas de tela
 
     private static Region region(Zone zone) {
         return switch (zone) {
-            case JERSEY_BODY, JERSEY_COLLAR, JERSEY_SIDES, SHORTS_WAIST -> Region.TORSO;
-            case JERSEY_SLEEVES, JERSEY_CUFFS -> Region.ARM;
-            case SHORTS_BASE, SHORTS_STRIPE -> Region.BLEND;
-            case SOCKS_LEG, SOCKS_BAND -> Region.LEG;
-            default -> Region.SHOE;
+            case JERSEY_BODY -> Region.JERSEY;
+            case JERSEY_SLEEVES -> Region.ARM;
+            case SHORTS_BASE -> Region.BLEND;
+            case SOCKS_LEG -> Region.LEG;
+            default -> Region.TORSO;
         };
     }
 
-    private MeshData fitGarment(Zone zone, MeshData mesh) {
+    /**
+     * Prenda base: traslado vértice a vértice, suavizado del desplazamiento, holgura sobre la piel, suavizado de
+     * Taubin de la forma (la tela no copia pezones, columna ni músculos) y un último empuje fuera de la piel.
+     */
+    private Fitted fitBase(Zone zone, Cloth cloth, MeshData mesh) {
         Region region = region(zone);
         float[] pts = mesh.points();
-        int n = mesh.pointCount();
         // Puntos repetidos en la misma posición (costuras entre piezas) se tratan como uno solo.
-        int[] canon = new int[n];
+        int[] canon = new int[mesh.pointCount()];
         int[] firstOf = weld(pts, canon);
         int m = firstOf.length;
         double[] src = new double[m * 3];
@@ -173,18 +396,125 @@ public final class OutfitFitter {
         // El short cambia de eje (pelvis → pierna) sobre la entrepierna: más pasadas para que no quede un escalón.
         int passes = region == Region.BLEND ? SMOOTH_PASSES * 3 : SMOOTH_PASSES;
         smoothDisplacement(mesh, canon, src, dst, inside, m, passes);
-        double gap = zone.garment() == Garment.SOCKS ? SOCK_GAP : GAP;
         // Lo que en el maniquí iba dentro del cuerpo (la cara interior de la pelvis del short) sigue oculto.
-        IntStream.range(0, m).parallel().filter(c -> !inside[c]).forEach(c -> pushOut(dst, c, gap));
+        IntStream.range(0, m).parallel().filter(c -> !inside[c]).forEach(c -> pushOut(dst, c, cloth.ease()));
+        if (cloth.taubin() > 0) {
+            // Sin empuje final: volvería a marcar los relieves que el suavizado quitó. La piel que quede asomando se
+            // oculta (hideCovered).
+            int[][] nb = ClothOps.neighbors(mesh, canon, m);
+            ClothOps.taubin(dst, nb, ClothOps.boundary(mesh, canon, m), inside, cloth.taubin());
+        } else {
+            double gap = zone.garment() == Garment.SOCKS ? SOCK_GAP : GAP;
+            IntStream.range(0, m).parallel().filter(c -> !inside[c]).forEach(c -> pushOut(dst, c, gap));
+        }
+        return new Fitted(mesh, canon, src, dst, inside);
+    }
 
+    private static MeshData toMesh(Fitted f) {
+        float[] pts = f.mesh().points();
         float[] out = new float[pts.length];
-        for (int i = 0; i < n; i++) {
-            int c = canon[i];
-            out[i * 3] = (float) dst[c * 3];
-            out[i * 3 + 1] = (float) -dst[c * 3 + 1];
-            out[i * 3 + 2] = (float) -dst[c * 3 + 2];
+        for (int i = 0; i < f.canon().length; i++) {
+            int c = f.canon()[i];
+            out[i * 3] = (float) f.dst()[c * 3];
+            out[i * 3 + 1] = (float) -f.dst()[c * 3 + 1];
+            out[i * 3 + 2] = (float) -f.dst()[c * 3 + 2];
+        }
+        return withNormals(f.mesh(), out);
+    }
+
+    /** Pieza secundaria: copia el desplazamiento de su prenda base ({@link ClothOps#follow}). */
+    private MeshData follow(MeshData mesh, List<Fitted> base) {
+        int total = base.stream().mapToInt(b -> b.src().length).sum();
+        double[] src = new double[total];
+        double[] dst = new double[total];
+        int at = 0;
+        for (Fitted b : base) {
+            System.arraycopy(b.src(), 0, src, at, b.src().length);
+            System.arraycopy(b.dst(), 0, dst, at, b.dst().length);
+            at += b.src().length;
+        }
+        float[] pts = mesh.points();
+        double[] p = new double[pts.length];
+        for (int i = 0; i < pts.length; i += 3) {
+            p[i] = pts[i];
+            p[i + 1] = -pts[i + 1];
+            p[i + 2] = -pts[i + 2];
+        }
+        double[] moved = ClothOps.follow(src, dst, p);
+        // Tira delgada: se empuja fuera de la piel (no hay relieve que marcar) para que no asome por ella.
+        IntStream.range(0, moved.length / 3).parallel().forEach(c -> pushOut(moved, c, FOLLOWER_GAP));
+        float[] out = new float[pts.length];
+        for (int i = 0; i < pts.length; i += 3) {
+            out[i] = (float) moved[i];
+            out[i + 1] = (float) -moved[i + 1];
+            out[i + 2] = (float) -moved[i + 2];
         }
         return withNormals(mesh, out);
+    }
+
+    /**
+     * El ribete del cuello, pegado al escote ya ajustado: cada punto conserva su posición relativa al borde (normal
+     * de la tela, hacia arriba y a lo largo del borde) que tenía en el maniquí, interpolada entre los dos puntos del
+     * borde más cercanos ({@link ClothOps#followEdge}). Es una tira continua de la misma sección: no se retuerce ni
+     * forma puntas donde el escote cambia de dirección.
+     */
+    private MeshData followNeckline(MeshData collar, List<Fitted> body) {
+        Fitted b = body.get(0);
+        MeshData fittedBody = toMesh(b);
+        double top = Double.NEGATIVE_INFINITY;
+        double bottom = Double.POSITIVE_INFINITY;
+        for (int i = 1; i < b.src().length; i += 3) {
+            top = Math.max(top, b.src()[i]);
+            bottom = Math.min(bottom, b.src()[i]);
+        }
+        double middle = (top + bottom) / 2;
+        float[] out = ClothOps.followEdge(b.mesh(), fittedBody, i -> -b.mesh().points()[i * 3 + 1] > middle,
+                collar.points(), COLLAR_THICKNESS, COLLAR_HEIGHT, COLLAR_LOWER);
+        double[] model = new double[out.length];
+        for (int i = 0; i < out.length; i += 3) {
+            model[i] = out[i];
+            model[i + 1] = -out[i + 1];
+            model[i + 2] = -out[i + 2];
+        }
+        IntStream.range(0, model.length / 3).parallel().forEach(c -> pushOut(model, c, FOLLOWER_GAP));
+        for (int i = 0; i < out.length; i += 3) {
+            out[i] = (float) model[i];
+            out[i + 1] = (float) -model[i + 1];
+            out[i + 2] = (float) -model[i + 2];
+        }
+        return withNormals(collar, out);
+    }
+
+    /**
+     * El extremo superior de la manga (sobre la axila) va escondido dentro del torso en el maniquí. En la persona el
+     * tubo de la manga puede asomar sobre el hombro: esos puntos, si quedaron por fuera del cuerpo de la camiseta
+     * (a menos de 4 cm), se meten 4 mm por debajo. Solo esos: mover más de la manga la arruga.
+     */
+    private void hideSleeveTops(List<Fitted> sleeves, List<Fitted> body) {
+        TriangleIndex index = TriangleIndex.of(body.stream().map(OutfitFitter::toMesh).toList(), CELL);
+        ThreadLocal<TriangleIndex.Query> q = ThreadLocal.withInitial(index::query);
+        for (Fitted s : sleeves) {
+            double[] src = s.src();
+            double[] d = s.dst();
+            IntStream.range(0, d.length / 3).parallel().forEach(c -> {
+                Vec3 o = new Vec3(src[c * 3], src[c * 3 + 1], src[c * 3 + 2]);
+                if (o.y() <= from.armpit || !from.insideTorso(o)) {
+                    return;
+                }
+                Vec3 p = new Vec3(d[c * 3], d[c * 3 + 1], d[c * 3 + 2]);
+                TriangleIndex.Hit hit = q.get().nearest(p, 0.04);
+                if (hit == null) {
+                    return;
+                }
+                double sd = p.sub(hit.point()).dot(hit.normal());
+                if (sd > -0.004) {
+                    Vec3 in = p.addScaled(hit.normal(), -(sd + 0.004));
+                    d[c * 3] = in.x();
+                    d[c * 3 + 1] = in.y();
+                    d[c * 3 + 2] = in.z();
+                }
+            });
+        }
     }
 
     /** Punto trasladado; {@code inside} = en el maniquí estaba dentro del cuerpo (no se ve). */
@@ -194,36 +524,241 @@ public final class OutfitFitter {
     /** Traslada un punto del uniforme del maniquí (espacio del modelo) a la persona. */
     private Placed transfer(Vec3 p, Region region) {
         return switch (region) {
-            case TORSO -> torso(p);
+            case JERSEY -> torso(p, p.y(), true);
+            case TORSO -> torso(p, p.y(), false);
             case LEG -> leg(p);
             case ARM -> arm(p);
             case BLEND -> {
                 double w = smoothstep(blendTop, blendBottom, p.y());
+                // La pelvis del short se generó sobre la sección del torso a la altura de "congelado".
+                double surfaceY = Math.max(p.y(), hipFreeze);
                 if (w <= 0) {
-                    yield torso(p);
+                    yield torso(p, surfaceY, false);
                 }
                 if (w >= 1) {
                     yield leg(p);
                 }
-                Placed a = torso(p);
+                Placed a = torso(p, surfaceY, false);
                 Placed b = leg(p);
-                yield new Placed(a.p().lerp(b.p(), w), w < 0.5 ? a.inside() : b.inside());
+                // Mezclar posiciones sobre una superficie convexa cae por dentro (la cuerda): se mezcla la distancia
+                // al eje de la pierna y la dirección, así no queda una "cintura" sobre la entrepierna.
+                Vec3 mid = a.p().lerp(b.p(), w);
+                Vec3 c = to.legCenter(p.x() >= 0 ? 1 : -1, mid.y());
+                double ra = Math.hypot(a.p().x() - c.x(), a.p().z() - c.z());
+                double rb = Math.hypot(b.p().x() - c.x(), b.p().z() - c.z());
+                Vec3 h = new Vec3(mid.x() - c.x(), 0, mid.z() - c.z());
+                double len = h.length();
+                Vec3 q = len < 1e-9 ? mid
+                        : new Vec3(c.x() + h.x() / len * (ra + (rb - ra) * w), mid.y(), c.z() + h.z() / len * (ra + (rb - ra) * w));
+                yield new Placed(q, w < 0.5 ? a.inside() : b.inside());
             }
             case SHOE -> new Placed(p, false);
         };
     }
 
-    private Placed torso(Vec3 p) {
-        return vertical(p, from.torsoCenter(p.y()), to.torsoCenter(mapY(p.y())));
+    /**
+     * Torso: rayos horizontales hasta la axila; por encima (hombros) rayos desde un centro bajo el pecho,
+     * que llegan a la pendiente del hombro casi de frente (un rayo horizontal la cruza de refilón y la tela queda
+     * dentro del hombro). Entre ambos se mezclan.
+     */
+    private Placed torso(Vec3 p, double surfaceY, boolean drape) {
+        // También en el escote: el ribete sigue al cuerpo, así que no se estira por el cuello.
+        Vec3 axis = from.torsoCenter(p.y());
+        double w = smoothstep(from.armpit - 0.03 * from.height(), from.armpit + 0.03 * from.height(), p.y());
+        Placed flat = null;
+        if (w < 1) {
+            // Bajo la entrepierna de la persona no hay torso en el centro (un rayo saldría entre las piernas):
+            // se mide a la altura de la entrepierna y se conserva la altura trasladada.
+            double y = mapY(p.y());
+            Vec3 axisTo = to.torsoCenter(Math.max(y, to.crotch + 0.01));
+            Placed f = drape
+                    ? vertical(p, axis, axisTo, dir -> drapedFrom(p.y(), dir), dir -> drapedTo(p.y(), axisTo, dir))
+                    : vertical(p, axis, axisTo, dir -> from.torsoRadius(surfaceY, dir), dir -> bridged(axisTo, dir));
+            flat = new Placed(new Vec3(f.p().x(), y, f.p().z()), f.inside());
+        }
+        if (w <= 0) {
+            return flat;
+        }
+        Placed up = shoulder(p);
+        if (flat == null) {
+            return up;
+        }
+        // Mezcla radial (distancia al eje y dirección): mezclar posiciones cae por dentro (la cuerda) y deja una
+        // hendidura sobre la axila.
+        Vec3 mid = flat.p().lerp(up.p(), w);
+        Vec3 c = to.torsoCenter(mid.y());
+        Vec3 v = mid.sub(c);
+        double len = v.length();
+        if (len < 1e-9) {
+            return new Placed(mid, w < 0.5 ? flat.inside() : up.inside());
+        }
+        double r = flat.p().sub(c).length() * (1 - w) + up.p().sub(c).length() * w;
+        return new Placed(c.addScaled(v.mul(1 / len), r), w < 0.5 ? flat.inside() : up.inside());
+    }
+
+    /**
+     * Hombros y escote: rayos desde un centro bajo el pecho, que llegan a la pendiente del hombro casi de frente.
+     * Junto al cuello (vertical) ese rayo lo cruza casi paralelo y subiría el escote por el cuello: si el punto queda
+     * más de 2,5 cm por encima de su altura proporcional, se pasa de a poco a un rayo horizontal a esa altura tope.
+     */
+    private Placed shoulder(Vec3 p) {
+        Vec3 c = from.torsoCenter(from.armpit - 0.15 * from.height());
+        Vec3 ct = to.torsoCenter(to.armpit - 0.15 * to.height());
+        Vec3 v = p.sub(c);
+        double d = v.length();
+        if (d < 1e-6) {
+            return new Placed(ct, true);
+        }
+        Vec3 dir = v.mul(1 / d);
+        // En el hombro el rayo puede seguir por encima del brazo: se acepta poco más del radio esperado.
+        // La esquina del hombro del maniquí es el brazo (fuera del torso): su "holgura" medida contra el torso no es
+        // real; la camiseta va casi pegada al hombro.
+        // Los límites estrictos (radio y holgura) solo hacia los lados, donde está el brazo; hacia el pecho o la
+        // espalda no hay brazo y la tela lleva la misma holgura que más abajo.
+        double side = Math.abs(dir.x()) / Math.max(1e-6, Math.hypot(dir.x(), dir.z()));
+        double tolerance = side > 0.6 ? 1.35 : 2.2;
+        // Un rayo oblicuo puede salir del torso más allá del punto (curvatura de los omóplatos) sin que la tela vaya
+        // por dentro: en el hombro nada se marca como oculto, se toma la holgura mínima.
+        double exit = from.torsoExit(c, dir);
+        double[] r = radius(Double.isNaN(exit) ? exit : Math.min(exit, d), d, skinQ.get().ray(ct, dir, 0.8), tolerance,
+                side > 0.6 ? SHOULDER_MAX_EASE : MAX_EASE);
+        Vec3 q = ct.addScaled(dir, r[0]);
+        double cap = mapY(p.y()) + 0.025;
+        double t = smoothstep(cap - 0.01, cap + 0.01, q.y());
+        if (t <= 0) {
+            return new Placed(q, false);
+        }
+        // Mezcla continua (radial, alrededor del eje) con el rayo horizontal a la altura tope: sin esquinas.
+        Vec3 axisTo = to.torsoCenter(cap);
+        Placed flat = vertical(p, from.torsoCenter(p.y()), axisTo, dirH -> from.torsoRadius(p.y(), dirH),
+                dirH -> bridged(axisTo, dirH));
+        Vec3 f = new Vec3(flat.p().x(), Math.min(cap, q.y()), flat.p().z());
+        Vec3 mid = q.lerp(f, t);
+        Vec3 c0 = to.torsoCenter(mid.y());
+        Vec3 h = new Vec3(mid.x() - c0.x(), 0, mid.z() - c0.z());
+        double len = h.length();
+        if (len < 1e-9) {
+            return new Placed(mid, false);
+        }
+        double rq = Math.hypot(q.x() - c0.x(), q.z() - c0.z());
+        double rf = Math.hypot(f.x() - c0.x(), f.z() - c0.z());
+        double rr = rq + (rf - rq) * t;
+        return new Placed(new Vec3(c0.x() + h.x() / len * rr, mid.y(), c0.z() + h.z() / len * rr), false);
     }
 
     private Placed leg(Vec3 p) {
         int sign = p.x() >= 0 ? 1 : -1;
-        return vertical(p, from.legCenter(sign, p.y()), to.legCenter(sign, mapY(p.y())));
+        Vec3 axisTo = to.legCenter(sign, mapY(p.y()));
+        return vertical(p, from.legCenter(sign, p.y()), axisTo, dir -> from.legRadius(sign, p.y(), dir),
+                dir -> bridged(axisTo, dir));
+    }
+
+    /**
+     * Caída de la camiseta (como {@code GarmentGenerator.jerseyBase}): bajo el pecho la tela no sigue la piel hacia
+     * adentro, cuelga del radio del pecho. Así no se marcan el bajo busto, el abdomen ni la cintura.
+     */
+    private double drapedFrom(double y, Vec3 dir) {
+        double rb = from.torsoRadius(y, dir);
+        double rc = from.torsoRadius(drapeTop, dir) * 0.985;
+        double k = 0.62 * smoothstep(drapeTop, drapeBottom, y);
+        return Math.max(rb, rb + (rc - rb) * k);
+    }
+
+    /**
+     * En la persona la tela cuelga del punto más saliente por encima (busto, pectorales, omóplatos; se busca cada
+     * 1 cm hasta la axila): baja casi recta, entrando {@link #DRAPE_SLOPE} por metro, hasta volver a tocar el cuerpo. Así no marca
+     * el pliegue bajo el busto, el abdomen ni la cintura.
+     */
+    private double drapedTo(double yFrom, Vec3 axisTo, Vec3 dir) {
+        double rb = bridged(axisTo, dir);
+        if (Double.isNaN(rb) || yFrom >= drapeTop + 0.08 * from.height()) {
+            return rb;
+        }
+        double hang = rb;
+        double top = to.armpit - 0.02 * to.height();
+        for (double y = Math.ceil(axisTo.y() * 100) / 100; y <= top + 1e-9; y += 0.01) {
+            double r = bridged(to.torsoCenter(y), dir);
+            if (!Double.isNaN(r)) {
+                hang = Math.max(hang, r * 0.985 - DRAPE_SLOPE * (y - axisTo.y()));
+            }
+        }
+        return hang;
+    }
+
+    /**
+     * Radio de la tela sobre la piel en {@code dir}: el de la envolvente convexa de la sección horizontal del cuerpo
+     * en ese punto (72 rayos alrededor del eje). Una camiseta o un short no se meten entre los pechos, en la columna
+     * ni en el surco de los glúteos: pasan de un relieve al otro, como en la sección convexa.
+     */
+    private double bridged(Vec3 origin, Vec3 dir) {
+        double[][] hull = sections.computeIfAbsent(List.of(Math.round(origin.x() * 1000), Math.round(origin.y() * 1000),
+                Math.round(origin.z() * 1000)), k -> section(origin));
+        if (hull.length < 3) {
+            return skinQ.get().ray(origin, dir, 0.6);
+        }
+        // Salida del rayo por el polígono convexo (el origen está dentro).
+        double dx = dir.x();
+        double dz = dir.z();
+        double best = Double.NaN;
+        for (int i = 0; i < hull.length; i++) {
+            double[] a = hull[i];
+            double[] b = hull[(i + 1) % hull.length];
+            double ex = b[0] - a[0];
+            double ez = b[1] - a[1];
+            double den = dx * ez - dz * ex;
+            if (Math.abs(den) < 1e-12) {
+                continue;
+            }
+            double t = (a[0] * ez - a[1] * ex) / den;
+            double u = (a[0] * dz - a[1] * dx) / den;
+            if (t > 0 && u >= -1e-9 && u <= 1 + 1e-9 && (Double.isNaN(best) || t > best)) {
+                best = t;
+            }
+        }
+        return Double.isNaN(best) ? skinQ.get().ray(origin, dir, 0.6) : best;
+    }
+
+    private final java.util.concurrent.ConcurrentHashMap<List<Long>, double[][]> sections =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** Envolvente convexa (x, z relativos al origen) de la piel en 72 direcciones horizontales. */
+    private double[][] section(Vec3 origin) {
+        List<double[]> pts = new ArrayList<>();
+        TriangleIndex.Query q = skinQ.get();
+        for (int k = 0; k < 72; k++) {
+            double a = 2 * Math.PI * k / 72;
+            double r = q.ray(origin, new Vec3(Math.sin(a), 0, Math.cos(a)), 0.6);
+            if (!Double.isNaN(r)) {
+                pts.add(new double[]{Math.sin(a) * r, Math.cos(a) * r});
+            }
+        }
+        if (pts.size() < 3) {
+            return new double[0][];
+        }
+        pts.sort((p1, p2) -> p1[0] != p2[0] ? Double.compare(p1[0], p2[0]) : Double.compare(p1[1], p2[1]));
+        double[][] h = new double[pts.size() * 2][];
+        int n = 0;
+        for (int pass = 0; pass < 2; pass++) {
+            int start = n;
+            for (int idx = 0; idx < pts.size(); idx++) {
+                double[] pt = pts.get(pass == 0 ? idx : pts.size() - 1 - idx);
+                while (n >= start + 2 && cross(h[n - 2], h[n - 1], pt) <= 0) {
+                    n--;
+                }
+                h[n++] = pt;
+            }
+            n--;
+        }
+        return Arrays.copyOf(h, n);
+    }
+
+    private static double cross(double[] o, double[] a, double[] b) {
+        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
     }
 
     /** Rayo horizontal desde el eje de una parte vertical (torso o pierna). */
-    private Placed vertical(Vec3 p, Vec3 axisFrom, Vec3 axisTo) {
+    private Placed vertical(Vec3 p, Vec3 axisFrom, Vec3 axisTo, java.util.function.ToDoubleFunction<Vec3> surfaceFrom,
+                            java.util.function.ToDoubleFunction<Vec3> surfaceTo) {
         Vec3 h = new Vec3(p.x() - axisFrom.x(), 0, p.z() - axisFrom.z());
         double d = h.length();
         double y = axisTo.y();
@@ -231,7 +766,7 @@ public final class OutfitFitter {
             return new Placed(new Vec3(axisTo.x(), y, axisTo.z()), true);
         }
         Vec3 dir = h.mul(1 / d);
-        double[] r = radius(axisFrom, dir, d, axisTo, dir, 0.6);
+        double[] r = radius(surfaceFrom.applyAsDouble(dir), d, surfaceTo.applyAsDouble(dir), 2.2, MAX_EASE);
         return new Placed(new Vec3(axisTo.x() + dir.x() * r[0], y, axisTo.z() + dir.z() * r[0]), r[1] > 0);
     }
 
@@ -256,8 +791,20 @@ public final class OutfitFitter {
         Vec3[] fTo = frame(to.armDirection(sign, sh));
         Vec3 dirFrom = v.mul(1 / d);
         Vec3 dirTo = fTo[0].mul(Math.cos(angle)).add(fTo[1].mul(Math.sin(angle)));
-        double[] r = radius(c, dirFrom, d, ch, dirTo, 0.3);
-        return new Placed(ch.addScaled(dirTo, r[0]), r[1] > 0);
+        // Cerca del hombro el rayo desde el eje toca el hombro o la espalda: por encima de SLEEVE_TUBE bajo la axila,
+        // la sección se mide allí (el brazo ya está separado del torso) y la manga sigue como un tubo por el eje; lo
+        // que entra al hombro queda tapado por el cuerpo de la camiseta (la profundidad decide qué se ve).
+        double tube = SLEEVE_TUBE * to.height();
+        double measureAt = Math.max(sh, tube);
+        Vec3 cm = to.armPoint(sign, measureAt);
+        Vec3[] fm = frame(to.armDirection(sign, measureAt));
+        Vec3 dirM = fm[0].mul(Math.cos(angle)).add(fm[1].mul(Math.sin(angle)));
+        // El brazo tiene una sección regular: un rayo mucho más largo que lo esperado tocó la espalda o el pecho.
+        double sFrom = sh >= tube ? s : tube / ratio;
+        double[] r = radius(from.armRadius(sign, sFrom, dirFrom), d, skinQ.get().ray(cm, dirM, 0.3), 1.35, MAX_EASE);
+        // La manga se abre hacia la punta (no es un tubo): unos milímetros más por cada centímetro bajo la axila.
+        double flare = SLEEVE_FLARE * Math.max(0, sh - tube);
+        return new Placed(ch.addScaled(dirTo, r[0] + (r[1] > 0 ? 0 : flare)), r[1] > 0);
     }
 
     /**
@@ -266,13 +813,12 @@ public final class OutfitFitter {
      * se usa el radio del maniquí escalado. Un punto que en el maniquí estaba dentro del cuerpo queda dentro, a la
      * misma fracción del radio. Devuelve {radio, 1 si quedó dentro}.
      */
-    private double[] radius(Vec3 originFrom, Vec3 dirFrom, double d, Vec3 originTo, Vec3 dirTo, double max) {
-        double rFrom = mannequinQ.get().ray(originFrom, dirFrom, max);
+    private double[] radius(double rFrom, double d, double measured, double tolerance, double maxEase) {
         boolean inside = !Double.isNaN(rFrom) && d < rFrom - 0.001;
-        double e = Double.isNaN(rFrom) ? 0.008 : clamp(d - rFrom, MIN_EASE, MAX_EASE);
+        double e = Double.isNaN(rFrom) ? 0.008 : clamp(d - rFrom, MIN_EASE, maxEase);
         double expected = (Double.isNaN(rFrom) ? d - e : rFrom) * ratio;
-        double rTo = skinQ.get().ray(originTo, dirTo, max);
-        if (Double.isNaN(rTo) || rTo < 0.4 * expected || rTo > 2.2 * expected + 0.03) {
+        double rTo = measured;
+        if (Double.isNaN(rTo) || rTo < 0.4 * expected || rTo > tolerance * expected + 0.03) {
             rTo = expected;
         }
         if (inside) {
@@ -669,13 +1215,8 @@ public final class OutfitFitter {
             double nx = uy * wz - uz * wy;
             double ny = uz * wx - ux * wz;
             double nz = ux * wy - uy * wx;
-            // El sentido de la cara puede no coincidir con la normal guardada: se orienta con la original.
-            int n0 = f[b + 1] * 3;
-            if (nx * old[n0] + ny * old[n0 + 1] + nz * old[n0 + 2] < 0) {
-                nx = -nx;
-                ny = -ny;
-                nz = -nz;
-            }
+            // Las caras del maniquí ya vienen orientadas (GridSurface): no se invierte cara por cara (al deformar,
+            // una cara inclinada daría manchas oscuras); solo al final, si la normal suave quedó al revés.
             for (int k = 0; k < 3; k++) {
                 int ni = f[b + k * 3 + 1] * 3;
                 acc[ni] += nx;
@@ -686,7 +1227,10 @@ public final class OutfitFitter {
         float[] normals = new float[old.length];
         for (int i = 0; i < old.length; i += 3) {
             double len = Math.sqrt(acc[i] * acc[i] + acc[i + 1] * acc[i + 1] + acc[i + 2] * acc[i + 2]);
-            if (len < 1e-12) {
+            if (acc[i] * old[i] + acc[i + 1] * old[i + 1] + acc[i + 2] * old[i + 2] < 0) {
+                len = -len;
+            }
+            if (Math.abs(len) < 1e-12) {
                 normals[i] = old[i];
                 normals[i + 1] = old[i + 1];
                 normals[i + 2] = old[i + 2];

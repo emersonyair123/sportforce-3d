@@ -64,10 +64,10 @@
                 <HBox fx:id="searchBox" styleClass="sf-search" prefWidth="360" HBox.hgrow="SOMETIMES">
                     <TextField fx:id="searchField" promptText="Buscar en el catálogo" HBox.hgrow="ALWAYS"/>
                 </HBox>
-                <Label fx:id="countLabel" styleClass="body-s, ink-muted"/>
+                <Label fx:id="countLabel" styleClass="body-s, ink-muted" minWidth="-Infinity"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Label text="Ordenar por" styleClass="body-s, ink-muted"/>
-                <ComboBox fx:id="sortBox" prefWidth="200"/>
+                <Label text="Ordenar por" styleClass="body-s, ink-muted" minWidth="-Infinity"/>
+                <ComboBox fx:id="sortBox" prefWidth="210" minWidth="-Infinity"/>
             </HBox>
             <StackPane>
                 <FlowPane fx:id="grid" hgap="24" vgap="24"/>

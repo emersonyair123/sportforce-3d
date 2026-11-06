@@ -29,6 +29,9 @@ import com.sportforce3d.design.MaterialSlot;
 import com.sportforce3d.design.PatternSpec;
 import com.sportforce3d.design.PatternType;
 import com.sportforce3d.design.RealisticSpec;
+import com.sportforce3d.design.RealisticView;
+import com.sportforce3d.design.TextSlot;
+import com.sportforce3d.design.ViewSync;
 import com.sportforce3d.model.DesignAsset;
 import com.sportforce3d.model.Garment;
 import com.sportforce3d.model.Material;
@@ -178,13 +181,21 @@ public class DesignerController implements Router.Routable {
         this.viewModel = new DesignerViewModel(context.designService(), context.catalogService(), Clock.systemUTC());
         this.images = new ElementImages(context.storage());
         this.renderer = new DesignRenderer(viewer, new TextureComposer(images));
-        this.realistic = new RealisticDesigner(viewModel, context.recolorService());
+        this.realistic = new RealisticDesigner(viewModel, context.recolorService(), images);
     }
 
     @FXML
     private void initialize() {
         stage.getChildren().add(0, viewer);
         stage.getChildren().add(1, realistic.stageNode());
+        notices3d.getStyleClass().addAll("body-s", "ink-muted", "sf-realistic-notices");
+        notices3d.setWrapText(true);
+        notices3d.setMaxWidth(560);
+        notices3d.setMouseTransparent(true);
+        notices3d.setVisible(false);
+        StackPane.setAlignment(notices3d, Pos.BOTTOM_CENTER);
+        StackPane.setMargin(notices3d, new javafx.geometry.Insets(0, 16, 40, 16));
+        stage.getChildren().add(2, notices3d);
         root.getProperties().put(RealisticDesigner.class, realistic);
         // Para pruebas de interfaz (TestFX): el estado se lee del ViewModel, no de los controles.
         root.getProperties().put(DesignerViewModel.class, viewModel);
@@ -225,6 +236,7 @@ public class DesignerController implements Router.Routable {
         });
         viewModel.documentProperty().addListener((obs, old, doc) -> {
             refreshPanel();
+            updateNotices3d();
             // Manga o largos distintos: otra prenda simulada (la cámara no se mueve, ver Viewer3D.frame).
             if (!realisticMode.get() && old != null && !old.cut().equals(doc.cut())) {
                 viewModel.loadPerson();
@@ -515,6 +527,7 @@ public class DesignerController implements Router.Routable {
         tabs.setVisible(!real);
         tabs.setManaged(!real);
         applyHint();
+        updateNotices3d();
         structureKey = "";
         refreshPanel();
         scroll.setVvalue(0);
@@ -522,6 +535,16 @@ public class DesignerController implements Router.Routable {
             viewModel.loadPerson();
             viewer.requestFocus();
         }
+    }
+
+    /** Avisos de la Vista 3D: lo que el diseño tiene y el 3D muestra con lo más parecido. */
+    private final Label notices3d = new Label();
+
+    private void updateNotices3d() {
+        java.util.List<String> list = ViewSync.notices3d(viewModel.doc());
+        notices3d.setText(String.join(" · ", list));
+        boolean show = !list.isEmpty() && !realisticMode.get();
+        notices3d.setVisible(show);
     }
 
     private void applyHint() {
@@ -548,9 +571,10 @@ public class DesignerController implements Router.Routable {
         }
         Path path = file.toPath();
         if (real) {
-            RealisticSpec spec = viewModel.realistic();
+            RealisticView view = viewModel.realisticView();
+            RealisticPreview.Crest crest = realistic.crest(view);
             Async.run(() -> {
-                        ArgbImage[] px = realistic.renderPixels(spec);
+                        ArgbImage[] px = realistic.renderPixels(view, crest);
                         RealisticDesigner.writePng(RealisticDesigner.sideBySide(px[0], px[1]), path);
                         return path;
                     },
@@ -896,9 +920,10 @@ public class DesignerController implements Router.Routable {
             capture3d(paths -> store(name, paths, after));
             return;
         }
-        RealisticSpec spec = viewModel.realistic();
+        RealisticView view = viewModel.realisticView();
+        RealisticPreview.Crest crest = realistic.crest(view);
         Async.run(() -> {
-            ArgbImage[] px = realistic.renderPixels(spec);
+            ArgbImage[] px = realistic.renderPixels(view, crest);
             Path f = Files.createTempFile("sf-frente", ".png");
             RealisticDesigner.writePng(px[0], f);
             Path b = null;
@@ -1388,57 +1413,6 @@ public class DesignerController implements Router.Routable {
 
     // ---------------------------------------------------------------- Pestaña Texto
 
-    /** Opciones de la pestaña Texto: cada una es una tarjeta con su propio editor debajo del botón. */
-    enum TextSlot {
-        BACK_NAME("Nombre en la espalda"),
-        BACK_NUMBER("Número en la espalda"),
-        CHEST_NUMBER("Número en el pecho"),
-        SHORTS_NUMBER("Número en el short");
-
-        final String label;
-
-        TextSlot(String label) {
-            this.label = label;
-        }
-
-        boolean matches(DesignElement e) {
-            return switch (this) {
-                case BACK_NAME -> e.type() == ElementType.NAME && e.area() == Area.JERSEY_BACK;
-                case BACK_NUMBER -> e.type() == ElementType.NUMBER && e.area() == Area.JERSEY_BACK;
-                case CHEST_NUMBER -> e.type() == ElementType.NUMBER && e.area() == Area.JERSEY_FRONT;
-                case SHORTS_NUMBER -> e.type() == ElementType.NUMBER && e.area().garment() == Garment.SHORTS;
-            };
-        }
-
-        /** El primer elemento del documento que corresponde a esta opción (o null). */
-        DesignElement find(DesignDocument doc) {
-            return doc.elements().stream().filter(this::matches).findFirst().orElse(null);
-        }
-
-        static TextSlot of(DesignElement e) {
-            for (TextSlot s : values()) {
-                if (s.matches(e)) {
-                    return s;
-                }
-            }
-            return null;
-        }
-
-        DesignElement create(DesignDocument doc) {
-            String fill = contrast(doc.color(Zone.JERSEY_BODY));
-            String edge = fill.equals("#FFFFFF") ? "#0B0E13" : "#FFFFFF";
-            String shortsFill = contrast(doc.color(Zone.SHORTS_BASE));
-            // Con contorno desde el inicio: sobre franjas o colores medios el texto sin borde se pierde.
-            return switch (this) {
-                case BACK_NAME -> DesignDefaults.name("TU NOMBRE", fill, edge).withOutline(0.004);
-                case BACK_NUMBER -> DesignDefaults.backNumber("10", fill, edge).withOutline(0.006);
-                case CHEST_NUMBER -> DesignDefaults.chestNumber("10", fill, edge).withOutline(0.003);
-                case SHORTS_NUMBER -> DesignDefaults.shortsNumber("10", shortsFill,
-                        shortsFill.equals("#FFFFFF") ? "#0B0E13" : "#FFFFFF").withOutline(0.003);
-            };
-        }
-    }
-
     /** Tarjetas de texto abiertas (con su editor a la vista). */
     private final Set<TextSlot> openText = java.util.EnumSet.noneOf(TextSlot.class);
 
@@ -1475,7 +1449,7 @@ public class DesignerController implements Router.Routable {
         VBox card = new VBox(4);
         card.getStyleClass().add("sf-text-card");
         boolean open = element != null && openText.contains(slot);
-        SfButton header = new SfButton(slot.label, SfButton.Variant.GHOST, SfButton.Size.SM)
+        SfButton header = new SfButton(slot.label(), SfButton.Variant.GHOST, SfButton.Size.SM)
                 .withIcon(element == null ? Feather.PLUS : open ? Feather.CHEVRON_UP : Feather.CHEVRON_DOWN);
         header.getStyleClass().add("sf-text-card-head");
         header.setMaxWidth(Double.MAX_VALUE);
@@ -1505,7 +1479,7 @@ public class DesignerController implements Router.Routable {
             return card;
         }
         String id = element.id();
-        SfButton remove = SfButton.icon(Feather.TRASH_2, "Quitar " + slot.label.toLowerCase(java.util.Locale.ROOT));
+        SfButton remove = SfButton.icon(Feather.TRASH_2, "Quitar " + slot.label().toLowerCase(java.util.Locale.ROOT));
         remove.setOnAction(e -> {
             openText.remove(slot);
             viewModel.remove(id);

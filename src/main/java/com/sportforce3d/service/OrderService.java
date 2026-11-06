@@ -1,6 +1,12 @@
 package com.sportforce3d.service;
 
 import com.sportforce3d.db.Database;
+import com.sportforce3d.design.DesignJson;
+import com.sportforce3d.design.DesignPricing;
+import com.sportforce3d.model.Material;
+import com.sportforce3d.repository.DesignRepository;
+import com.sportforce3d.repository.DesignRepository.StoredDesign;
+import com.sportforce3d.storage.StorageService;
 import com.sportforce3d.model.Address;
 import com.sportforce3d.model.CartLine;
 import com.sportforce3d.model.CartSummary;
@@ -20,14 +26,22 @@ import com.sportforce3d.util.Validators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Clock;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * Convierte el carrito en un pedido: congela precios y dirección, reserva stock y crea el pago pendiente,
  * todo en una sola transacción. Nunca marca un pedido como pagado: eso lo hace un ADMIN al verificar el pago.
+ * <p>
+ * Las líneas personalizadas guardan una copia inmutable del diseño: el JSON de la versión actual y sus capturas
+ * copiadas a {@code storage/orders/}. Así el pedido no cambia aunque el cliente edite o borre el diseño después.
  */
 public class OrderService {
 
@@ -42,16 +56,27 @@ public class OrderService {
     private final CartRepository carts;
     private final AddressRepository addresses;
     private final CartService cartService;
+    private final DesignRepository designs;
+    private final CatalogService catalog;
+    private final StorageService storage;
     private final Session session;
     private final Clock clock;
 
+    /** Copia del diseño preparada antes de la transacción. */
+    private record DesignCopy(String name, int version, String json, String front, String back) {
+    }
+
     public OrderService(Database db, OrderRepository orders, CartRepository carts, AddressRepository addresses,
-                        CartService cartService, Session session, Clock clock) {
+                        CartService cartService, DesignRepository designs, CatalogService catalog,
+                        StorageService storage, Session session, Clock clock) {
         this.db = db;
         this.orders = orders;
         this.carts = carts;
         this.addresses = addresses;
         this.cartService = cartService;
+        this.designs = designs;
+        this.catalog = catalog;
+        this.storage = storage;
         this.session = session;
         this.clock = clock;
     }
@@ -71,10 +96,65 @@ public class OrderService {
         String now = clock.instant().toString();
         int year = clock.instant().atZone(LIMA).getYear();
 
-        long orderId = db.inTransaction(c -> {
+        // Copias de los diseños (archivos) fuera de la transacción; si algo falla se borran.
+        List<String> created = new ArrayList<>();
+        Map<Long, DesignCopy> copies = new HashMap<>();
+        try {
+            for (CartLine line : carts.findLines(me.id())) {
+                if (line.hasDesign() && !copies.containsKey(line.designId())) {
+                    copies.put(line.designId(), copyDesign(me, line, created));
+                }
+            }
+            long orderId = insertOrder(me, addressId, method, cleanNotes, now, year, copies);
+            return orders.findDetail(orderId).orElseThrow();
+        } catch (RuntimeException e) {
+            created.forEach(storage::delete);
+            throw e;
+        }
+    }
+
+    private DesignCopy copyDesign(User me, CartLine line, List<String> created) {
+        StoredDesign d = designs.find(line.designId())
+                .filter(x -> x.userId() == me.id() && !x.deleted())
+                .orElseThrow(() -> new ServiceException("El diseño de " + line.productName()
+                        + " ya no existe. Quítalo del carrito para continuar."));
+        DesignJson.read(d.documentJson()); // valida antes de congelarlo
+        return new DesignCopy(d.summary().name(), d.summary().version(), d.documentJson(),
+                copyFile(d.summary().thumbnailFront(), created), copyFile(d.summary().thumbnailBack(), created));
+    }
+
+    private String copyFile(String path, List<String> created) {
+        if (path == null) {
+            return null;
+        }
+        Path source = storage.resolve(path);
+        if (!Files.exists(source)) {
+            return null;
+        }
+        String copy = storage.store(source, "orders", Set.of(StorageService.Kind.PNG)).path();
+        created.add(copy);
+        return copy;
+    }
+
+    private long insertOrder(User me, long addressId, PaymentMethod method, String cleanNotes, String now, int year,
+                             Map<Long, DesignCopy> copies) {
+        Map<String, Material> materials = copies.isEmpty() ? Map.of() : catalog.materialsByCode();
+        return db.inTransaction(c -> {
             Address address = addresses.findById(c, me.id(), addressId)
                     .orElseThrow(() -> ValidationException.of("address", "Elige una dirección de envío."));
-            List<CartLine> lines = carts.findLines(c, me.id());
+            List<CartLine> lines = new ArrayList<>();
+            for (CartLine line : carts.findLines(c, me.id())) {
+                if (line.hasDesign()) {
+                    DesignCopy copy = copies.get(line.designId());
+                    if (copy == null) {
+                        throw new ServiceException("Tu carrito cambió mientras confirmabas. Revísalo e inténtalo de nuevo.");
+                    }
+                    // El recargo se congela con la versión que se copia.
+                    line = line.withSurcharge(DesignPricing.surchargeCents(DesignJson.read(copy.json()), materials,
+                            line.garment()));
+                }
+                lines.add(line);
+            }
             if (lines.isEmpty()) {
                 throw new ServiceException("Tu carrito está vacío.");
             }
@@ -96,9 +176,12 @@ public class OrderService {
                             line.quantity(), line.available());
                     throw new ServiceException("No hay stock suficiente de " + line.productName() + ".");
                 }
+                DesignCopy copy = line.hasDesign() ? copies.get(line.designId()) : null;
                 orders.insertItem(c, id, new NewItem(line.productId(), line.variantId(), line.productName(),
                         line.sku(), line.sizeName(), line.colorHex(), line.quantity(), line.unitPriceCents(),
-                        line.surchargeCents()));
+                        line.surchargeCents(), line.designId(), copy == null ? null : copy.name(),
+                        copy == null ? null : copy.version(), copy == null ? null : copy.json(),
+                        copy == null ? null : copy.front(), copy == null ? null : copy.back()));
             }
             orders.insertHistory(c, id, null, OrderStatus.PENDIENTE_PAGO, me.id(), "Pedido creado", now);
             orders.insertPendingPayment(c, id, method, summary.totalCents());
@@ -107,7 +190,6 @@ public class OrderService {
                     number, me.id(), lines.size(), summary.totalCents());
             return id;
         });
-        return orders.findDetail(orderId).orElseThrow();
     }
 
     public List<OrderSummary> myOrders() {

@@ -7,11 +7,11 @@ import com.sportforce3d.component.SfTextField;
 import com.sportforce3d.component.Toast;
 import com.sportforce3d.design.DesignDefaults;
 import com.sportforce3d.design.RealisticSpec;
+import com.sportforce3d.design.RealisticView;
 import com.sportforce3d.render.ArgbImage;
 import com.sportforce3d.render.RealisticModel;
 import com.sportforce3d.render.RealisticModelRepository;
 import com.sportforce3d.render.RealisticPattern;
-import com.sportforce3d.render.RecolorRequest;
 import com.sportforce3d.render.RecolorService;
 import com.sportforce3d.viewmodel.DesignerViewModel;
 import com.sportforce3d.viewmodel.ErrorMessages;
@@ -22,11 +22,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -37,10 +33,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
 /**
- * Vista realista del diseñador: fotos de personas con la prenda recoloreada (frente y espalda lado a lado) y su
+ * Vista realista del diseñador: fotos de personas con la prenda recoloreada ({@link RealisticPreview}) y su
  * panel (categoría, corte, colores por zona, diseño, nombre y número). Lee y cambia la vista realista del
  * documento con {@link DesignerViewModel#editRealistic}, así deshacer, borrador y guardado funcionan igual que en 3D.
  * <p>
@@ -62,7 +57,8 @@ final class RealisticDesigner {
     private final List<Runnable> syncers = new ArrayList<>();
     private boolean syncing;
     private String zone = RealisticModel.CAMISETA;
-    private RealisticSpec shown;
+    private RealisticView shown;
+    private final com.sportforce3d.three.ElementImages images;
     private boolean busy;
     private long lastFrame;
 
@@ -76,8 +72,9 @@ final class RealisticDesigner {
         }
     };
 
-    RealisticDesigner(DesignerViewModel viewModel, RecolorService recolor) {
+    RealisticDesigner(DesignerViewModel viewModel, RecolorService recolor, com.sportforce3d.three.ElementImages images) {
         this.viewModel = viewModel;
+        this.images = images;
         this.recolor = recolor;
         this.models = recolor.models();
     }
@@ -101,24 +98,32 @@ final class RealisticDesigner {
         return RealisticPreview.frontModel(models, spec);
     }
 
-    /** Fotos de frente y espalda (null si el modelo no tiene espalda) en tamaño completo. Cualquier hilo. */
-    ArgbImage[] renderPixels(RealisticSpec spec) {
-        return RealisticPreview.renderPixels(recolor, spec);
+    /** El escudo del pecho del diseño, listo para dibujar en cualquier hilo. Hilo de JavaFX. */
+    RealisticPreview.Crest crest(RealisticView view) {
+        return RealisticPreview.crest(images, view.crest());
     }
 
+    /** Fotos de frente y espalda (null si el modelo no tiene espalda) en tamaño completo. Cualquier hilo. */
+    ArgbImage[] renderPixels(RealisticView view, RealisticPreview.Crest crest) {
+        return RealisticPreview.renderPixels(recolor, view, crest);
+    }
+
+    /** El mismo diseño que la Vista 3D: se redibuja cuando cambia lo que muestra la foto (no más de 30 veces/s). */
     private void renderIfChanged() {
-        RealisticSpec spec = viewModel.realistic();
-        if (busy || spec.equals(shown)) {
+        RealisticView view = viewModel.realisticView();
+        if (busy || view.equals(shown)) {
             return;
         }
         busy = true;
-        Async.run(() -> RealisticPreview.render(recolor, spec), images -> {
+        RealisticPreview.Crest crest = crest(view);
+        preview.showNotices(view.notices());
+        Async.run(() -> RealisticPreview.render(recolor, view, crest), imgs -> {
             busy = false;
-            shown = spec;
-            preview.show(images[0], images[1]);
+            shown = view;
+            preview.show(imgs[0], imgs[1]);
         }, e -> {
             busy = false;
-            shown = spec;
+            shown = view;
             Toast.error(preview.node(), "No se pudo dibujar la vista realista. " + ErrorMessages.of(e));
         });
     }
@@ -146,9 +151,7 @@ final class RealisticDesigner {
             chip.setToggleGroup(categoryGroup);
             chip.setOnAction(e -> {
                 chip.setSelected(true);
-                String cut = frontModel(viewModel.realistic()).cut();
-                String key = models.find(key(cut, audience)).isPresent() ? key(cut, audience) : key("futbol", audience);
-                viewModel.editRealistic("Categoría · " + label, s -> s.withModel(key), null);
+                selectAudience(audience, label);
             });
             sync(() -> chip.setSelected(audience.equals(frontModel(viewModel.realistic()).audience())));
             categories.getChildren().add(chip);
@@ -290,6 +293,16 @@ final class RealisticDesigner {
                         ? "El nombre va en la espalda; el número, en el pecho y en la espalda."
                         : "El número se ve en el pecho. Esta foto no tiene espalda: el nombre y el número de la "
                         + "espalda se ven en la Vista 3D.")));
+    }
+
+    /**
+     * Cambia la categoría (la persona) conservando el corte si existe para ella; si no, fútbol. También lo usa el
+     * selector de persona de la Vista 3D, así las dos vistas muestran a la misma persona.
+     */
+    void selectAudience(String audience, String label) {
+        String cut = frontModel(viewModel.realistic()).cut();
+        String key = models.find(key(cut, audience)).isPresent() ? key(cut, audience) : key("futbol", audience);
+        viewModel.editRealistic("Categoría · " + label, s -> s.withModel(key), null);
     }
 
     void refresh() {

@@ -36,6 +36,16 @@ public final class DesignFonts {
         };
     }
 
+    /** Archivo TTF en /fonts (el compositor de texturas dibuja con Java2D y carga la fuente él mismo). */
+    public static String file(String key) {
+        return switch (key == null ? DEFAULT : key) {
+            case "BARLOW_CONDENSED_700" -> "BarlowCondensed-Bold.ttf";
+            case "BARLOW_600" -> "Barlow-SemiBold.ttf";
+            case "JETBRAINS_MONO" -> "JetBrainsMono-Medium.ttf";
+            default -> "BarlowCondensed-ExtraBold.ttf";
+        };
+    }
+
     public static boolean bold(String key) {
         return "BARLOW_CONDENSED_700".equals(key);
     }

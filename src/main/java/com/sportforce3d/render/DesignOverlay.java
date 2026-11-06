@@ -179,20 +179,87 @@ final class DesignOverlay {
      * las cifras o de las mayúsculas.
      */
     private static void drawTexts(Graphics2D g, RealisticModel model, RealisticModel.ShirtGeometry geo, RecolorRequest req) {
+        if (req.overlay() != null) {
+            drawSynced(g, model, geo, req.overlay());
+            return;
+        }
         if (req.name() == null && req.number() == null) {
             return;
         }
-        g.setColor(new Color(textColor(req)));
+        int fill = textColor(req);
         double h = geo.height();
         boolean back = model.view() == RealisticModel.View.ESPALDA;
         if (req.number() != null) {
             double cy = geo.neckY() + (back ? 0.80 : 0.74) * h;
             double size = (back ? 0.46 : 0.36) * h;
-            g.fill(text(g, String.valueOf(req.number()), "0", geo.centerX(), cy, size, (back ? 0.62 : 0.5) * h));
+            outlined(g, text(g, String.valueOf(req.number()), "0", geo.centerX(), cy, size, (back ? 0.62 : 0.5) * h),
+                    size * 0.035, fill);
         }
         if (back && req.name() != null) {
-            g.fill(text(g, req.name(), "H", geo.centerX(), geo.neckY() + 0.26 * h, 0.10 * h, 0.66 * h));
+            double size = 0.10 * h;
+            outlined(g, text(g, req.name(), "H", geo.centerX(), geo.neckY() + 0.26 * h, size, 0.66 * h), size * 0.07, fill);
         }
+    }
+
+    /**
+     * Textos y escudo de un diseño sincronizado con el 3D (Etapa 11), con sus colores, contornos y tipografías:
+     * espalda con nombre y número (como siempre); frente con el número pequeño en el pecho derecho del jugador
+     * (izquierda de la foto) y el escudo en el izquierdo, a la altura y el tamaño que tienen en el 3D.
+     */
+    private static void drawSynced(Graphics2D g, RealisticModel model, RealisticModel.ShirtGeometry geo,
+                                   RecolorRequest.Overlay o) {
+        double h = geo.height();
+        if (model.view() == RealisticModel.View.ESPALDA) {
+            if (o.back() != null) {
+                double size = 0.46 * h;
+                paint(g, text(g, font(o.back().font()), o.back().value(), "0", geo.centerX(), geo.neckY() + 0.80 * h,
+                        size, 0.62 * h), size * 0.035, o.back());
+            }
+            if (o.name() != null) {
+                double size = 0.10 * h;
+                paint(g, text(g, font(o.name().font()), o.name().value(), "H", geo.centerX(), geo.neckY() + 0.26 * h,
+                        size, 0.66 * h), size * 0.07, o.name());
+            }
+            return;
+        }
+        if (o.chest() != null) {
+            double size = 0.15 * h;
+            paint(g, text(g, font(o.chest().font()), o.chest().value(), "0", geo.centerX() - 0.16 * h,
+                    geo.neckY() + 0.28 * h, size, 0.22 * h), size * 0.05, o.chest());
+        }
+        if (o.crest() != null) {
+            ArgbImage c = o.crest();
+            BufferedImage img = new BufferedImage(c.width(), c.height(), BufferedImage.TYPE_INT_ARGB);
+            img.setRGB(0, 0, c.width(), c.height(), c.pixels(), 0, c.width());
+            double ch = 0.15 * h;
+            double cw = ch * c.width() / Math.max(1, c.height());
+            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            g.drawImage(img, (int) Math.round(geo.centerX() + 0.16 * h - cw / 2),
+                    (int) Math.round(geo.neckY() + 0.28 * h - ch / 2), (int) Math.round(cw), (int) Math.round(ch), null);
+        }
+    }
+
+    /** Relleno con el color del texto y, si tiene, el contorno con su color (como en el 3D). */
+    private static void paint(Graphics2D g, Shape shape, double width, com.sportforce3d.design.RealisticView.Text t) {
+        if (t.outline() != null) {
+            g.setColor(new Color(RecolorRequest.rgb(t.outline())));
+            g.setStroke(new BasicStroke((float) Math.max(1.5, width * 2), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            g.draw(shape);
+        }
+        g.setColor(new Color(RecolorRequest.rgb(t.fill())));
+        g.fill(shape);
+    }
+
+    /**
+     * Rellena el texto con un contorno fino del color contrario: así se lee aunque el diseño de debajo tenga el
+     * mismo tono (por ejemplo, nombre oscuro sobre rayas oscuras).
+     */
+    private static void outlined(Graphics2D g, Shape shape, double width, int fill) {
+        g.setColor(new Color(luminance(fill) > 0.55 ? DARK_TEXT : LIGHT_TEXT));
+        g.setStroke(new BasicStroke((float) Math.max(1.5, width * 2), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        g.draw(shape);
+        g.setColor(new Color(fill));
+        g.fill(shape);
     }
 
     /**
@@ -200,8 +267,13 @@ final class DesignOverlay {
      * letras con cola (Q, Ñ) no achican el nombre; si pasa de {@code maxWidth}, se angosta.
      */
     private static Shape text(Graphics2D g, String value, String reference, double cx, double cy, double size, double maxWidth) {
+        return text(g, font(), value, reference, cx, cy, size, maxWidth);
+    }
+
+    private static Shape text(Graphics2D g, Font base, String value, String reference, double cx, double cy,
+                              double size, double maxWidth) {
         FontRenderContext frc = g.getFontRenderContext();
-        Font f = font().deriveFont(100f);
+        Font f = base.deriveFont(100f);
         Rectangle2D ref = new TextLayout(reference, f, frc).getOutline(null).getBounds2D();
         Shape outline = new TextLayout(value, f, frc).getOutline(null);
         Rectangle2D bounds = outline.getBounds2D();
@@ -221,8 +293,11 @@ final class DesignOverlay {
         }
         String shirt = req.zoneColors().get(RealisticModel.CAMISETA);
         int c = shirt == null ? 0xFFFFFF : RecolorRequest.rgb(shirt);
-        double lum = (0.2126 * ((c >> 16) & 0xFF) + 0.7152 * ((c >> 8) & 0xFF) + 0.0722 * (c & 0xFF)) / 255;
-        return lum > 0.55 ? DARK_TEXT : LIGHT_TEXT;
+        return luminance(c) > 0.55 ? DARK_TEXT : LIGHT_TEXT;
+    }
+
+    private static double luminance(int rgb) {
+        return (0.2126 * ((rgb >> 16) & 0xFF) + 0.7152 * ((rgb >> 8) & 0xFF) + 0.0722 * (rgb & 0xFF)) / 255;
     }
 
     private static final java.util.Map<String, Font> FONTS = new java.util.concurrent.ConcurrentHashMap<>();

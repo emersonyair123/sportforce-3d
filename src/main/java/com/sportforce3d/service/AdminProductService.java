@@ -194,7 +194,7 @@ public class AdminProductService {
             errors.put("garment", "Elige el tipo de prenda.");
         } else if (f.customizable() && !f.garment().designable()) {
             errors.put("customizable", "Los buzos y accesorios no se personalizan en el diseñador 3D: se venden con "
-                    + "su color y talla. Desmarca "Personalizable".");
+                    + "su color y talla. Desmarca \"Personalizable\".");
         }
         if (f.basePriceCents() < 0 || f.basePriceCents() > MAX_PRICE_CENTS) {
             errors.put("price", "El precio debe estar entre S/ 0.00 y S/ 99,999.99.");

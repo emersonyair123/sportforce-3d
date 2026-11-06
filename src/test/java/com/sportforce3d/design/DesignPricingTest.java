@@ -34,7 +34,8 @@ class DesignPricingTest {
                 .withMaterial(MaterialSlot.JERSEY, "MALLA")
                 .withMaterial(MaterialSlot.SHORTS, "LICRA")
                 .withMaterial(MaterialSlot.SHOE_SOLE, "TPU_TACOS");
-        assertThat(DesignPricing.surchargeCents(doc, CATALOG, Garment.KIT)).isEqualTo(500 + 1000 + 2000);
+        // Un uniforme (KIT) es camiseta + short + medias: la suela de las zapatillas no cuenta.
+        assertThat(DesignPricing.surchargeCents(doc, CATALOG, Garment.KIT)).isEqualTo(500 + 1000);
         assertThat(DesignPricing.surchargeCents(doc, CATALOG, null)).isEqualTo(3500);
         assertThat(DesignPricing.surchargeCents(doc, CATALOG, Garment.JERSEY)).isEqualTo(500);
         assertThat(DesignPricing.surchargeCents(doc, CATALOG, Garment.SHOES)).isEqualTo(2000);

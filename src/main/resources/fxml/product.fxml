@@ -14,7 +14,7 @@
         <padding><Insets top="24" right="24" bottom="64" left="24"/></padding>
         <SfLink fx:id="backLink" text="Volver"/>
         <StackPane fx:id="body">
-            <FlowPane fx:id="layout" hgap="48" vgap="32"/>
+            <FlowPane fx:id="layout" hgap="40" vgap="32"/>
         </StackPane>
     </VBox>
 </ScrollPane>

@@ -6,12 +6,15 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.FlowPane;
 
 import java.util.List;
 
-/** Control segmentado: Camiseta · Short · Medias · Zapatillas · Accesorios. Siempre hay una prenda elegida. */
-public class GarmentPicker extends HBox {
+/**
+ * Control segmentado: Camiseta · Short · Medias · Zapatillas · Accesorios. Siempre hay una prenda elegida.
+ * Si no cabe en una fila (p. ej. en el panel de 360 px del diseñador) pasa a dos filas en lugar de recortar texto.
+ */
+public class GarmentPicker extends FlowPane {
 
     private final ObjectProperty<Garment> selected = new SimpleObjectProperty<>(this, "selected");
     private final ToggleGroup group = new ToggleGroup();
@@ -23,7 +26,8 @@ public class GarmentPicker extends HBox {
     public GarmentPicker(List<Garment> garments) {
         getStyleClass().add("sf-seg");
         setAlignment(Pos.CENTER_LEFT);
-        setMaxWidth(USE_PREF_SIZE);
+        setHgap(4);
+        setVgap(4);
 
         for (Garment garment : garments) {
             ToggleButton item = new ToggleButton(garment.label());
@@ -31,6 +35,7 @@ public class GarmentPicker extends HBox {
             item.setUserData(garment);
             item.setToggleGroup(group);
             item.setMnemonicParsing(false);
+            item.setMinWidth(USE_PREF_SIZE);
             getChildren().add(item);
         }
 

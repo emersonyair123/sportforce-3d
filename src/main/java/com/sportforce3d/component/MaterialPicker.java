@@ -118,6 +118,12 @@ public class MaterialPicker extends VBox {
         return selected;
     }
 
+    /** Elige por id (null deja sin elegir); útil al sincronizar con un diseño abierto. */
+    public void setSelected(Material material) {
+        selected.set(material == null ? null
+                : cards.stream().map(c -> c.material).filter(m -> m.id() == material.id()).findFirst().orElse(null));
+    }
+
     public Material getSelected() {
         return selected.get();
     }

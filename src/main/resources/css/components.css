@@ -526,11 +526,10 @@
 
 .sf-seg {
     -fx-background-color: -sf-bg-200;
-    -fx-background-radius: 999;
+    -fx-background-radius: 20;
     -fx-border-color: -sf-line;
-    -fx-border-radius: 999;
+    -fx-border-radius: 20;
     -fx-padding: 4;
-    -fx-spacing: 4;
 }
 
 .sf-seg-item {
@@ -679,7 +678,7 @@
     -fx-alignment: center;
     -fx-padding: 48 24 48 24;
 }
-.sf-empty .ikonli-font-icon { -fx-icon-color: -sf-ink-subtle; }
+.sf-empty > .ikonli-font-icon { -fx-icon-color: -sf-ink-subtle; } /* solo el icono grande, no el del botón */
 
 /* ---------------------------------------------------------------- Toast */
 
@@ -1166,6 +1165,69 @@
     -fx-background-color: -sf-bg-300;
 }
 
+/* ================================================================ Etapa 3: diseñador 3D */
+
+.sf-designer-stage {
+    -fx-background-color: -sf-bg-000;
+}
+
+/* Barra flotante en píldora sobre el visor: bg-200 al 90 %. */
+.sf-designer-toolbar {
+    -fx-background-color: derive(-sf-bg-200, 0%);
+    -fx-opacity: 0.96;
+    -fx-background-radius: 999;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 999;
+    -fx-padding: 4 6 4 6;
+    -fx-effect: dropshadow(gaussian, -sf-shadow-card, 24, 0, 0, 8);
+}
+.sf-toolbar-btn {
+    -fx-border-color: transparent;
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-padding: 6 12 6 12;
+}
+.sf-toolbar-btn:hover { -fx-background-color: -sf-bg-300; }
+.sf-toolbar-btn:focus-visible {
+    -fx-border-color: transparent, -sf-focus;
+    -fx-border-radius: 999, 999;
+}
+.sf-toolbar-sep {
+    -fx-background-color: -sf-line;
+    -fx-min-width: 1;
+    -fx-pref-width: 1;
+    -fx-max-width: 1;
+    -fx-pref-height: 22;
+    -fx-max-height: 22;
+}
+
+.sf-designer-hint {
+    -fx-text-fill: -sf-ink-subtle;
+    -fx-font-size: 12px;
+}
+
+.sf-designer-loading {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 10;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 10;
+    -fx-padding: 12 18 12 18;
+}
+
+.sf-viewer3d:focus-visible {
+    -fx-border-color: -sf-focus;
+    -fx-border-width: 2;
+    -fx-border-insets: 2;
+}
+
+.sf-upcoming-row {
+    -fx-background-color: -sf-bg-200;
+    -fx-background-radius: 10;
+    -fx-border-color: -sf-line;
+    -fx-border-radius: 10;
+    -fx-padding: 8 12 8 12;
+}
+
 /* ================================================================ Etapa 4: personalización */
 
 .sf-designer-side {
@@ -1175,7 +1237,7 @@
     -fx-padding: 24 24 12 24;
 }
 .sf-designer-tabs {
-    -fx-padding: 0 24 4 24;
+    -fx-padding: 4 24 12 24;
 }
 .sf-designer-footer {
     -fx-padding: 16 24 20 24;
@@ -1381,11 +1443,9 @@
     -fx-background-radius: 5;
     -fx-padding: 4;
 }
+/* La serie de comparación va sin puntos: solo la línea discontinua. */
 .sf-chart .default-color1.chart-line-symbol {
-    -fx-background-color: -sf-accent, -sf-bg-200;
-    -fx-background-insets: 0, 2;
-    -fx-background-radius: 4;
-    -fx-padding: 3;
+    -fx-background-color: transparent;
 }
 .sf-chart .default-color0.chart-legend-item-symbol {
     -fx-background-color: -sf-brand;
@@ -1395,7 +1455,7 @@
 }
 .sf-chart .default-color0.chart-bar {
     -fx-bar-fill: -sf-brand;
-    -fx-background-radius: 4 4 0 0;
+    -fx-background-radius: 4;
 }
 .sf-chart .default-color0.chart-bar:hover {
     -fx-bar-fill: -sf-brand-hover;

@@ -12,10 +12,11 @@ import java.util.Map;
 /**
  * Ficha técnica de un diseño para producción: color HEX por zona, material y patrón por prenda, y cada elemento con
  * posición (u, v dentro de su zona, 0–1), escala y rotación; además la vista realista (modelo, color HEX por zona,
- * diseño, nombre y número), null en diseños anteriores a la Etapa 7. La usan el visor del ADMIN y la descarga en CSV.
+ * diseño, nombre y número), null en diseños anteriores a la Etapa 7, y el corte (manga y largos; los diseños anteriores a
+ * la Etapa 10 tienen el de siempre). La usan el visor del ADMIN y la descarga en CSV.
  */
 public record TechSheet(List<ZoneRow> zones, List<MaterialRow> materials, List<PatternRow> patterns,
-                        List<ElementRow> elements, Realistic realistic) {
+                        List<ElementRow> elements, Realistic realistic, GarmentCut cut) {
 
     /**
      * Vista realista: {@code model} es la clave de {@code models/realista} (frente), {@code zones} zona → HEX en el
@@ -74,13 +75,17 @@ public record TechSheet(List<ZoneRow> zones, List<MaterialRow> materials, List<P
         RealisticSpec r = doc.realistic();
         Realistic realistic = r == null ? null : new Realistic(r.modelKey(), r.zoneColors(), r.pattern(),
                 r.plain() ? null : r.patternColor(), r.name(), r.number());
-        return new TechSheet(zones, mats, patterns, elements, realistic);
+        return new TechSheet(zones, mats, patterns, elements, realistic, doc.cut());
     }
 
     /** CSV con punto y coma (Excel en español lo abre bien) y UTF-8 con BOM. */
     public String toCsv(String title) {
         StringBuilder sb = new StringBuilder("﻿");
         line(sb, "Ficha técnica", title);
+        sb.append('\n');
+        line(sb, "CORTE", "Manga", cut.sleeve().label());
+        line(sb, "", "Largo del short", cut.shorts().label() + " (" + cut.shorts().detail() + ")");
+        line(sb, "", "Largo de las medias", cut.socks().label() + " (" + cut.socks().detail() + ")");
         sb.append('\n');
         line(sb, "ZONAS", "Prenda", "Zona", "Color HEX");
         for (ZoneRow z : zones) {
