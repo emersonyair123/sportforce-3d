@@ -1,22 +1,22 @@
 package com.sportforce3d.tools;
 
-import com.sportforce3d.app.AppContext;
-import com.sportforce3d.app.Fonts;
-import com.sportforce3d.app.Routes;
-import com.sportforce3d.app.SportForceApp;
-import com.sportforce3d.app.UiSettings;
-import com.sportforce3d.component.SfButton;
-import com.sportforce3d.component.SfTextField;
-import com.sportforce3d.config.AppConfig;
-import com.sportforce3d.db.Database;
-import com.sportforce3d.design.DesignDocument;
-import com.sportforce3d.design.SampleDesigns;
-import com.sportforce3d.model.Garment;
-import com.sportforce3d.three.Png;
-import com.sportforce3d.three.ViewPreset;
-import com.sportforce3d.three.Viewer3D;
-import com.sportforce3d.three.human.Persona;
-import com.sportforce3d.viewmodel.DesignerViewModel;
+import com.sportforce3d.app.PpqhAppContext;
+import com.sportforce3d.app.PpqhFonts;
+import com.sportforce3d.app.PpqhRoutes;
+import com.sportforce3d.app.PpqhSportForceApp;
+import com.sportforce3d.app.PpqhUiSettings;
+import com.sportforce3d.component.PpqhSfButton;
+import com.sportforce3d.component.PpqhSfTextField;
+import com.sportforce3d.config.PpqhAppConfig;
+import com.sportforce3d.db.HepyDatabase;
+import com.sportforce3d.design.PgeyDesignDocument;
+import com.sportforce3d.design.PgeySampleDesigns;
+import com.sportforce3d.model.HepyGarment;
+import com.sportforce3d.three.PgeyPng;
+import com.sportforce3d.three.PgeyViewPreset;
+import com.sportforce3d.three.PgeyViewer3D;
+import com.sportforce3d.three.human.PgeyPersona;
+import com.sportforce3d.viewmodel.PgeyDesignerViewModel;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -41,7 +41,7 @@ public final class Personas3dTour {
             "futbol_nina_frente"};
 
     private final Path out;
-    private AppContext context;
+    private PpqhAppContext context;
     private Stage stage;
 
     private Personas3dTour(Path out) {
@@ -63,15 +63,15 @@ public final class Personas3dTour {
     private void run() throws Exception {
         Files.createDirectories(out);
         Path data = Files.createTempDirectory("sf-personas3d");
-        Database.deleteFiles(data.resolve("tour.db"));
+        HepyDatabase.hepyDeleteFiles(data.resolve("tour.db"));
         fx(() -> {
-            Fonts.loadAll();
-            UiSettings settings = new UiSettings(Preferences.userRoot().node("com/sportforce3d-tour"));
+            PpqhFonts.ppqhLoadAll();
+            PpqhUiSettings settings = new PpqhUiSettings(Preferences.userRoot().node("com/sportforce3d-tour"));
             settings.reduceMotionProperty().set(true);
-            context = new AppContext(new AppConfig(data.resolve("tour.db")), settings);
-            context.database().migrate();
+            context = new PpqhAppContext(new PpqhAppConfig(data.resolve("tour.db")), settings);
+            context.ppqhDatabase().hepyMigrate();
             stage = new Stage();
-            SportForceApp.openMainWindow(stage, context);
+            PpqhSportForceApp.ppqhOpenMainWindow(stage, context);
             stage.setWidth(W);
             stage.setHeight(H);
             stage.show();
@@ -79,7 +79,7 @@ public final class Personas3dTour {
         });
         pause(800);
         login();
-        go(Routes.DESIGNER, null);
+        go(PpqhRoutes.PPQH_DESIGNER, null);
         fx(() -> {
             toggle("Vista 3D").fire();
             return null;
@@ -88,27 +88,27 @@ public final class Personas3dTour {
         for (int i = 0; i < MODELS.length; i++) {
             int k = i;
             fx(() -> {
-                DesignDocument d = SampleDesigns.forPerson(k);
-                vm().edit("Persona", x -> d.withRealistic(d.realisticOrDefault().withModel(MODELS[k])), null);
-                vm().seal();
+                PgeyDesignDocument d = PgeySampleDesigns.pgeyForPerson(k);
+                vm().pgeyEdit("Persona", x -> d.pgeyWithRealistic(d.pgeyRealisticOrDefault().pgeyWithModel(MODELS[k])), null);
+                vm().pgeySeal();
                 return null;
             });
             waitDressed();
-            Persona p = fx(() -> vm().personaProperty().get());
+            PgeyPersona p = fx(() -> vm().personaProperty().get());
             boolean fallback = fx(() -> vm().personFallbackProperty().get());
-            System.out.println("Persona " + p.key() + (fallback ? ": MANIQUÍ DE RESPALDO" : ": persona 3D vestida"));
+            System.out.println("Persona " + p.pgeyKey() + (fallback ? ": MANIQUÍ DE RESPALDO" : ": persona 3D vestida"));
             fx(() -> {
-                viewer().jumpTo(ViewPreset.FRONT, Garment.KIT);
+                viewer().pgeyJumpTo(PgeyViewPreset.FRONT, HepyGarment.KIT);
                 return null;
             });
             pause(1200);
-            shot("vista3d-" + p.key() + "-frente");
+            shot("vista3d-" + p.pgeyKey() + "-frente");
             fx(() -> {
-                viewer().jumpTo(ViewPreset.BACK, Garment.KIT);
+                viewer().pgeyJumpTo(PgeyViewPreset.BACK, HepyGarment.KIT);
                 return null;
             });
             pause(1200);
-            shot("vista3d-" + p.key() + "-espalda");
+            shot("vista3d-" + p.pgeyKey() + "-espalda");
         }
         fx(() -> {
             stage.close();
@@ -137,16 +137,16 @@ public final class Personas3dTour {
         return null;
     }
 
-    private Viewer3D viewer() {
-        return (Viewer3D) stage.getScene().getRoot().lookup(".sf-viewer3d");
+    private PgeyViewer3D viewer() {
+        return (PgeyViewer3D) stage.getScene().getRoot().lookup(".sf-viewer3d");
     }
 
-    private DesignerViewModel vm() {
-        Node n = find(stage.getScene().getRoot(), x -> x.getProperties().containsKey(DesignerViewModel.class));
+    private PgeyDesignerViewModel vm() {
+        Node n = find(stage.getScene().getRoot(), x -> x.getProperties().containsKey(PgeyDesignerViewModel.class));
         if (n == null) {
             throw new IllegalStateException("No está abierto el diseñador");
         }
-        return (DesignerViewModel) n.getProperties().get(DesignerViewModel.class);
+        return (PgeyDesignerViewModel) n.getProperties().get(PgeyDesignerViewModel.class);
     }
 
     private ToggleButton toggle(String text) {
@@ -160,8 +160,8 @@ public final class Personas3dTour {
 
     private void login() throws Exception {
         fx(() -> {
-            if (!context.session().isAuthenticated()) {
-                context.navigator().showLogin();
+            if (!context.ppqhSession().ppqhIsAuthenticated()) {
+                context.ppqhNavigator().ppqhShowLogin();
             }
             return null;
         });
@@ -177,7 +177,7 @@ public final class Personas3dTour {
 
     private void go(String route, Object param) throws Exception {
         fx(() -> {
-            context.router().go(route, param);
+            context.ppqhRouter().ppqhGo(route, param);
             return null;
         });
         pause(1300);
@@ -186,13 +186,13 @@ public final class Personas3dTour {
     private void shot(String name) throws Exception {
         WritableImage img = fx(() -> stage.getScene().snapshot(null));
         Path file = out.resolve(name + ".png");
-        Png.write(img, file);
+        PgeyPng.pgeyWrite(img, file);
         System.out.println("Captura: " + file);
     }
 
-    private SfTextField field(String label) {
+    private PpqhSfTextField field(String label) {
         for (Node n : stage.getScene().getRoot().lookupAll(".sf-field")) {
-            if (n instanceof SfTextField f && f.isVisible() && f.lookupAll(".sf-field-label").stream()
+            if (n instanceof PpqhSfTextField f && f.isVisible() && f.lookupAll(".sf-field-label").stream()
                     .anyMatch(l -> l instanceof Labeled ll && ll.getText().equalsIgnoreCase(label))) {
                 return f;
             }
@@ -200,12 +200,12 @@ public final class Personas3dTour {
         throw new IllegalStateException("No hay campo " + label);
     }
 
-    private SfButton button(String text) {
-        Node found = find(stage.getScene().getRoot(), x -> x instanceof SfButton b && text.equalsIgnoreCase(b.getText()));
+    private PpqhSfButton button(String text) {
+        Node found = find(stage.getScene().getRoot(), x -> x instanceof PpqhSfButton b && text.equalsIgnoreCase(b.getText()));
         if (found == null) {
             throw new IllegalStateException("No hay botón " + text);
         }
-        return (SfButton) found;
+        return (PpqhSfButton) found;
     }
 
     private static void waitFor(Callable<Boolean> condition, long maxMs) throws Exception {

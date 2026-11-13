@@ -1,11 +1,11 @@
 package com.sportforce3d.three.human;
 
-import com.sportforce3d.model.Garment;
-import com.sportforce3d.three.geom.MeshData;
-import com.sportforce3d.three.geom.Vec3;
-import com.sportforce3d.three.model.ModelData;
-import com.sportforce3d.three.model.ModelProviders;
-import com.sportforce3d.three.model.Zone;
+import com.sportforce3d.model.HepyGarment;
+import com.sportforce3d.three.geom.PgeyMeshData;
+import com.sportforce3d.three.geom.PgeyVec3;
+import com.sportforce3d.three.model.PgeyModelData;
+import com.sportforce3d.three.model.PgeyModelProviders;
+import com.sportforce3d.three.model.PgeyZone;
 import javafx.scene.paint.Color;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,60 +20,60 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class OutfitFitterTest {
 
-    private static final Map<Persona, Fitted> FITS = new EnumMap<>(Persona.class);
+    private static final Map<PgeyPersona, Fitted> FITS = new EnumMap<>(PgeyPersona.class);
 
-    private record Fitted(HumanModel human, ModelData source, OutfitFitter.DressedPerson dressed, TriangleIndex skin) {
+    private record Fitted(PgeyHumanModel human, PgeyModelData source, PgeyOutfitFitter.PgeyDressedPerson dressed, PgeyTriangleIndex skin) {
     }
 
     @BeforeAll
     static void fitAll() {
-        for (Persona p : Persona.values()) {
-            HumanModel human = geometryOnly(p);
-            ModelData source = ModelProviders.load(p.fallback());
-            OutfitFitter.DressedPerson dressed = OutfitFitter.fit(human, source);
+        for (PgeyPersona p : PgeyPersona.values()) {
+            PgeyHumanModel human = geometryOnly(p);
+            PgeyModelData source = PgeyModelProviders.pgeyLoad(p.pgeyFallback());
+            PgeyOutfitFitter.PgeyDressedPerson dressed = PgeyOutfitFitter.pgeyFit(human, source);
             FITS.put(p, new Fitted(human, source, dressed,
-                    TriangleIndex.of(List.of(OutfitFitter.skinOf(human).mesh()), 0.02)));
+                    PgeyTriangleIndex.pgeyOf(List.of(PgeyOutfitFitter.pgeySkinOf(human).pgeyMesh()), 0.02)));
         }
     }
 
-    static HumanModel geometryOnly(Persona p) {
-        ObjMtlReader.Result r = HumanModels.readGeometry(p);
-        List<HumanModel.Part> parts = new ArrayList<>();
+    static PgeyHumanModel geometryOnly(PgeyPersona p) {
+        PgeyObjMtlReader.PgeyResult r = PgeyHumanModels.pgeyReadGeometry(p);
+        List<PgeyHumanModel.PgeyPart> parts = new ArrayList<>();
         int skin = 0;
-        for (int i = 1; i < r.groups().size(); i++) {
-            if (r.groups().get(i).mesh().faceCount() > r.groups().get(skin).mesh().faceCount()) {
+        for (int i = 1; i < r.pgeyGroups().size(); i++) {
+            if (r.pgeyGroups().get(i).pgeyMesh().pgeyFaceCount() > r.pgeyGroups().get(skin).pgeyMesh().pgeyFaceCount()) {
                 skin = i;
             }
         }
-        for (int i = 0; i < r.groups().size(); i++) {
-            ObjMtlReader.Group g = r.groups().get(i);
-            parts.add(new HumanModel.Part(g.material(), g.mesh(), Color.WHITE, Color.GRAY, 20, null, i != skin));
+        for (int i = 0; i < r.pgeyGroups().size(); i++) {
+            PgeyObjMtlReader.PgeyGroup g = r.pgeyGroups().get(i);
+            parts.add(new PgeyHumanModel.PgeyPart(g.pgeyMaterial(), g.pgeyMesh(), Color.WHITE, Color.GRAY, 20, null, i != skin));
         }
-        return new HumanModel(p, parts, r.min()[1], r.height());
+        return new PgeyHumanModel(p, parts, r.pgeyMin()[1], r.pgeyHeight());
     }
 
-    private static double[] stats(Fitted f, Zone zone) {
-        TriangleIndex.Query q = f.skin().query();
-        TriangleIndex.Query body = TriangleIndex.of(f.dressed().outfit().zones().get(Zone.JERSEY_BODY).stream()
-                .map(ModelData.Part::mesh).toList(), 0.02).query();
+    private static double[] stats(Fitted f, PgeyZone zone) {
+        PgeyTriangleIndex.PgeyQuery q = f.skin().pgeyQuery();
+        PgeyTriangleIndex.PgeyQuery body = PgeyTriangleIndex.pgeyOf(f.dressed().pgeyOutfit().pgeyZones().get(PgeyZone.JERSEY_BODY).stream()
+                .map(PgeyModelData.PgeyPart::pgeyMesh).toList(), 0.02).pgeyQuery();
         int outside = 0;
         int n = 0;
         double far = 0;
-        for (var part : f.dressed().outfit().zones().get(zone)) {
-            float[] p = part.mesh().points();
+        for (var part : f.dressed().pgeyOutfit().pgeyZones().get(zone)) {
+            float[] p = part.pgeyMesh().pgeyPoints();
             for (int i = 0; i < p.length; i += 3) {
-                Vec3 v = new Vec3(p[i], -p[i + 1], -p[i + 2]);
-                TriangleIndex.Hit hit = q.nearest(v, 0.12);
+                PgeyVec3 v = new PgeyVec3(p[i], -p[i + 1], -p[i + 2]);
+                PgeyTriangleIndex.PgeyHit hit = q.pgeyNearest(v, 0.12);
                 n++;
                 if (hit == null) {
                     far = 0.12;
                     outside++;
-                } else if (v.sub(hit.point()).dot(hit.normal()) > -0.0005) {
+                } else if (v.pgeySub(hit.pgeyPoint()).pgeyDot(hit.pgeyNormal()) > -0.0005) {
                     outside++;
-                    far = Math.max(far, hit.distance());
-                } else if (zone == Zone.JERSEY_SLEEVES) {
-                    TriangleIndex.Hit b = body.nearest(v, 0.03);
-                    if (b != null && v.sub(b.point()).dot(b.normal()) < 0) {
+                    far = Math.max(far, hit.pgeyDistance());
+                } else if (zone == PgeyZone.JERSEY_SLEEVES) {
+                    PgeyTriangleIndex.PgeyHit b = body.pgeyNearest(v, 0.03);
+                    if (b != null && v.pgeySub(b.pgeyPoint()).pgeyDot(b.pgeyNormal()) < 0) {
                         outside++;
                     }
                 }
@@ -83,40 +83,40 @@ class OutfitFitterTest {
     }
 
     @ParameterizedTest
-    @EnumSource(Persona.class)
-    void conservaLasMallasYLasIslasUv(Persona p) {
+    @EnumSource(PgeyPersona.class)
+    void conservaLasMallasYLasIslasUv(PgeyPersona p) {
         Fitted f = FITS.get(p);
-        assertThat(f.dressed().outfit().zones().keySet()).isEqualTo(f.source().zones().keySet());
-        f.source().zones().forEach((zone, parts) -> {
+        assertThat(f.dressed().pgeyOutfit().pgeyZones().keySet()).isEqualTo(f.source().pgeyZones().keySet());
+        f.source().pgeyZones().forEach((zone, parts) -> {
             for (int i = 0; i < parts.size(); i++) {
-                MeshData a = parts.get(i).mesh();
-                MeshData b = f.dressed().outfit().zones().get(zone).get(i).mesh();
-                assertThat(b.pointCount()).as("%s puntos", zone).isGreaterThanOrEqualTo(a.pointCount());
-                assertThat(b.texCoords()).as("%s UV", zone).isEqualTo(a.texCoords());
-                if (zone == Zone.JERSEY_BODY || zone == Zone.SHORTS_BASE) {
-                    assertThat(b.pointCount()).as("%s con basta", zone).isGreaterThan(a.pointCount());
-                    assertThat(java.util.Arrays.copyOf(b.faces(), a.faces().length)).as("%s caras", zone)
-                            .isEqualTo(a.faces());
-                } else if (zone.garment() == Garment.SOCKS) {
-                    assertThat(b.faceCount()).isLessThanOrEqualTo(a.faceCount()).isGreaterThan(a.faceCount() / 2);
+                PgeyMeshData a = parts.get(i).pgeyMesh();
+                PgeyMeshData b = f.dressed().pgeyOutfit().pgeyZones().get(zone).get(i).pgeyMesh();
+                assertThat(b.pgeyPointCount()).as("%s puntos", zone).isGreaterThanOrEqualTo(a.pgeyPointCount());
+                assertThat(b.pgeyTexCoords()).as("%s UV", zone).isEqualTo(a.pgeyTexCoords());
+                if (zone == PgeyZone.JERSEY_BODY || zone == PgeyZone.SHORTS_BASE) {
+                    assertThat(b.pgeyPointCount()).as("%s con basta", zone).isGreaterThan(a.pgeyPointCount());
+                    assertThat(java.util.Arrays.copyOf(b.pgeyFaces(), a.pgeyFaces().length)).as("%s caras", zone)
+                            .isEqualTo(a.pgeyFaces());
+                } else if (zone.pgeyGarment() == HepyGarment.SOCKS) {
+                    assertThat(b.pgeyFaceCount()).isLessThanOrEqualTo(a.pgeyFaceCount()).isGreaterThan(a.pgeyFaceCount() / 2);
                 } else {
-                    assertThat(b.faces()).as("%s caras", zone).isEqualTo(a.faces());
+                    assertThat(b.pgeyFaces()).as("%s caras", zone).isEqualTo(a.pgeyFaces());
                 }
             }
         });
     }
 
     @ParameterizedTest
-    @EnumSource(Persona.class)
-    void laTelaQuedaPorFueraDeLaPielYSinPicos(Persona p) {
+    @EnumSource(PgeyPersona.class)
+    void laTelaQuedaPorFueraDeLaPielYSinPicos(PgeyPersona p) {
         Fitted f = FITS.get(p);
-        for (Zone z : Zone.values()) {
-            if (z.garment() == Garment.SHOES) {
+        for (PgeyZone z : PgeyZone.values()) {
+            if (z.pgeyGarment() == HepyGarment.SHOES) {
                 continue;
             }
             double[] s = stats(f, z);
-            double min = z == Zone.JERSEY_BODY ? 0.99 : z == Zone.JERSEY_SLEEVES ? 0.95 : 0.995;
-            if (z != Zone.SHORTS_BASE) {
+            double min = z == PgeyZone.JERSEY_BODY ? 0.99 : z == PgeyZone.JERSEY_SLEEVES ? 0.95 : 0.995;
+            if (z != PgeyZone.SHORTS_BASE) {
                 assertThat(s[0]).as("%s %s: vértices por fuera de la piel", p, z).isGreaterThanOrEqualTo(min);
             }
             assertThat(s[1]).as("%s %s: distancia máxima a la piel (m)", p, z).isLessThan(0.07);
@@ -124,29 +124,29 @@ class OutfitFitterTest {
     }
 
     @ParameterizedTest
-    @EnumSource(Persona.class)
-    void laPielNoAsomaPorLaRopa(Persona p) {
+    @EnumSource(PgeyPersona.class)
+    void laPielNoAsomaPorLaRopa(PgeyPersona p) {
         Fitted f = FITS.get(p);
-        Map<Zone, List<ModelData.Part>> z = f.dressed().outfit().zones();
-        List<MeshData> cloth = new ArrayList<>();
-        for (Zone zone : List.of(Zone.JERSEY_BODY, Zone.JERSEY_SIDES, Zone.SHORTS_BASE, Zone.SHORTS_STRIPE,
-                Zone.SHORTS_WAIST)) {
-            z.get(zone).forEach(part -> cloth.add(part.mesh()));
+        Map<PgeyZone, List<PgeyModelData.PgeyPart>> z = f.dressed().pgeyOutfit().pgeyZones();
+        List<PgeyMeshData> cloth = new ArrayList<>();
+        for (PgeyZone zone : List.of(PgeyZone.JERSEY_BODY, PgeyZone.JERSEY_SIDES, PgeyZone.SHORTS_BASE, PgeyZone.SHORTS_STRIPE,
+                PgeyZone.SHORTS_WAIST)) {
+            z.get(zone).forEach(part -> cloth.add(part.pgeyMesh()));
         }
-        TriangleIndex.Query clothQ = TriangleIndex.of(cloth, 0.02).query();
-        TriangleIndex skinIndex = TriangleIndex.of(List.of(OutfitFitter.skinOf(f.dressed().body()).mesh()), 0.02);
-        TriangleIndex.Query skinQ = skinIndex.query();
-        double[] range = heightRange(z.get(Zone.SHORTS_BASE), z.get(Zone.JERSEY_BODY));
+        PgeyTriangleIndex.PgeyQuery clothQ = PgeyTriangleIndex.pgeyOf(cloth, 0.02).pgeyQuery();
+        PgeyTriangleIndex skinIndex = PgeyTriangleIndex.pgeyOf(List.of(PgeyOutfitFitter.pgeySkinOf(f.dressed().pgeyBody()).pgeyMesh()), 0.02);
+        PgeyTriangleIndex.PgeyQuery skinQ = skinIndex.pgeyQuery();
+        double[] range = heightRange(z.get(PgeyZone.SHORTS_BASE), z.get(PgeyZone.JERSEY_BODY));
         int rays = 0;
         int skinFirst = 0;
         for (double y = range[0] + 0.015; y < range[1] - 0.03; y += 0.01) {
             for (int a = -50; a <= 50; a += 5) {
                 for (int back = 0; back < 2; back++) {
                     double ang = Math.toRadians(a + back * 180);
-                    Vec3 dir = new Vec3(-Math.sin(ang), 0, -Math.cos(ang));
-                    Vec3 origin = new Vec3(0, y, 0).addScaled(dir, -1.0);
-                    double c = clothQ.ray(origin, dir, 1.0);
-                    double sk = skinQ.ray(origin, dir, 1.0);
+                    PgeyVec3 dir = new PgeyVec3(-Math.sin(ang), 0, -Math.cos(ang));
+                    PgeyVec3 origin = new PgeyVec3(0, y, 0).pgeyAddScaled(dir, -1.0);
+                    double c = clothQ.pgeyRay(origin, dir, 1.0);
+                    double sk = skinQ.pgeyRay(origin, dir, 1.0);
                     if (Double.isNaN(c) && Double.isNaN(sk)) {
                         continue;
                     }
@@ -161,10 +161,10 @@ class OutfitFitterTest {
         assertThat((double) skinFirst / rays).as("%s: rayos que ven piel antes que tela", p).isLessThan(0.01);
     }
 
-    private static double[] heightRange(List<ModelData.Part> shorts, List<ModelData.Part> jersey) {
+    private static double[] heightRange(List<PgeyModelData.PgeyPart> shorts, List<PgeyModelData.PgeyPart> jersey) {
         double lo = -Double.MAX_VALUE;
         for (var part : shorts) {
-            float[] pts = part.mesh().points();
+            float[] pts = part.pgeyMesh().pgeyPoints();
             double min = Double.MAX_VALUE;
             for (int i = 0; i < pts.length; i += 3) {
                 min = Math.min(min, -pts[i + 1]);
@@ -173,7 +173,7 @@ class OutfitFitterTest {
         }
         double hi = 0;
         for (var part : jersey) {
-            float[] pts = part.mesh().points();
+            float[] pts = part.pgeyMesh().pgeyPoints();
             for (int i = 0; i < pts.length; i += 3) {
                 hi = Math.max(hi, -pts[i + 1]);
             }
@@ -182,16 +182,16 @@ class OutfitFitterTest {
     }
 
     @ParameterizedTest
-    @EnumSource(Persona.class)
-    void lasZapatillasCubrenLosPiesYLaPielTapadaSeOculta(Persona p) {
+    @EnumSource(PgeyPersona.class)
+    void lasZapatillasCubrenLosPiesYLaPielTapadaSeOculta(PgeyPersona p) {
         Fitted f = FITS.get(p);
-        double[] v = f.skin().vertices();
-        double footTop = f.human().minY() + 0.025 * f.human().height();
+        double[] v = f.skin().pgeyVertices();
+        double footTop = f.human().pgeyMinY() + 0.025 * f.human().pgeyHeight();
         for (int sign : new int[]{-1, 1}) {
             double[] shoe = {Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE};
-            for (Zone z : List.of(Zone.SHOE_UPPER, Zone.SHOE_SOLE, Zone.SHOE_TOE, Zone.SHOE_HEEL)) {
-                for (var part : f.dressed().outfit().zones().get(z)) {
-                    float[] pts = part.mesh().points();
+            for (PgeyZone z : List.of(PgeyZone.SHOE_UPPER, PgeyZone.SHOE_SOLE, PgeyZone.SHOE_TOE, PgeyZone.SHOE_HEEL)) {
+                for (var part : f.dressed().pgeyOutfit().pgeyZones().get(z)) {
+                    float[] pts = part.pgeyMesh().pgeyPoints();
                     for (int i = 0; i < pts.length; i += 3) {
                         if (pts[i] * sign > 0) {
                             shoe[0] = Math.min(shoe[0], pts[i]);
@@ -209,22 +209,22 @@ class OutfitFitterTest {
                 }
             }
         }
-        int before = OutfitFitter.skinOf(f.human()).mesh().faceCount();
-        int after = OutfitFitter.skinOf(f.dressed().body()).mesh().faceCount();
+        int before = PgeyOutfitFitter.pgeySkinOf(f.human()).pgeyMesh().pgeyFaceCount();
+        int after = PgeyOutfitFitter.pgeySkinOf(f.dressed().pgeyBody()).pgeyMesh().pgeyFaceCount();
         assertThat(after).as("piel oculta bajo la ropa y en los pies").isLessThan(before).isGreaterThan(before / 2);
     }
 
     @ParameterizedTest
-    @EnumSource(Persona.class)
-    void lasMedidasDelCuerpoSonPlausibles(Persona p) {
+    @EnumSource(PgeyPersona.class)
+    void lasMedidasDelCuerpoSonPlausibles(PgeyPersona p) {
         Fitted f = FITS.get(p);
-        BodyFrame b = BodyFrame.measure(f.skin().vertices(), f.skin().triangles(), f.human().minY(), f.human().height());
-        double h = b.height();
-        assertThat((b.crotch - b.floor) / h).isBetween(0.40, 0.52);
-        assertThat((b.armpit - b.floor) / h).isBetween(0.68, 0.80);
-        assertThat(b.neck).isBetween(b.armpit + 0.03 * h, b.top - 0.12 * h);
-        assertThat(b.armDirection(1, 0).x()).isGreaterThan(0.3);
-        assertThat(b.armDirection(-1, 0).x()).isLessThan(-0.3);
-        assertThat(b.armDirection(1, 0).y()).isLessThan(-0.3);
+        PgeyBodyFrame b = PgeyBodyFrame.pgeyMeasure(f.skin().pgeyVertices(), f.skin().pgeyTriangles(), f.human().pgeyMinY(), f.human().pgeyHeight());
+        double h = b.pgeyHeight();
+        assertThat((b.pgeyCrotch - b.pgeyFloor) / h).isBetween(0.40, 0.52);
+        assertThat((b.pgeyArmpit - b.pgeyFloor) / h).isBetween(0.68, 0.80);
+        assertThat(b.pgeyNeck).isBetween(b.pgeyArmpit + 0.03 * h, b.pgeyTop - 0.12 * h);
+        assertThat(b.pgeyArmDirection(1, 0).pgeyX()).isGreaterThan(0.3);
+        assertThat(b.pgeyArmDirection(-1, 0).pgeyX()).isLessThan(-0.3);
+        assertThat(b.pgeyArmDirection(1, 0).pgeyY()).isLessThan(-0.3);
     }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.sportforce3d.component.SfButton?>
-<?import com.sportforce3d.component.SfTextField?>
+<?import com.sportforce3d.component.PpqhSfButton?>
+<?import com.sportforce3d.component.PpqhSfTextField?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.sportforce3d.view.AccountController"
+            fx:controller="com.sportforce3d.view.PpqhAccountController"
             fitToWidth="true" styleClass="sf-page">
     <VBox spacing="32" maxWidth="1280">
         <padding><Insets top="32" right="24" bottom="64" left="24"/></padding>
@@ -19,8 +19,8 @@
         <VBox spacing="8">
             <Label text="MI CUENTA" styleClass="display-l, ink"/>
             <HBox spacing="12" alignment="CENTER_LEFT">
-                <Label fx:id="emailLabel" styleClass="code, ink-muted"/>
-                <Label fx:id="roleLabel" styleClass="sf-chip"/>
+                <Label fx:id="ppqhEmailLabel" id="emailLabel" styleClass="code, ink-muted"/>
+                <Label fx:id="ppqhRoleLabel" id="roleLabel" styleClass="sf-chip"/>
             </HBox>
         </VBox>
 
@@ -28,28 +28,28 @@
             <VBox styleClass="sf-card" spacing="16" prefWidth="440">
                 <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
                 <Label text="Perfil" styleClass="title-s, ink"/>
-                <SfTextField fx:id="fullNameField" label="Nombre completo"/>
-                <SfTextField fx:id="phoneField" label="Celular" promptText="987654321"/>
+                <PpqhSfTextField fx:id="ppqhFullNameField" id="fullNameField" label="Nombre completo"/>
+                <PpqhSfTextField fx:id="ppqhPhoneField" id="phoneField" label="Celular" promptText="987654321"/>
                 <HBox alignment="CENTER_RIGHT">
-                    <SfButton fx:id="saveProfileButton" text="Guardar cambios" variant="PRIMARY" size="MD"/>
+                    <PpqhSfButton fx:id="ppqhSaveProfileButton" id="saveProfileButton" text="Guardar cambios" variant="PRIMARY" size="MD"/>
                 </HBox>
             </VBox>
 
             <VBox styleClass="sf-card" spacing="16" prefWidth="440">
                 <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
                 <Label text="Cambiar contraseña" styleClass="title-s, ink"/>
-                <SfTextField fx:id="currentPasswordField" label="Contraseña actual" password="true"/>
-                <SfTextField fx:id="newPasswordField" label="Nueva contraseña" password="true"/>
-                <SfTextField fx:id="confirmationField" label="Repite la nueva contraseña" password="true"/>
+                <PpqhSfTextField fx:id="ppqhCurrentPasswordField" id="currentPasswordField" label="Contraseña actual" password="true"/>
+                <PpqhSfTextField fx:id="ppqhNewPasswordField" id="newPasswordField" label="Nueva contraseña" password="true"/>
+                <PpqhSfTextField fx:id="ppqhConfirmationField" id="confirmationField" label="Repite la nueva contraseña" password="true"/>
                 <HBox alignment="CENTER_RIGHT">
-                    <SfButton fx:id="changePasswordButton" text="Cambiar contraseña" variant="GHOST" size="MD"/>
+                    <PpqhSfButton fx:id="ppqhChangePasswordButton" id="changePasswordButton" text="Cambiar contraseña" variant="GHOST" size="MD"/>
                 </HBox>
             </VBox>
 
             <VBox styleClass="sf-card" spacing="12" prefWidth="440">
                 <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
                 <Label text="Configuración" styleClass="title-s, ink"/>
-                <CheckBox fx:id="reduceMotionCheck" text="Reducir animaciones"/>
+                <CheckBox fx:id="ppqhReduceMotionCheck" id="reduceMotionCheck" text="Reducir animaciones"/>
                 <Label text="Quita desplazamientos y la auto-rotación del maniquí 3D; solo quedan cambios de opacidad. Se guarda en este equipo."
                        styleClass="body-s, ink-muted" wrapText="true"/>
             </VBox>

@@ -20,17 +20,17 @@ class DatabaseMigrationTest {
 
     @Test
     void createsFileAndAppliesSchemaAndSeed() {
-        Database db = new Database(tempDir.resolve("nueva").resolve("sportforce3d.db"));
+        HepyDatabase db = new HepyDatabase(tempDir.resolve("nueva").resolve("sportforce3d.db"));
 
-        assertThat(db.migrate()).isEqualTo(10);
-        assertThat(Files.exists(db.file())).isTrue();
-        assertThat(db.migrate()).isZero();
+        assertThat(db.hepyMigrate()).isEqualTo(10);
+        assertThat(Files.exists(db.hepyFile())).isTrue();
+        assertThat(db.hepyMigrate()).isZero();
     }
 
     @Test
     void seedHasCatalogUsersAndStock() throws SQLException {
-        Database db = TestDatabases.migrated(tempDir);
-        try (Connection c = db.getConnection(); Statement st = c.createStatement()) {
+        HepyDatabase db = TestDatabases.migrated(tempDir);
+        try (Connection c = db.hepyGetConnection(); Statement st = c.createStatement()) {
             assertThat(count(st, "SELECT count(*) FROM products")).isGreaterThanOrEqualTo(20);
             assertThat(count(st, "SELECT count(*) FROM categories")).as("10 de V2 + Niños de V6").isEqualTo(11);
             assertThat(count(st, "SELECT count(*) FROM materials")).as("12 de V2 + Poliéster liso de V7").isEqualTo(13);
@@ -54,8 +54,8 @@ class DatabaseMigrationTest {
 
     @Test
     void foreignKeysAreEnforced() throws SQLException {
-        Database db = TestDatabases.migrated(tempDir);
-        try (Connection c = db.getConnection(); Statement st = c.createStatement()) {
+        HepyDatabase db = TestDatabases.migrated(tempDir);
+        try (Connection c = db.hepyGetConnection(); Statement st = c.createStatement()) {
             assertThat(count(st, "PRAGMA foreign_keys")).isEqualTo(1);
             assertThatThrownBy(() -> st.executeUpdate("INSERT INTO user_roles (user_id, role_id) VALUES (999, 1)"))
                     .isInstanceOf(SQLException.class)
@@ -65,8 +65,8 @@ class DatabaseMigrationTest {
 
     @Test
     void checkConstraintsProtectMoneyAndDates() throws SQLException {
-        Database db = TestDatabases.migrated(tempDir);
-        try (Connection c = db.getConnection(); Statement st = c.createStatement()) {
+        HepyDatabase db = TestDatabases.migrated(tempDir);
+        try (Connection c = db.hepyGetConnection(); Statement st = c.createStatement()) {
             assertThatThrownBy(() -> st.executeUpdate(
                     "UPDATE products SET base_price_cents = -1 WHERE id = 1"))
                     .isInstanceOf(SQLException.class);
@@ -88,8 +88,8 @@ class DatabaseMigrationTest {
 
     @Test
     void updatedAtTriggerTouchesRow() throws Exception {
-        Database db = TestDatabases.migrated(tempDir);
-        try (Connection c = db.getConnection(); Statement st = c.createStatement()) {
+        HepyDatabase db = TestDatabases.migrated(tempDir);
+        try (Connection c = db.hepyGetConnection(); Statement st = c.createStatement()) {
             st.executeUpdate("UPDATE users SET updated_at = '2000-01-01T00:00:00.000Z' WHERE id = 1");
             st.executeUpdate("UPDATE users SET full_name = 'Admin Renombrado' WHERE id = 1");
             try (ResultSet rs = st.executeQuery("SELECT updated_at FROM users WHERE id = 1")) {
@@ -101,15 +101,15 @@ class DatabaseMigrationTest {
 
     @Test
     void deleteFilesAllowsRecreatingFromScratch() {
-        Database db = TestDatabases.migrated(tempDir);
-        db.withConnection(c -> c.createStatement().executeUpdate("DELETE FROM addresses"));
+        HepyDatabase db = TestDatabases.migrated(tempDir);
+        db.hepyWithConnection(c -> c.createStatement().executeUpdate("DELETE FROM addresses"));
 
-        Database.deleteFiles(db.file());
-        assertThat(Files.exists(db.file())).isFalse();
+        HepyDatabase.hepyDeleteFiles(db.hepyFile());
+        assertThat(Files.exists(db.hepyFile())).isFalse();
 
-        Database fresh = new Database(db.file());
-        assertThat(fresh.migrate()).isEqualTo(10);
-        int addresses = fresh.withConnection(c -> {
+        HepyDatabase fresh = new HepyDatabase(db.hepyFile());
+        assertThat(fresh.hepyMigrate()).isEqualTo(10);
+        int addresses = fresh.hepyWithConnection(c -> {
             try (ResultSet rs = c.createStatement().executeQuery("SELECT count(*) FROM addresses")) {
                 rs.next();
                 return rs.getInt(1);
@@ -120,17 +120,17 @@ class DatabaseMigrationTest {
 
     @Test
     void repairsChecksumsOfDatabasesCreatedWithOlderScripts() throws SQLException {
-        Database db = TestDatabases.migrated(tempDir);
+        HepyDatabase db = TestDatabases.migrated(tempDir);
         long original;
-        try (Connection c = db.getConnection(); Statement st = c.createStatement()) {
+        try (Connection c = db.hepyGetConnection(); Statement st = c.createStatement()) {
             original = count(st, "SELECT checksum FROM flyway_schema_history WHERE version = '1'");
             st.executeUpdate("UPDATE flyway_schema_history SET checksum = checksum + 1 WHERE version IN ('1', '6')");
             st.executeUpdate("UPDATE users SET full_name = 'Nombre Conservado' WHERE id = 2");
         }
 
-        assertThat(new Database(db.file()).migrate()).isZero();
+        assertThat(new HepyDatabase(db.hepyFile()).hepyMigrate()).isZero();
 
-        try (Connection c = db.getConnection(); Statement st = c.createStatement()) {
+        try (Connection c = db.hepyGetConnection(); Statement st = c.createStatement()) {
             assertThat(count(st, "SELECT checksum FROM flyway_schema_history WHERE version = '1'")).isEqualTo(original);
             assertThat(count(st, "SELECT count(*) FROM users WHERE full_name = 'Nombre Conservado'")).isEqualTo(1);
         }

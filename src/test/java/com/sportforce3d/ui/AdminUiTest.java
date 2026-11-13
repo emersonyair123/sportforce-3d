@@ -1,8 +1,8 @@
 package com.sportforce3d.ui;
 
-import com.sportforce3d.app.AppContext;
-import com.sportforce3d.app.Routes;
-import com.sportforce3d.component.SfTextField;
+import com.sportforce3d.app.PpqhAppContext;
+import com.sportforce3d.app.PpqhRoutes;
+import com.sportforce3d.component.PpqhSfTextField;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ class AdminUiTest {
     @TempDir
     Path tempDir;
 
-    private AppContext context;
+    private PpqhAppContext context;
 
     @Start
     void start(Stage stage) {
@@ -92,23 +92,23 @@ class AdminUiTest {
     void adminChangesAZoneColorOfTheRealisticPhoto(FxRobot robot) {
         login(robot, "admin@sportforce3d.pe", "Admin123!");
         long id = productId("SF-ZAP-003");
-        robot.interact(() -> context.router().go(Routes.ADMIN_PRODUCT_EDIT, id));
+        robot.interact(() -> context.ppqhRouter().ppqhGo(PpqhRoutes.PPQH_ADMIN_PRODUCT_EDIT, id));
         waitUntil("foto realista", () -> textShown(robot, "SUELA"::equals));
         assertThat(textShown(robot, "CAPELLADA"::equals)).isTrue();
 
-        SfTextField hex = zoneHex(robot, "SUELA");
+        PpqhSfTextField hex = zoneHex(robot, "SUELA");
         assertThat(hex.getText()).isEqualTo("#F2F5F8");
         UiTestSupport.clickNode(robot, hex.getInput());
         robot.push(KeyCode.CONTROL, KeyCode.A).push(KeyCode.BACK_SPACE).write("#0B0E13").push(KeyCode.ENTER);
         click(robot, "Guardar producto");
         waitUntil("guardado", () -> textShown(robot, "Cambios guardados."::equals));
 
-        var look = context.catalogService().realisticLook(id).orElseThrow();
-        assertThat(look.zoneColors()).containsEntry("paneles", "#0b0e13").containsEntry("principal", "#1f5fff");
+        var look = context.ppqhCatalogService().hepyRealisticLook(id).orElseThrow();
+        assertThat(look.hepyZoneColors()).containsEntry("paneles", "#0b0e13").containsEntry("principal", "#1f5fff");
         assertThat(zoneHex(robot, "SUELA").getText()).as("el formulario recarga lo guardado").isEqualTo("#0B0E13");
 
         long casaca = productId("SF-BUZ-002");
-        robot.interact(() -> context.router().go(Routes.ADMIN_PRODUCT_EDIT, casaca));
+        robot.interact(() -> context.ppqhRouter().ppqhGo(PpqhRoutes.PPQH_ADMIN_PRODUCT_EDIT, casaca));
         waitUntil("aviso de no personalizable", () -> textShown(robot, t -> t.startsWith("Los buzos y accesorios no se personalizan")));
         javafx.scene.control.CheckBox check = robot.lookup((java.util.function.Predicate<javafx.scene.Node>) n ->
                 n instanceof javafx.scene.control.CheckBox c && "Personalizable en el diseñador 3D".equals(c.getText()))
@@ -118,7 +118,7 @@ class AdminUiTest {
     }
 
     private long productId(String sku) {
-        return context.database().withConnection(c -> {
+        return context.ppqhDatabase().hepyWithConnection(c -> {
             try (var ps = c.prepareStatement("SELECT id FROM products WHERE sku = ?")) {
                 ps.setString(1, sku);
                 try (var rs = ps.executeQuery()) {
@@ -129,11 +129,11 @@ class AdminUiTest {
         });
     }
 
-    private static SfTextField zoneHex(FxRobot robot, String zoneLabel) {
+    private static PpqhSfTextField zoneHex(FxRobot robot, String zoneLabel) {
         javafx.scene.control.Label label = robot.lookup((java.util.function.Predicate<javafx.scene.Node>) n ->
                 n instanceof javafx.scene.control.Label l && zoneLabel.equals(l.getText()))
                 .queryAs(javafx.scene.control.Label.class);
-        return (SfTextField) label.getParent().lookup(".sf-field");
+        return (PpqhSfTextField) label.getParent().lookup(".sf-field");
     }
 
     @Test
@@ -143,20 +143,20 @@ class AdminUiTest {
         assertThat(labeled(robot, "Configuración")).isEmpty();
         assertThat(labeled(robot, "Dashboard")).isEmpty();
 
-        for (String route : new String[]{Routes.ADMIN_SETTINGS, Routes.ADMIN_REPORTS, Routes.ADMIN_PAYMENTS}) {
-            robot.interact(() -> context.router().go(route, null));
+        for (String route : new String[]{PpqhRoutes.PPQH_ADMIN_SETTINGS, PpqhRoutes.PPQH_ADMIN_REPORTS, PpqhRoutes.PPQH_ADMIN_PAYMENTS}) {
+            robot.interact(() -> context.ppqhRouter().ppqhGo(route, null));
             waitUntil("sin acceso", () -> textShown(robot, "Sin acceso"::equals));
             assertThat(textShown(robot, "Guardar datos de pago"::equals)).isFalse();
         }
     }
 
-    private static SfTextField field(FxRobot robot, String label) {
+    private static PpqhSfTextField field(FxRobot robot, String label) {
         waitUntil("campo " + label, () -> UiTestSupport.field(robot, label).isPresent());
         return UiTestSupport.field(robot, label).orElseThrow();
     }
 
     private static void replace(FxRobot robot, String label, String value) {
-        SfTextField f = field(robot, label);
+        PpqhSfTextField f = field(robot, label);
         UiTestSupport.clickNode(robot, f.getInput());
         robot.push(KeyCode.CONTROL, KeyCode.A).push(KeyCode.BACK_SPACE).write(value);
     }

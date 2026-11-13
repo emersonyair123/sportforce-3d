@@ -1,9 +1,9 @@
 package com.sportforce3d.three;
 
-import com.sportforce3d.model.Garment;
-import com.sportforce3d.three.model.BodyType;
-import com.sportforce3d.three.model.ModelData;
-import com.sportforce3d.three.procedural.ProceduralModelProvider;
+import com.sportforce3d.model.HepyGarment;
+import com.sportforce3d.three.model.PgeyBodyType;
+import com.sportforce3d.three.model.PgeyModelData;
+import com.sportforce3d.three.procedural.PgeyProceduralModelProvider;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.image.WritableImage;
@@ -18,52 +18,52 @@ import java.util.concurrent.TimeUnit;
 
 public final class CaptureTool {
 
-    private record Shot(String name, ViewPreset view, Garment focus, int width, int height) {
+    private record PgeyShot(String pgeyName, PgeyViewPreset pgeyView, HepyGarment pgeyFocus, int pgeyWidth, int pgeyHeight) {
     }
 
     private CaptureTool() {
     }
 
-    public static void main(String[] args) throws Exception {
-        Path out = Path.of(args.length > 0 ? args[0] : "docs/capturas");
-        String which = args.length > 1 ? args[1] : "ADULTO_HOMBRE";
-        if (which.equals("ETAPA4")) {
-            captureSampleDesign(out);
+    public static void main(String[] pgeyArgs) throws Exception {
+        Path pgeyOut = Path.of(pgeyArgs.length > 0 ? pgeyArgs[0] : "docs/capturas");
+        String pgeyWhich = pgeyArgs.length > 1 ? pgeyArgs[1] : "ADULTO_HOMBRE";
+        if (pgeyWhich.equals("ETAPA4")) {
+            pgeyCaptureSampleDesign(pgeyOut);
             return;
         }
-        if (which.equals("PERSONAS")) {
-            capturePersons(out);
+        if (pgeyWhich.equals("PERSONAS")) {
+            pgeyCapturePersons(pgeyOut);
             return;
         }
-        if (which.equals("UNIFORMES") || which.equals("DEFECTO")) {
-            captureDressed(out, which.equals("DEFECTO"));
+        if (pgeyWhich.equals("UNIFORMES") || pgeyWhich.equals("DEFECTO")) {
+            pgeyCaptureDressed(pgeyOut, pgeyWhich.equals("DEFECTO"));
             return;
         }
-        if (which.equals("TELA")) {
-            captureSimulated(out);
+        if (pgeyWhich.equals("TELA")) {
+            pgeyCaptureSimulated(pgeyOut);
             return;
         }
-        List<BodyType> types = which.equals("ALL") ? List.of(BodyType.values()) : List.of(BodyType.valueOf(which));
+        List<PgeyBodyType> pgeyTypes = pgeyWhich.equals("ALL") ? List.of(PgeyBodyType.values()) : List.of(PgeyBodyType.valueOf(pgeyWhich));
 
-        CountDownLatch started = new CountDownLatch(1);
-        Platform.startup(started::countDown);
-        started.await();
+        CountDownLatch pgeyStarted = new CountDownLatch(1);
+        Platform.startup(pgeyStarted::countDown);
+        pgeyStarted.await();
         try {
-            for (BodyType type : types) {
-                ModelData model = new ProceduralModelProvider().load(type);
-                String prefix = type == BodyType.ADULTO_HOMBRE ? "" : type.key() + "-";
-                List<Shot> shots = new ArrayList<>(List.of(
-                        new Shot(prefix + "frente", ViewPreset.FRONT, Garment.KIT, 1200, 1600),
-                        new Shot(prefix + "espalda", ViewPreset.BACK, Garment.KIT, 1200, 1600),
-                        new Shot(prefix + "lateral", ViewPreset.LEFT, Garment.KIT, 1200, 1600)));
-                if (type == BodyType.ADULTO_HOMBRE) {
-                    shots.add(new Shot("detalle-camiseta", ViewPreset.FRONT, Garment.JERSEY, 1400, 1100));
-                    shots.add(new Shot("detalle-zapatillas", ViewPreset.LEFT, Garment.SHOES, 1400, 1000));
+            for (PgeyBodyType pgeyType : pgeyTypes) {
+                PgeyModelData pgeyModel = new PgeyProceduralModelProvider().pgeyLoad(pgeyType);
+                String pgeyPrefix = pgeyType == PgeyBodyType.ADULTO_HOMBRE ? "" : pgeyType.pgeyKey() + "-";
+                List<PgeyShot> pgeyShots = new ArrayList<>(List.of(
+                        new PgeyShot(pgeyPrefix + "frente", PgeyViewPreset.FRONT, HepyGarment.KIT, 1200, 1600),
+                        new PgeyShot(pgeyPrefix + "espalda", PgeyViewPreset.BACK, HepyGarment.KIT, 1200, 1600),
+                        new PgeyShot(pgeyPrefix + "lateral", PgeyViewPreset.LEFT, HepyGarment.KIT, 1200, 1600)));
+                if (pgeyType == PgeyBodyType.ADULTO_HOMBRE) {
+                    pgeyShots.add(new PgeyShot("detalle-camiseta", PgeyViewPreset.FRONT, HepyGarment.JERSEY, 1400, 1100));
+                    pgeyShots.add(new PgeyShot("detalle-zapatillas", PgeyViewPreset.LEFT, HepyGarment.SHOES, 1400, 1000));
                 }
-                for (Shot shot : shots) {
-                    WritableImage img = onFx(() -> render(model, shot));
-                    Png.write(img, out.resolve(shot.name() + ".png"));
-                    System.out.println("Captura: " + out.resolve(shot.name() + ".png").toAbsolutePath());
+                for (PgeyShot pgeyShot : pgeyShots) {
+                    WritableImage pgeyImg = pgeyOnFx(() -> pgeyRender(pgeyModel, pgeyShot));
+                    PgeyPng.pgeyWrite(pgeyImg, pgeyOut.resolve(pgeyShot.pgeyName() + ".png"));
+                    System.out.println("Captura: " + pgeyOut.resolve(pgeyShot.pgeyName() + ".png").toAbsolutePath());
                 }
             }
         } finally {
@@ -71,83 +71,83 @@ public final class CaptureTool {
         }
     }
 
-    private static void captureSampleDesign(Path out) throws Exception {
-        java.nio.file.Path tmp = java.nio.file.Files.createTempDirectory("sf-capturas");
-        com.sportforce3d.db.Database db = new com.sportforce3d.db.Database(tmp.resolve("tmp.db"));
-        db.migrate();
-        var catalog = new com.sportforce3d.repository.CatalogRepository(db);
-        java.util.Map<String, com.sportforce3d.model.Material> materials = new java.util.HashMap<>();
-        for (var scope : com.sportforce3d.model.Material.Scope.values()) {
-            catalog.findMaterials(scope).forEach(m -> materials.put(m.code(), m));
+    private static void pgeyCaptureSampleDesign(Path pgeyOut) throws Exception {
+        java.nio.file.Path pgeyTmp = java.nio.file.Files.createTempDirectory("sf-capturas");
+        com.sportforce3d.db.HepyDatabase pgeyDb = new com.sportforce3d.db.HepyDatabase(pgeyTmp.resolve("tmp.db"));
+        pgeyDb.hepyMigrate();
+        var pgeyCatalog = new com.sportforce3d.repository.HepyCatalogRepository(pgeyDb);
+        java.util.Map<String, com.sportforce3d.model.HepyMaterial> pgeyMaterials = new java.util.HashMap<>();
+        for (var pgeyScope : com.sportforce3d.model.HepyMaterial.HepyScope.values()) {
+            pgeyCatalog.hepyFindMaterials(pgeyScope).forEach(pgeyM -> pgeyMaterials.put(pgeyM.hepyCode(), pgeyM));
         }
-        var doc = com.sportforce3d.design.SampleDesigns.halcones();
-        ModelData model = new ProceduralModelProvider().load(doc.bodyType());
-        CountDownLatch started = new CountDownLatch(1);
-        Platform.startup(started::countDown);
-        started.await();
+        var pgeyDoc = com.sportforce3d.design.PgeySampleDesigns.pgeyHalcones();
+        PgeyModelData pgeyModel = new PgeyProceduralModelProvider().pgeyLoad(pgeyDoc.pgeyBodyType());
+        CountDownLatch pgeyStarted = new CountDownLatch(1);
+        Platform.startup(pgeyStarted::countDown);
+        pgeyStarted.await();
         try {
-            List<Shot> shots = List.of(
-                    new Shot("frente", ViewPreset.FRONT, Garment.KIT, 1200, 1600),
-                    new Shot("espalda", ViewPreset.BACK, Garment.KIT, 1200, 1600),
-                    new Shot("detalle-frente", ViewPreset.FRONT, Garment.JERSEY, 1400, 1100),
-                    new Shot("detalle-espalda", ViewPreset.BACK, Garment.JERSEY, 1400, 1100),
-                    new Shot("detalle-short-medias", ViewPreset.FRONT, Garment.SHORTS, 1400, 1100),
-                    new Shot("detalle-zapatillas", ViewPreset.LEFT, Garment.SHOES, 1400, 1000));
-            for (Shot shot : shots) {
-                WritableImage img = onFx(() -> {
-                    Viewer3D viewer = new Viewer3D();
-                    viewer.autoRotateProperty().set(false);
-                    viewer.resize(shot.width(), shot.height());
-                    Stage stage = new Stage();
-                    stage.setScene(new Scene(viewer, shot.width(), shot.height()));
-                    com.sportforce3d.app.Fonts.loadAll();
-                    viewer.setModel(model);
-                    new DesignRenderer(viewer, new TextureComposer(new ElementImages(null))).applyAll(doc, materials);
-                    viewer.jumpTo(shot.view(), shot.focus());
-                    viewer.layout();
-                    WritableImage image = viewer.capture(shot.width());
-                    stage.close();
-                    return image;
+            List<PgeyShot> pgeyShots = List.of(
+                    new PgeyShot("frente", PgeyViewPreset.FRONT, HepyGarment.KIT, 1200, 1600),
+                    new PgeyShot("espalda", PgeyViewPreset.BACK, HepyGarment.KIT, 1200, 1600),
+                    new PgeyShot("detalle-frente", PgeyViewPreset.FRONT, HepyGarment.JERSEY, 1400, 1100),
+                    new PgeyShot("detalle-espalda", PgeyViewPreset.BACK, HepyGarment.JERSEY, 1400, 1100),
+                    new PgeyShot("detalle-short-medias", PgeyViewPreset.FRONT, HepyGarment.SHORTS, 1400, 1100),
+                    new PgeyShot("detalle-zapatillas", PgeyViewPreset.LEFT, HepyGarment.SHOES, 1400, 1000));
+            for (PgeyShot pgeyShot : pgeyShots) {
+                WritableImage pgeyImg = pgeyOnFx(() -> {
+                    PgeyViewer3D pgeyViewer = new PgeyViewer3D();
+                    pgeyViewer.autoRotateProperty().set(false);
+                    pgeyViewer.resize(pgeyShot.pgeyWidth(), pgeyShot.pgeyHeight());
+                    Stage pgeyStage = new Stage();
+                    pgeyStage.setScene(new Scene(pgeyViewer, pgeyShot.pgeyWidth(), pgeyShot.pgeyHeight()));
+                    com.sportforce3d.app.PpqhFonts.ppqhLoadAll();
+                    pgeyViewer.setModel(pgeyModel);
+                    new PgeyDesignRenderer(pgeyViewer, new PgeyTextureComposer(new PgeyElementImages(null))).pgeyApplyAll(pgeyDoc, pgeyMaterials);
+                    pgeyViewer.pgeyJumpTo(pgeyShot.pgeyView(), pgeyShot.pgeyFocus());
+                    pgeyViewer.layout();
+                    WritableImage pgeyImage = pgeyViewer.pgeyCapture(pgeyShot.pgeyWidth());
+                    pgeyStage.close();
+                    return pgeyImage;
                 });
-                Png.write(img, out.resolve(shot.name() + ".png"));
-                System.out.println("Captura: " + out.resolve(shot.name() + ".png").toAbsolutePath());
+                PgeyPng.pgeyWrite(pgeyImg, pgeyOut.resolve(pgeyShot.pgeyName() + ".png"));
+                System.out.println("Captura: " + pgeyOut.resolve(pgeyShot.pgeyName() + ".png").toAbsolutePath());
             }
         } finally {
             Platform.exit();
         }
     }
 
-    private static void capturePersons(Path out) throws Exception {
-        CountDownLatch started = new CountDownLatch(1);
-        Platform.startup(started::countDown);
-        started.await();
+    private static void pgeyCapturePersons(Path pgeyOut) throws Exception {
+        CountDownLatch pgeyStarted = new CountDownLatch(1);
+        Platform.startup(pgeyStarted::countDown);
+        pgeyStarted.await();
         try {
-            for (com.sportforce3d.three.human.Persona persona : com.sportforce3d.three.human.Persona.values()) {
-                com.sportforce3d.three.human.HumanModel human = com.sportforce3d.three.human.HumanModels.load(persona);
-                List<Shot> shots = List.of(
-                        new Shot(persona.key() + "-frente", ViewPreset.FRONT, Garment.KIT, 1200, 1600),
-                        new Shot(persona.key() + "-espalda", ViewPreset.BACK, Garment.KIT, 1200, 1600),
-                        new Shot(persona.key() + "-costado", ViewPreset.RIGHT, Garment.KIT, 1200, 1600),
-                        new Shot(persona.key() + "-cara", ViewPreset.FRONT, null, 1200, 1000));
-                for (Shot shot : shots) {
-                    WritableImage img = onFx(() -> {
-                        Viewer3D viewer = new Viewer3D();
-                        viewer.autoRotateProperty().set(false);
-                        viewer.resize(shot.width(), shot.height());
-                        Stage stage = new Stage();
-                        stage.setScene(new Scene(viewer, shot.width(), shot.height()));
-                        viewer.setPerson(human);
-                        viewer.jumpTo(shot.view(), Garment.KIT);
-                        if (shot.focus() == null) {
-                            viewer.jumpToFace();
+            for (com.sportforce3d.three.human.PgeyPersona pgeyPersona : com.sportforce3d.three.human.PgeyPersona.values()) {
+                com.sportforce3d.three.human.PgeyHumanModel pgeyHuman = com.sportforce3d.three.human.PgeyHumanModels.pgeyLoad(pgeyPersona);
+                List<PgeyShot> pgeyShots = List.of(
+                        new PgeyShot(pgeyPersona.pgeyKey() + "-frente", PgeyViewPreset.FRONT, HepyGarment.KIT, 1200, 1600),
+                        new PgeyShot(pgeyPersona.pgeyKey() + "-espalda", PgeyViewPreset.BACK, HepyGarment.KIT, 1200, 1600),
+                        new PgeyShot(pgeyPersona.pgeyKey() + "-costado", PgeyViewPreset.RIGHT, HepyGarment.KIT, 1200, 1600),
+                        new PgeyShot(pgeyPersona.pgeyKey() + "-cara", PgeyViewPreset.FRONT, null, 1200, 1000));
+                for (PgeyShot pgeyShot : pgeyShots) {
+                    WritableImage pgeyImg = pgeyOnFx(() -> {
+                        PgeyViewer3D pgeyViewer = new PgeyViewer3D();
+                        pgeyViewer.autoRotateProperty().set(false);
+                        pgeyViewer.resize(pgeyShot.pgeyWidth(), pgeyShot.pgeyHeight());
+                        Stage pgeyStage = new Stage();
+                        pgeyStage.setScene(new Scene(pgeyViewer, pgeyShot.pgeyWidth(), pgeyShot.pgeyHeight()));
+                        pgeyViewer.setPerson(pgeyHuman);
+                        pgeyViewer.pgeyJumpTo(pgeyShot.pgeyView(), HepyGarment.KIT);
+                        if (pgeyShot.pgeyFocus() == null) {
+                            pgeyViewer.pgeyJumpToFace();
                         }
-                        viewer.layout();
-                        WritableImage image = viewer.capture(shot.width());
-                        stage.close();
-                        return image;
+                        pgeyViewer.layout();
+                        WritableImage pgeyImage = pgeyViewer.pgeyCapture(pgeyShot.pgeyWidth());
+                        pgeyStage.close();
+                        return pgeyImage;
                     });
-                    Png.write(img, out.resolve(shot.name() + ".png"));
-                    System.out.println("Captura: " + out.resolve(shot.name() + ".png").toAbsolutePath());
+                    PgeyPng.pgeyWrite(pgeyImg, pgeyOut.resolve(pgeyShot.pgeyName() + ".png"));
+                    System.out.println("Captura: " + pgeyOut.resolve(pgeyShot.pgeyName() + ".png").toAbsolutePath());
                 }
             }
         } finally {
@@ -155,127 +155,127 @@ public final class CaptureTool {
         }
     }
 
-    private static void captureDressed(Path out, boolean defaults) throws Exception {
-        java.util.Map<String, com.sportforce3d.model.Material> materials = materials();
-        CountDownLatch started = new CountDownLatch(1);
-        Platform.startup(started::countDown);
-        started.await();
+    private static void pgeyCaptureDressed(Path pgeyOut, boolean pgeyDefaults) throws Exception {
+        java.util.Map<String, com.sportforce3d.model.HepyMaterial> pgeyMaterials = pgeyMaterials();
+        CountDownLatch pgeyStarted = new CountDownLatch(1);
+        Platform.startup(pgeyStarted::countDown);
+        pgeyStarted.await();
         try {
-            for (com.sportforce3d.three.human.Persona persona : com.sportforce3d.three.human.Persona.values()) {
-                var dressed = com.sportforce3d.three.human.HumanModels.dress(persona);
-                var doc = defaults ? com.sportforce3d.design.DesignDefaults.document(persona.fallback())
-                        : com.sportforce3d.design.SampleDesigns.forPerson(persona.ordinal());
-                List<Shot> shots = defaults ? List.of(
-                        new Shot("defecto-" + persona.key() + "-frente", ViewPreset.FRONT, Garment.KIT, 1200, 1600),
-                        new Shot("defecto-" + persona.key() + "-espalda", ViewPreset.BACK, Garment.KIT, 1200, 1600),
-                        new Shot("defecto-" + persona.key() + "-espalda-detalle", ViewPreset.BACK, Garment.JERSEY, 1400, 1100))
+            for (com.sportforce3d.three.human.PgeyPersona pgeyPersona : com.sportforce3d.three.human.PgeyPersona.values()) {
+                var pgeyDressed = com.sportforce3d.three.human.PgeyHumanModels.pgeyDress(pgeyPersona);
+                var pgeyDoc = pgeyDefaults ? com.sportforce3d.design.PgeyDesignDefaults.pgeyDocument(pgeyPersona.pgeyFallback())
+                        : com.sportforce3d.design.PgeySampleDesigns.pgeyForPerson(pgeyPersona.ordinal());
+                List<PgeyShot> pgeyShots = pgeyDefaults ? List.of(
+                        new PgeyShot("defecto-" + pgeyPersona.pgeyKey() + "-frente", PgeyViewPreset.FRONT, HepyGarment.KIT, 1200, 1600),
+                        new PgeyShot("defecto-" + pgeyPersona.pgeyKey() + "-espalda", PgeyViewPreset.BACK, HepyGarment.KIT, 1200, 1600),
+                        new PgeyShot("defecto-" + pgeyPersona.pgeyKey() + "-espalda-detalle", PgeyViewPreset.BACK, HepyGarment.JERSEY, 1400, 1100))
                         : List.of(
-                        new Shot("uniforme-" + persona.key() + "-frente", ViewPreset.FRONT, Garment.KIT, 1200, 1600),
-                        new Shot("uniforme-" + persona.key() + "-espalda", ViewPreset.BACK, Garment.KIT, 1200, 1600),
-                        new Shot("uniforme-" + persona.key() + "-costado", ViewPreset.RIGHT, Garment.KIT, 1200, 1600),
-                        new Shot("uniforme-" + persona.key() + "-camiseta", ViewPreset.FRONT, Garment.JERSEY, 1400, 1100),
-                        new Shot("uniforme-" + persona.key() + "-zapatillas", ViewPreset.LEFT, Garment.SHOES, 1400, 1000));
-                renderDressed(dressed, doc, materials, shots, out);
+                        new PgeyShot("uniforme-" + pgeyPersona.pgeyKey() + "-frente", PgeyViewPreset.FRONT, HepyGarment.KIT, 1200, 1600),
+                        new PgeyShot("uniforme-" + pgeyPersona.pgeyKey() + "-espalda", PgeyViewPreset.BACK, HepyGarment.KIT, 1200, 1600),
+                        new PgeyShot("uniforme-" + pgeyPersona.pgeyKey() + "-costado", PgeyViewPreset.RIGHT, HepyGarment.KIT, 1200, 1600),
+                        new PgeyShot("uniforme-" + pgeyPersona.pgeyKey() + "-camiseta", PgeyViewPreset.FRONT, HepyGarment.JERSEY, 1400, 1100),
+                        new PgeyShot("uniforme-" + pgeyPersona.pgeyKey() + "-zapatillas", PgeyViewPreset.LEFT, HepyGarment.SHOES, 1400, 1000));
+                pgeyRenderDressed(pgeyDressed, pgeyDoc, pgeyMaterials, pgeyShots, pgeyOut);
             }
         } finally {
             Platform.exit();
         }
     }
 
-    private static void captureSimulated(Path out) throws Exception {
-        java.util.Map<String, com.sportforce3d.model.Material> materials = materials();
-        CountDownLatch started = new CountDownLatch(1);
-        Platform.startup(started::countDown);
-        started.await();
+    private static void pgeyCaptureSimulated(Path pgeyOut) throws Exception {
+        java.util.Map<String, com.sportforce3d.model.HepyMaterial> pgeyMaterials = pgeyMaterials();
+        CountDownLatch pgeyStarted = new CountDownLatch(1);
+        Platform.startup(pgeyStarted::countDown);
+        pgeyStarted.await();
         try {
-            for (var persona : com.sportforce3d.three.human.Persona.values()) {
-                var dressed = com.sportforce3d.three.human.HumanModels.dress(persona);
-                String p = persona.key() + "-";
-                renderDressed(dressed, com.sportforce3d.design.SampleDesigns.forPerson(persona.ordinal()), materials,
-                        List.of(new Shot(p + "frente", ViewPreset.FRONT, Garment.KIT, 1200, 1600),
-                                new Shot(p + "espalda", ViewPreset.BACK, Garment.KIT, 1200, 1600),
-                                new Shot(p + "costado", ViewPreset.RIGHT, Garment.KIT, 1200, 1600),
-                                new Shot(p + "costado-izquierdo", ViewPreset.LEFT, Garment.KIT, 1200, 1600),
-                                new Shot(p + "camiseta", ViewPreset.FRONT, Garment.JERSEY, 1400, 1100),
-                                new Shot(p + "camiseta-espalda", ViewPreset.BACK, Garment.JERSEY, 1400, 1100)), out);
-                renderDressed(dressed, com.sportforce3d.design.DesignDefaults.document(persona.fallback()), materials,
-                        List.of(new Shot(p + "defecto-frente", ViewPreset.FRONT, Garment.KIT, 1200, 1600)), out);
+            for (var pgeyPersona : com.sportforce3d.three.human.PgeyPersona.values()) {
+                var pgeyDressed = com.sportforce3d.three.human.PgeyHumanModels.pgeyDress(pgeyPersona);
+                String pgeyP = pgeyPersona.pgeyKey() + "-";
+                pgeyRenderDressed(pgeyDressed, com.sportforce3d.design.PgeySampleDesigns.pgeyForPerson(pgeyPersona.ordinal()), pgeyMaterials,
+                        List.of(new PgeyShot(pgeyP + "frente", PgeyViewPreset.FRONT, HepyGarment.KIT, 1200, 1600),
+                                new PgeyShot(pgeyP + "espalda", PgeyViewPreset.BACK, HepyGarment.KIT, 1200, 1600),
+                                new PgeyShot(pgeyP + "costado", PgeyViewPreset.RIGHT, HepyGarment.KIT, 1200, 1600),
+                                new PgeyShot(pgeyP + "costado-izquierdo", PgeyViewPreset.LEFT, HepyGarment.KIT, 1200, 1600),
+                                new PgeyShot(pgeyP + "camiseta", PgeyViewPreset.FRONT, HepyGarment.JERSEY, 1400, 1100),
+                                new PgeyShot(pgeyP + "camiseta-espalda", PgeyViewPreset.BACK, HepyGarment.JERSEY, 1400, 1100)), pgeyOut);
+                pgeyRenderDressed(pgeyDressed, com.sportforce3d.design.PgeyDesignDefaults.pgeyDocument(pgeyPersona.pgeyFallback()), pgeyMaterials,
+                        List.of(new PgeyShot(pgeyP + "defecto-frente", PgeyViewPreset.FRONT, HepyGarment.KIT, 1200, 1600)), pgeyOut);
             }
         } finally {
             Platform.exit();
         }
     }
 
-    private static void renderDressed(com.sportforce3d.three.human.OutfitFitter.DressedPerson dressed,
-                                      com.sportforce3d.design.DesignDocument doc,
-                                      java.util.Map<String, com.sportforce3d.model.Material> materials,
-                                      List<Shot> shots, Path out) throws Exception {
-        Viewer3D viewer = onFx(() -> {
-            Viewer3D v = new Viewer3D();
-            v.autoRotateProperty().set(false);
-            Stage stage = new Stage();
-            stage.setScene(new Scene(v, 1200, 1600));
-            com.sportforce3d.app.Fonts.loadAll();
-            v.setDressedPerson(dressed);
-            new DesignRenderer(v, new TextureComposer(new ElementImages(null))).applyAll(doc, materials);
-            return v;
+    private static void pgeyRenderDressed(com.sportforce3d.three.human.PgeyOutfitFitter.PgeyDressedPerson pgeyDressed,
+                                      com.sportforce3d.design.PgeyDesignDocument pgeyDoc,
+                                      java.util.Map<String, com.sportforce3d.model.HepyMaterial> pgeyMaterials,
+                                      List<PgeyShot> pgeyShots, Path pgeyOut) throws Exception {
+        PgeyViewer3D pgeyViewer = pgeyOnFx(() -> {
+            PgeyViewer3D pgeyV = new PgeyViewer3D();
+            pgeyV.autoRotateProperty().set(false);
+            Stage pgeyStage = new Stage();
+            pgeyStage.setScene(new Scene(pgeyV, 1200, 1600));
+            com.sportforce3d.app.PpqhFonts.ppqhLoadAll();
+            pgeyV.setDressedPerson(pgeyDressed);
+            new PgeyDesignRenderer(pgeyV, new PgeyTextureComposer(new PgeyElementImages(null))).pgeyApplyAll(pgeyDoc, pgeyMaterials);
+            return pgeyV;
         });
-        for (Shot shot : shots) {
-            WritableImage img = onFx(() -> {
-                Stage stage = (Stage) viewer.getScene().getWindow();
-                stage.setWidth(shot.width());
-                stage.setHeight(shot.height());
-                viewer.resize(shot.width(), shot.height());
-                viewer.jumpTo(shot.view(), shot.focus());
-                viewer.layout();
-                return viewer.capture(shot.width());
+        for (PgeyShot pgeyShot : pgeyShots) {
+            WritableImage pgeyImg = pgeyOnFx(() -> {
+                Stage pgeyStage = (Stage) pgeyViewer.getScene().getWindow();
+                pgeyStage.setWidth(pgeyShot.pgeyWidth());
+                pgeyStage.setHeight(pgeyShot.pgeyHeight());
+                pgeyViewer.resize(pgeyShot.pgeyWidth(), pgeyShot.pgeyHeight());
+                pgeyViewer.pgeyJumpTo(pgeyShot.pgeyView(), pgeyShot.pgeyFocus());
+                pgeyViewer.layout();
+                return pgeyViewer.pgeyCapture(pgeyShot.pgeyWidth());
             });
-            Png.write(img, out.resolve(shot.name() + ".png"));
-            System.out.println("Captura: " + out.resolve(shot.name() + ".png").toAbsolutePath());
+            PgeyPng.pgeyWrite(pgeyImg, pgeyOut.resolve(pgeyShot.pgeyName() + ".png"));
+            System.out.println("Captura: " + pgeyOut.resolve(pgeyShot.pgeyName() + ".png").toAbsolutePath());
         }
-        onFx(() -> {
-            Stage stage = (Stage) viewer.getScene().getWindow();
-            stage.getScene().setRoot(new javafx.scene.Group());
-            stage.close();
+        pgeyOnFx(() -> {
+            Stage pgeyStage = (Stage) pgeyViewer.getScene().getWindow();
+            pgeyStage.getScene().setRoot(new javafx.scene.Group());
+            pgeyStage.close();
             return null;
         });
     }
 
-    private static java.util.Map<String, com.sportforce3d.model.Material> materials() throws Exception {
-        java.nio.file.Path tmp = java.nio.file.Files.createTempDirectory("sf-capturas");
-        com.sportforce3d.db.Database db = new com.sportforce3d.db.Database(tmp.resolve("tmp.db"));
-        db.migrate();
-        var catalog = new com.sportforce3d.repository.CatalogRepository(db);
-        java.util.Map<String, com.sportforce3d.model.Material> materials = new java.util.HashMap<>();
-        for (var scope : com.sportforce3d.model.Material.Scope.values()) {
-            catalog.findMaterials(scope).forEach(m -> materials.put(m.code(), m));
+    private static java.util.Map<String, com.sportforce3d.model.HepyMaterial> pgeyMaterials() throws Exception {
+        java.nio.file.Path pgeyTmp = java.nio.file.Files.createTempDirectory("sf-capturas");
+        com.sportforce3d.db.HepyDatabase pgeyDb = new com.sportforce3d.db.HepyDatabase(pgeyTmp.resolve("tmp.db"));
+        pgeyDb.hepyMigrate();
+        var pgeyCatalog = new com.sportforce3d.repository.HepyCatalogRepository(pgeyDb);
+        java.util.Map<String, com.sportforce3d.model.HepyMaterial> pgeyMaterials = new java.util.HashMap<>();
+        for (var pgeyScope : com.sportforce3d.model.HepyMaterial.HepyScope.values()) {
+            pgeyCatalog.hepyFindMaterials(pgeyScope).forEach(pgeyM -> pgeyMaterials.put(pgeyM.hepyCode(), pgeyM));
         }
-        return materials;
+        return pgeyMaterials;
     }
 
-    private static WritableImage render(ModelData model, Shot shot) {
-        Viewer3D viewer = new Viewer3D();
-        viewer.autoRotateProperty().set(false);
-        viewer.resize(shot.width(), shot.height());
-        Stage stage = new Stage();
-        stage.setScene(new Scene(viewer, shot.width(), shot.height()));
-        viewer.setModel(model);
-        viewer.jumpTo(shot.view(), shot.focus());
-        viewer.layout();
-        WritableImage img = viewer.capture(shot.width());
-        stage.close();
-        return img;
+    private static WritableImage pgeyRender(PgeyModelData pgeyModel, PgeyShot pgeyShot) {
+        PgeyViewer3D pgeyViewer = new PgeyViewer3D();
+        pgeyViewer.autoRotateProperty().set(false);
+        pgeyViewer.resize(pgeyShot.pgeyWidth(), pgeyShot.pgeyHeight());
+        Stage pgeyStage = new Stage();
+        pgeyStage.setScene(new Scene(pgeyViewer, pgeyShot.pgeyWidth(), pgeyShot.pgeyHeight()));
+        pgeyViewer.setModel(pgeyModel);
+        pgeyViewer.pgeyJumpTo(pgeyShot.pgeyView(), pgeyShot.pgeyFocus());
+        pgeyViewer.layout();
+        WritableImage pgeyImg = pgeyViewer.pgeyCapture(pgeyShot.pgeyWidth());
+        pgeyStage.close();
+        return pgeyImg;
     }
 
-    private static <T> T onFx(java.util.concurrent.Callable<T> work) throws Exception {
-        CompletableFuture<T> f = new CompletableFuture<>();
+    private static <T> T pgeyOnFx(java.util.concurrent.Callable<T> pgeyWork) throws Exception {
+        CompletableFuture<T> pgeyF = new CompletableFuture<>();
         Platform.runLater(() -> {
             try {
-                f.complete(work.call());
-            } catch (Throwable t) {
-                f.completeExceptionally(t);
+                pgeyF.complete(pgeyWork.call());
+            } catch (Throwable pgeyT) {
+                pgeyF.completeExceptionally(pgeyT);
             }
         });
-        return f.get(120, TimeUnit.SECONDS);
+        return pgeyF.get(120, TimeUnit.SECONDS);
     }
 }

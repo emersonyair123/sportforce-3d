@@ -27,6 +27,7 @@ Pantallas de la Etapa 7: [docs/capturas/etapa7](docs/capturas/etapa7) · todas l
 11. [Vista 3D: cambiar o agregar una persona desde MakeHuman](#11-vista-3d-cambiar-o-agregar-una-persona-desde-makehuman)
 12. [Vista 3D: tela simulada en Blender](#12-vista-3d-tela-simulada-en-blender)
 13. [Estructura del proyecto](#13-estructura-del-proyecto)
+14. [Integrantes y módulos](#14-integrantes-y-módulos)
 
 ---
 
@@ -470,6 +471,35 @@ src/main/resources/
 src/packaging/windows/          icono del instalador (generado por tools/IconTool)
 src/test/java/                  pruebas JUnit, de interfaz (ui/) y herramientas (tools/ScreenTour, tools/RealisticTour, tools/RealisticSamples, tools/IconTool)
 ```
+
+## 14. Integrantes y módulos
+
+Cada integrante firmó su módulo con sus iniciales en los nombres del código (`src/main/java` y `tools/blender`):
+
+- Clases: prefijo en PascalCase (`PgeyRecolorService`, `HepyCartService`, `PpqhOrderService`).
+- Métodos, campos, parámetros y variables: prefijo en minúscula (`pgeyRecolor`, `hepyBasePriceCents`, `ppqhPlaceOrder`, `ppqhTotalCents`).
+- Constantes: `PGEY_`, `HEPY_`, `PPQH_` (`PGEY_FACE_STRIDE`).
+
+| Integrante | Módulo | Paquetes y clases |
+| --- | --- | --- |
+| **PGEY** | Diseñador (vista realista y 3D), recoloreado de fotos, visor 3D y tela simulada | `design` (`PgeyDesignDocument`, `PgeyViewSync`…), `render` (`PgeyRecolorService`…), `three` y subpaquetes (`PgeyViewer3D`, `PgeyOutfitFitter`…), `service.PgeyDesignService`, `viewmodel.PgeyDesignerViewModel`, vistas `PgeyDesignerController`, `PgeyDesignsController` (Mis diseños), `PgeyRealisticDesigner`, `PgeyRealisticPreview`, `PgeyAdminDesignController`; modelos `PgeyDesignAsset`, `PgeyDesignSummary`; componentes del diseñador (`PgeyColorSwatch`, `PgeyColorSwatchGroup`, `PgeyGarmentPicker`, `PgeyMaterialPicker`, `PgeyMaterialSample`); scripts de `tools/blender` |
+| **HEPY** | Catálogo, productos, inventario, carrito y acceso a datos | `db` (`HepyDatabase`…), `repository` (todos, `HepyProductRepository`…), `storage.HepyStorageService`, `service` `HepyCatalogService`, `HepyCartService`, `HepyAdminProductService`; vistas y viewmodels de inicio, catálogo, ficha, carrito, ADMIN › Productos e Inventario; modelos de catálogo y carrito (`HepyProductSummary`, `HepyCartLine`…); componentes `HepyProductCard`, `HepyGarmentArt`, `HepyFilterChip`, `HepyPageNav`, `HepyQuantityStepper`; `util` `HepyMoney`, `HepyTexts` |
+| **PPQH** | Autenticación y usuarios, pedidos, pagos, panel ADMIN, reportes, configuración y aplicación | `app` (`PpqhAppContext`, `PpqhRouter`…), `config.PpqhAppConfig`, `report` (`PpqhPdfReportWriter`…), `service` `PpqhAuthService`, `PpqhSession`, `PpqhOrderService`, `PpqhPaymentService`, `PpqhReportService`, `PpqhDashboardService`…; vistas de login, registro, cuenta, checkout, pedidos y ADMIN (dashboard, pedidos, pagos, usuarios, reportes, configuración); modelos de usuarios, pedidos y pagos; componentes base (`PpqhSfButton`, `PpqhToast`, `PpqhSidebarNav`…); `util` `PpqhValidators`, `PpqhPeruRegions` |
+
+Clases que no encajaban en un solo módulo y a quién se asignaron:
+
+| Clase | Integrante | Motivo |
+| --- | --- | --- |
+| `PgeyAdminDesignController` | PGEY | Es parte del panel ADMIN, pero su contenido es el visor del uniforme (vista realista y 3D). |
+| `PgeyDesignService` | PGEY | Guardado de diseños, Mis diseños y logos: es el diseñador. |
+| `HepyDesignRepository` | HEPY | Todo `repository` es de HEPY, aunque guarde diseños. |
+| `HepyStorageService` | HEPY | Guarda los archivos subidos (fotos de productos, logos y comprobantes); es parte de la capa de datos. |
+| `HepyHomeController`, `HepyHomeViewModel` | HEPY | La pantalla de inicio es la vitrina de productos. |
+| `HepyGarmentArt`, `HepyRealisticLook` | HEPY | Ilustración y foto de las tarjetas del catálogo. |
+| `PpqhAddressService`, `PpqhAddressForm`, `PpqhPeruRegions` | PPQH | Direcciones de la cuenta del usuario y del checkout. |
+| `PpqhComponentGallery` y componentes base | PPQH | Se usan en toda la aplicación (parte de `app`). |
+
+`Launcher` y `three.CaptureTool` conservan su nombre: los usan por texto `pom.xml`, el instalador y las configuraciones de `.run/`. Tampoco se renombraron los métodos que exige Java o JavaFX (`main`, `start`, `stop`, `initialize`, `@Override`), los getters/setters de propiedades JavaFX, las constantes de los `enum` (se guardan como texto en la base de datos y en el JSON), las tablas y columnas, las claves del JSON de los diseños (se conservan con `@JsonProperty`), los recursos, las migraciones ni los nombres de los archivos de `tools/blender`.
 
 ## Licencias de terceros
 

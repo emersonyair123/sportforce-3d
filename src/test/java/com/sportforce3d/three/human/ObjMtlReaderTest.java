@@ -1,6 +1,6 @@
 package com.sportforce3d.three.human;
 
-import com.sportforce3d.three.geom.MeshData;
+import com.sportforce3d.three.geom.PgeyMeshData;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -51,8 +51,8 @@ class ObjMtlReaderTest {
             f -5/1 -4/2 -1/4
             """;
 
-    private static ObjMtlReader.Result read(String obj, Map<String, String> files) throws IOException {
-        return ObjMtlReader.read(new StringReader(obj), path -> {
+    private static PgeyObjMtlReader.PgeyResult read(String obj, Map<String, String> files) throws IOException {
+        return PgeyObjMtlReader.pgeyRead(new StringReader(obj), path -> {
             String text = files.get(path);
             return text == null ? null : new StringReader(text);
         });
@@ -60,42 +60,42 @@ class ObjMtlReaderTest {
 
     @Test
     void creaUnaMallaPorMaterialEnElOrdenDelObj() throws IOException {
-        ObjMtlReader.Result r = read(OBJ, Map.of("modelo.mtl", MTL));
+        PgeyObjMtlReader.PgeyResult r = read(OBJ, Map.of("modelo.mtl", MTL));
 
-        assertThat(r.groups()).extracting(ObjMtlReader.Group::material).containsExactly("piel", "ojos");
-        MeshData piel = r.groups().get(0).mesh();
-        assertThat(piel.faceCount()).as("el cuadro se divide en dos triángulos").isEqualTo(2);
-        assertThat(piel.pointCount()).as("solo los vértices que usa el material").isEqualTo(4);
-        MeshData ojos = r.groups().get(1).mesh();
-        assertThat(ojos.faceCount()).isEqualTo(1);
-        assertThat(ojos.pointCount()).isEqualTo(3);
+        assertThat(r.pgeyGroups()).extracting(PgeyObjMtlReader.PgeyGroup::pgeyMaterial).containsExactly("piel", "ojos");
+        PgeyMeshData piel = r.pgeyGroups().get(0).pgeyMesh();
+        assertThat(piel.pgeyFaceCount()).as("el cuadro se divide en dos triángulos").isEqualTo(2);
+        assertThat(piel.pgeyPointCount()).as("solo los vértices que usa el material").isEqualTo(4);
+        PgeyMeshData ojos = r.pgeyGroups().get(1).pgeyMesh();
+        assertThat(ojos.pgeyFaceCount()).isEqualTo(1);
+        assertThat(ojos.pgeyPointCount()).isEqualTo(3);
     }
 
     @Test
     void convierteACoordenadasDeJavaFxEInvierteV() throws IOException {
-        ObjMtlReader.Result r = read(OBJ, Map.of("modelo.mtl", MTL));
-        MeshData piel = r.groups().get(0).mesh();
+        PgeyObjMtlReader.PgeyResult r = read(OBJ, Map.of("modelo.mtl", MTL));
+        PgeyMeshData piel = r.pgeyGroups().get(0).pgeyMesh();
         int corner = 2;
-        int p = piel.faces()[corner * 3];
-        int t = piel.faces()[corner * 3 + 2];
-        assertThat(piel.points()[p * 3]).isEqualTo(1f);
-        assertThat(piel.points()[p * 3 + 1]).isEqualTo(-2f);
-        assertThat(piel.texCoords()[t * 2]).isEqualTo(1f);
-        assertThat(piel.texCoords()[t * 2 + 1]).isEqualTo(0f);
+        int p = piel.pgeyFaces()[corner * 3];
+        int t = piel.pgeyFaces()[corner * 3 + 2];
+        assertThat(piel.pgeyPoints()[p * 3]).isEqualTo(1f);
+        assertThat(piel.pgeyPoints()[p * 3 + 1]).isEqualTo(-2f);
+        assertThat(piel.pgeyTexCoords()[t * 2]).isEqualTo(1f);
+        assertThat(piel.pgeyTexCoords()[t * 2 + 1]).isEqualTo(0f);
 
-        assertThat(r.min()).containsExactly(0, 0, 0);
-        assertThat(r.max()).containsExactly(1, 2, 1);
-        assertThat(r.height()).isEqualTo(2);
+        assertThat(r.pgeyMin()).containsExactly(0, 0, 0);
+        assertThat(r.pgeyMax()).containsExactly(1, 2, 1);
+        assertThat(r.pgeyHeight()).isEqualTo(2);
     }
 
     @Test
     void calculaNormalesSuavesUnitariasCuandoElObjNoTrae() throws IOException {
-        MeshData piel = read(OBJ, Map.of("modelo.mtl", MTL)).groups().get(0).mesh();
+        PgeyMeshData piel = read(OBJ, Map.of("modelo.mtl", MTL)).pgeyGroups().get(0).pgeyMesh();
         for (int c = 0; c < 6; c++) {
-            int n = piel.faces()[c * 3 + 1];
-            assertThat(piel.normals()[n * 3]).isCloseTo(0f, within(1e-6f));
-            assertThat(piel.normals()[n * 3 + 1]).isCloseTo(0f, within(1e-6f));
-            assertThat(piel.normals()[n * 3 + 2]).isCloseTo(-1f, within(1e-6f));
+            int n = piel.pgeyFaces()[c * 3 + 1];
+            assertThat(piel.pgeyNormals()[n * 3]).isCloseTo(0f, within(1e-6f));
+            assertThat(piel.pgeyNormals()[n * 3 + 1]).isCloseTo(0f, within(1e-6f));
+            assertThat(piel.pgeyNormals()[n * 3 + 2]).isCloseTo(-1f, within(1e-6f));
         }
     }
 
@@ -109,13 +109,13 @@ class ObjMtlReaderTest {
                 f 1 3 2
                 f 1 2 4
                 """;
-        ObjMtlReader.Result result = read(obj, Map.of());
-        assertThat(result.groups().get(0).material()).isEqualTo(ObjMtlReader.DEFAULT_MATERIAL);
-        MeshData m = result.groups().get(0).mesh();
-        int shared = m.faces()[0];
-        int n = m.faces()[1];
-        assertThat(m.faces()[1]).as("normal indexada por vértice").isEqualTo(shared);
-        float[] nn = m.normals();
+        PgeyObjMtlReader.PgeyResult result = read(obj, Map.of());
+        assertThat(result.pgeyGroups().get(0).pgeyMaterial()).isEqualTo(PgeyObjMtlReader.PGEY_DEFAULT_MATERIAL);
+        PgeyMeshData m = result.pgeyGroups().get(0).pgeyMesh();
+        int shared = m.pgeyFaces()[0];
+        int n = m.pgeyFaces()[1];
+        assertThat(m.pgeyFaces()[1]).as("normal indexada por vértice").isEqualTo(shared);
+        float[] nn = m.pgeyNormals();
         double len = Math.sqrt(nn[n * 3] * nn[n * 3] + nn[n * 3 + 1] * nn[n * 3 + 1] + nn[n * 3 + 2] * nn[n * 3 + 2]);
         assertThat(len).isCloseTo(1, within(1e-6));
         assertThat(nn[n * 3]).isCloseTo(-0.7071f, within(1e-3f));
@@ -132,10 +132,10 @@ class ObjMtlReaderTest {
                 vn 0 1 0
                 f 1//1 2//1 3//1
                 """;
-        MeshData m = read(obj, Map.of()).groups().get(0).mesh();
-        int n = m.faces()[1];
-        assertThat(m.normals()[n * 3 + 1]).as("Y arriba → Y abajo en JavaFX").isEqualTo(-1f);
-        assertThat(m.texCoords()).as("sin vt: una coordenada (0, 0) compartida").containsExactly(0f, 0f);
+        PgeyMeshData m = read(obj, Map.of()).pgeyGroups().get(0).pgeyMesh();
+        int n = m.pgeyFaces()[1];
+        assertThat(m.pgeyNormals()[n * 3 + 1]).as("Y arriba → Y abajo en JavaFX").isEqualTo(-1f);
+        assertThat(m.pgeyTexCoords()).as("sin vt: una coordenada (0, 0) compartida").containsExactly(0f, 0f);
     }
 
     @Test
@@ -148,51 +148,51 @@ class ObjMtlReaderTest {
                 v 0 1 0
                 f 1 2 3 4 5
                 """;
-        assertThat(read(obj, Map.of()).groups().get(0).mesh().faceCount()).isEqualTo(3);
+        assertThat(read(obj, Map.of()).pgeyGroups().get(0).pgeyMesh().pgeyFaceCount()).isEqualTo(3);
     }
 
     @Test
     void leeElMtlIgnorandoDyConRutasRelativasALaCarpeta() throws IOException {
-        Map<String, ObjMtlReader.Material> m = ObjMtlReader.readMtl(new StringReader(MTL), "humanos/");
-        ObjMtlReader.Material piel = m.get("piel");
-        assertThat(piel.diffuse()).containsExactly(1, 0.95, 0.85);
-        assertThat(piel.specular()[0]).isEqualTo(0.02745);
-        assertThat(piel.diffuseMap()).isEqualTo("humanos/textures/piel.png");
-        assertThat(piel.alphaMap()).isEqualTo("humanos/textures/piel.png");
-        ObjMtlReader.Material ojos = m.get("ojos");
-        assertThat(ojos.shininess()).isEqualTo(80);
-        assertThat(ojos.diffuseMap()).as("opciones antes de la ruta y barra invertida").isEqualTo("humanos/textures/ojo.png");
+        Map<String, PgeyObjMtlReader.PgeyMaterial> m = PgeyObjMtlReader.pgeyReadMtl(new StringReader(MTL), "humanos/");
+        PgeyObjMtlReader.PgeyMaterial piel = m.get("piel");
+        assertThat(piel.pgeyDiffuse()).containsExactly(1, 0.95, 0.85);
+        assertThat(piel.pgeySpecular()[0]).isEqualTo(0.02745);
+        assertThat(piel.pgeyDiffuseMap()).isEqualTo("humanos/textures/piel.png");
+        assertThat(piel.pgeyAlphaMap()).isEqualTo("humanos/textures/piel.png");
+        PgeyObjMtlReader.PgeyMaterial ojos = m.get("ojos");
+        assertThat(ojos.pgeyShininess()).isEqualTo(80);
+        assertThat(ojos.pgeyDiffuseMap()).as("opciones antes de la ruta y barra invertida").isEqualTo("humanos/textures/ojo.png");
     }
 
     @Test
     void elMtlSeBuscaRelativoAlObjYLosMaterialesFaltantesTienenValoresNeutros() throws IOException {
-        ObjMtlReader.Result r = read(OBJ.replace("mtllib modelo.mtl", "mtllib sub/modelo.mtl"),
+        PgeyObjMtlReader.PgeyResult r = read(OBJ.replace("mtllib modelo.mtl", "mtllib sub/modelo.mtl"),
                 Map.of("sub/modelo.mtl", MTL));
-        assertThat(r.material("piel").diffuseMap()).isEqualTo("sub/textures/piel.png");
-        ObjMtlReader.Material missing = r.material("no-existe");
-        assertThat(missing.diffuse()).containsExactly(1, 1, 1);
-        assertThat(missing.diffuseMap()).isNull();
+        assertThat(r.pgeyMaterial("piel").pgeyDiffuseMap()).isEqualTo("sub/textures/piel.png");
+        PgeyObjMtlReader.PgeyMaterial missing = r.pgeyMaterial("no-existe");
+        assertThat(missing.pgeyDiffuse()).containsExactly(1, 1, 1);
+        assertThat(missing.pgeyDiffuseMap()).isNull();
     }
 
     @Test
     void sinMtlLaGeometriaIgualSeLee() throws IOException {
-        ObjMtlReader.Result r = read(OBJ, Map.of());
-        assertThat(r.groups()).hasSize(2);
-        assertThat(r.materials()).isEmpty();
+        PgeyObjMtlReader.PgeyResult r = read(OBJ, Map.of());
+        assertThat(r.pgeyGroups()).hasSize(2);
+        assertThat(r.pgeyMaterials()).isEmpty();
     }
 
     @Test
     void rechazaRutasQueSalenDeLaCarpetaDelModelo() throws IOException {
-        assertThat(ObjMtlReader.safePath("../secreto.png")).isNull();
-        assertThat(ObjMtlReader.safePath("textures/../../x.png")).isNull();
-        assertThat(ObjMtlReader.safePath("/etc/passwd")).isNull();
-        assertThat(ObjMtlReader.safePath("C:\\Windows\\x.png")).isNull();
-        assertThat(ObjMtlReader.safePath("./textures/a.png")).isEqualTo("textures/a.png");
+        assertThat(PgeyObjMtlReader.pgeySafePath("../secreto.png")).isNull();
+        assertThat(PgeyObjMtlReader.pgeySafePath("textures/../../x.png")).isNull();
+        assertThat(PgeyObjMtlReader.pgeySafePath("/etc/passwd")).isNull();
+        assertThat(PgeyObjMtlReader.pgeySafePath("C:\\Windows\\x.png")).isNull();
+        assertThat(PgeyObjMtlReader.pgeySafePath("./textures/a.png")).isEqualTo("textures/a.png");
 
         String evil = "newmtl x\nmap_Kd ../../fuera.png\n";
-        assertThat(ObjMtlReader.readMtl(new StringReader(evil), "").get("x").diffuseMap()).isNull();
+        assertThat(PgeyObjMtlReader.pgeyReadMtl(new StringReader(evil), "").get("x").pgeyDiffuseMap()).isNull();
         List<String> opened = new ArrayList<>();
-        ObjMtlReader.read(new StringReader("mtllib ../fuera.mtl\nv 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n"), p -> {
+        PgeyObjMtlReader.pgeyRead(new StringReader("mtllib ../fuera.mtl\nv 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n"), p -> {
             opened.add(p);
             return (Reader) null;
         });

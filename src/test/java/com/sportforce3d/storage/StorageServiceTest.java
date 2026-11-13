@@ -1,6 +1,6 @@
 package com.sportforce3d.storage;
 
-import com.sportforce3d.service.ValidationException;
+import com.sportforce3d.service.PpqhValidationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -26,14 +26,14 @@ class StorageServiceTest {
         Path pdf = tempDir.resolve("voucher.pdf");
         Files.writeString(pdf, "%PDF-1.7 ...");
 
-        assertThat(StorageService.detect(jpeg)).isEqualTo(StorageService.Kind.JPEG);
-        assertThat(StorageService.detect(svg)).isEqualTo(StorageService.Kind.SVG);
-        assertThat(StorageService.detect(pdf)).isEqualTo(StorageService.Kind.PDF);
+        assertThat(HepyStorageService.hepyDetect(jpeg)).isEqualTo(HepyStorageService.HepyKind.JPEG);
+        assertThat(HepyStorageService.hepyDetect(svg)).isEqualTo(HepyStorageService.HepyKind.SVG);
+        assertThat(HepyStorageService.hepyDetect(pdf)).isEqualTo(HepyStorageService.HepyKind.PDF);
 
-        StorageService storage = new StorageService(tempDir.resolve("storage"));
-        StorageService.StoredFile stored = storage.store(jpeg, "products", StorageService.IMAGES);
-        assertThat(stored.path()).endsWith(".jpg");
-        assertThatThrownBy(() -> storage.store(pdf, "products", StorageService.IMAGES)).isInstanceOf(ValidationException.class);
+        HepyStorageService storage = new HepyStorageService(tempDir.resolve("storage"));
+        HepyStorageService.HepyStoredFile stored = storage.hepyStore(jpeg, "products", HepyStorageService.HEPY_IMAGES);
+        assertThat(stored.hepyPath()).endsWith(".jpg");
+        assertThatThrownBy(() -> storage.hepyStore(pdf, "products", HepyStorageService.HEPY_IMAGES)).isInstanceOf(PpqhValidationException.class);
     }
 
     @Test
@@ -41,18 +41,18 @@ class StorageServiceTest {
         Path big = tempDir.resolve("grande.png");
         Files.write(big, new byte[]{(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A});
         try (RandomAccessFile raf = new RandomAccessFile(big.toFile(), "rw")) {
-            raf.setLength(StorageService.MAX_BYTES + 1);
+            raf.setLength(HepyStorageService.HEPY_MAX_BYTES + 1);
         }
-        StorageService storage = new StorageService(tempDir.resolve("storage"));
-        assertThatThrownBy(() -> storage.store(big, "products", Set.of(StorageService.Kind.PNG)))
+        HepyStorageService storage = new HepyStorageService(tempDir.resolve("storage"));
+        assertThatThrownBy(() -> storage.hepyStore(big, "products", Set.of(HepyStorageService.HepyKind.PNG)))
                 .hasMessageContaining("5 MB");
     }
 
     @Test
     void refusesPathsOutsideTheStorageFolder() {
-        StorageService storage = new StorageService(tempDir.resolve("storage"));
-        assertThatThrownBy(() -> storage.resolve("../../etc/passwd")).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> storage.store(tempDir.resolve("x"), "../fuera", StorageService.IMAGES))
+        HepyStorageService storage = new HepyStorageService(tempDir.resolve("storage"));
+        assertThatThrownBy(() -> storage.hepyResolve("../../etc/passwd")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> storage.hepyStore(tempDir.resolve("x"), "../fuera", HepyStorageService.HEPY_IMAGES))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

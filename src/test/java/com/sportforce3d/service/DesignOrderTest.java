@@ -1,18 +1,18 @@
 package com.sportforce3d.service;
 
-import com.sportforce3d.design.DesignDefaults;
-import com.sportforce3d.design.DesignDocument;
-import com.sportforce3d.design.DesignJson;
-import com.sportforce3d.design.ElementType;
-import com.sportforce3d.design.MaterialSlot;
-import com.sportforce3d.design.SampleDesigns;
-import com.sportforce3d.model.CartLine;
-import com.sportforce3d.model.CartSummary;
-import com.sportforce3d.model.DesignSummary;
-import com.sportforce3d.model.OrderDetail;
-import com.sportforce3d.model.OrderItem;
-import com.sportforce3d.model.PaymentMethod;
-import com.sportforce3d.three.model.Zone;
+import com.sportforce3d.design.PgeyDesignDefaults;
+import com.sportforce3d.design.PgeyDesignDocument;
+import com.sportforce3d.design.PgeyDesignJson;
+import com.sportforce3d.design.PgeyElementType;
+import com.sportforce3d.design.PgeyMaterialSlot;
+import com.sportforce3d.design.PgeySampleDesigns;
+import com.sportforce3d.model.HepyCartLine;
+import com.sportforce3d.model.HepyCartSummary;
+import com.sportforce3d.model.PgeyDesignSummary;
+import com.sportforce3d.model.PpqhOrderDetail;
+import com.sportforce3d.model.PpqhOrderItem;
+import com.sportforce3d.model.PpqhPaymentMethod;
+import com.sportforce3d.three.model.PgeyZone;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -47,50 +47,50 @@ class DesignOrderTest {
         return p;
     }
 
-    private DesignSummary saveHalcones() {
-        DesignDocument doc = SampleDesigns.halcones().withProduct(f.productId("SF-UFU-001"));
-        return f.designs.save(null, "Los Halcones", doc, front, back);
+    private PgeyDesignSummary saveHalcones() {
+        PgeyDesignDocument doc = PgeySampleDesigns.pgeyHalcones().pgeyWithProduct(f.productId("SF-UFU-001"));
+        return f.designs.pgeySave(null, "Los Halcones", doc, front, back);
     }
 
     @Test
     void designLineCarriesThumbnailSizeQuantityAndMaterialSurcharge() {
-        DesignSummary d = saveHalcones();
-        CartSummary cart = f.cart.addDesign(d.id(), f.variantId(KIT_SKU), 3);
+        PgeyDesignSummary d = saveHalcones();
+        HepyCartSummary cart = f.cart.hepyAddDesign(d.pgeyId(), f.variantId(KIT_SKU), 3);
 
-        CartLine line = cart.lines().get(0);
-        assertThat(line.designId()).isEqualTo(d.id());
-        assertThat(line.designName()).isEqualTo("Los Halcones");
-        assertThat(line.designThumbnail()).isEqualTo(d.thumbnailFront());
-        assertThat(line.sizeName()).isEqualTo("M");
-        assertThat(line.quantity()).isEqualTo(3);
-        assertThat(line.unitPriceCents()).isEqualTo(14990);
-        assertThat(line.surchargeCents()).isEqualTo(1500);
-        assertThat(cart.surchargeCents()).isEqualTo(3 * 1500);
+        HepyCartLine line = cart.hepyLines().get(0);
+        assertThat(line.hepyDesignId()).isEqualTo(d.pgeyId());
+        assertThat(line.hepyDesignName()).isEqualTo("Los Halcones");
+        assertThat(line.hepyDesignThumbnail()).isEqualTo(d.pgeyThumbnailFront());
+        assertThat(line.hepySizeName()).isEqualTo("M");
+        assertThat(line.hepyQuantity()).isEqualTo(3);
+        assertThat(line.hepyUnitPriceCents()).isEqualTo(14990);
+        assertThat(line.hepySurchargeCents()).isEqualTo(1500);
+        assertThat(cart.hepySurchargeCents()).isEqualTo(3 * 1500);
 
-        f.cart.addDesign(d.id(), f.variantId(KIT_SKU), 1);
-        CartSummary both = f.cart.add(f.variantId(KIT_SKU), 1);
-        assertThat(both.lines()).hasSize(2);
-        assertThat(both.lines().get(0).quantity()).isEqualTo(4);
-        assertThat(both.lines().get(1).hasDesign()).isFalse();
-        assertThat(both.lines().get(1).surchargeCents()).isZero();
+        f.cart.hepyAddDesign(d.pgeyId(), f.variantId(KIT_SKU), 1);
+        HepyCartSummary both = f.cart.hepyAdd(f.variantId(KIT_SKU), 1);
+        assertThat(both.hepyLines()).hasSize(2);
+        assertThat(both.hepyLines().get(0).hepyQuantity()).isEqualTo(4);
+        assertThat(both.hepyLines().get(1).hepyHasDesign()).isFalse();
+        assertThat(both.hepyLines().get(1).hepySurchargeCents()).isZero();
     }
 
     @Test
     void surchargeFollowsTheLatestVersionAndMaterialsMustBeAllowed() {
-        DesignSummary d = saveHalcones();
-        f.cart.addDesign(d.id(), f.variantId(KIT_SKU), 1);
-        DesignDocument malla = f.designs.open(d.id()).document().withMaterial(MaterialSlot.JERSEY, "MALLA");
-        f.designs.save(d.id(), "Los Halcones", malla, null, null);
-        assertThat(f.cart.summary().lines().get(0).surchargeCents()).isEqualTo(500);
+        PgeyDesignSummary d = saveHalcones();
+        f.cart.hepyAddDesign(d.pgeyId(), f.variantId(KIT_SKU), 1);
+        PgeyDesignDocument malla = f.designs.pgeyOpen(d.pgeyId()).pgeyDocument().pgeyWithMaterial(PgeyMaterialSlot.JERSEY, "MALLA");
+        f.designs.pgeySave(d.pgeyId(), "Los Halcones", malla, null, null);
+        assertThat(f.cart.hepySummary().hepyLines().get(0).hepySurchargeCents()).isEqualTo(500);
 
-        DesignDocument microfibra = malla.withMaterial(MaterialSlot.JERSEY, "MICROFIBRA");
-        DesignSummary d2 = f.designs.save(null, "Microfibra", microfibra, null, null);
-        assertThatThrownBy(() -> f.cart.addDesign(d2.id(), f.variantId(KIT_SKU), 1))
+        PgeyDesignDocument microfibra = malla.pgeyWithMaterial(PgeyMaterialSlot.JERSEY, "MICROFIBRA");
+        PgeyDesignSummary d2 = f.designs.pgeySave(null, "Microfibra", microfibra, null, null);
+        assertThatThrownBy(() -> f.cart.hepyAddDesign(d2.pgeyId(), f.variantId(KIT_SKU), 1))
                 .hasMessageContaining("Microfibra interlock").hasMessageContaining("no está disponible");
-        assertThatThrownBy(() -> f.cart.addDesign(d.id(), f.variantId("SF-CAM-003-M"), 1))
+        assertThatThrownBy(() -> f.cart.hepyAddDesign(d.pgeyId(), f.variantId("SF-CAM-003-M"), 1))
                 .hasMessageContaining("no se puede personalizar");
         f.loginNewClient("otra@correo.pe");
-        assertThatThrownBy(() -> f.cart.addDesign(d.id(), f.variantId(KIT_SKU), 1))
+        assertThatThrownBy(() -> f.cart.hepyAddDesign(d.pgeyId(), f.variantId(KIT_SKU), 1))
                 .hasMessage("No encontramos ese diseño.");
     }
 
@@ -99,51 +99,51 @@ class DesignOrderTest {
         java.util.Map<String, Long> expected = java.util.Map.of("DRY_FIT", 0L, "POLIESTER_LISO", 0L, "ALGODON", 0L,
                 "MALLA", 1000L);
         expected.forEach((code, cents) -> {
-            DesignDocument doc = SampleDesigns.halcones().withProduct(f.productId("SF-UFU-001"))
-                    .withMaterial(MaterialSlot.JERSEY, code).withMaterial(MaterialSlot.SHORTS, code);
-            DesignSummary d = f.designs.save(null, "Tela " + code, doc, front, back);
-            CartSummary cart = f.cart.addDesign(d.id(), f.variantId(KIT_SKU), 1);
-            assertThat(cart.lines().stream().filter(l -> Long.valueOf(d.id()).equals(l.designId())).findFirst().orElseThrow()
-                    .surchargeCents()).as(code).isEqualTo(cents);
+            PgeyDesignDocument doc = PgeySampleDesigns.pgeyHalcones().pgeyWithProduct(f.productId("SF-UFU-001"))
+                    .pgeyWithMaterial(PgeyMaterialSlot.JERSEY, code).pgeyWithMaterial(PgeyMaterialSlot.SHORTS, code);
+            PgeyDesignSummary d = f.designs.pgeySave(null, "Tela " + code, doc, front, back);
+            HepyCartSummary cart = f.cart.hepyAddDesign(d.pgeyId(), f.variantId(KIT_SKU), 1);
+            assertThat(cart.hepyLines().stream().filter(l -> Long.valueOf(d.pgeyId()).equals(l.hepyDesignId())).findFirst().orElseThrow()
+                    .hepySurchargeCents()).as(code).isEqualTo(cents);
         });
     }
 
     @Test
     void orderKeepsAnImmutableCopyOfTheDesign() throws Exception {
-        DesignSummary d = saveHalcones();
-        f.cart.addDesign(d.id(), f.variantId(KIT_SKU), 2);
-        OrderDetail order = f.orders.placeOrder(f.addresses.list().get(0).id(), PaymentMethod.YAPE, null);
+        PgeyDesignSummary d = saveHalcones();
+        f.cart.hepyAddDesign(d.pgeyId(), f.variantId(KIT_SKU), 2);
+        PpqhOrderDetail order = f.orders.ppqhPlaceOrder(f.addresses.ppqhList().get(0).ppqhId(), PpqhPaymentMethod.YAPE, null);
 
-        OrderItem item = order.items().get(0);
-        assertThat(item.hasDesign()).isTrue();
-        assertThat(item.designName()).isEqualTo("Los Halcones");
-        assertThat(item.designVersion()).isEqualTo(1);
-        assertThat(item.surchargeCents()).isEqualTo(1500);
-        assertThat(item.lineTotalCents()).isEqualTo(2 * (14990 + 1500));
-        assertThat(order.surchargeCents()).isEqualTo(3000);
-        assertThat(item.designFrontPath()).startsWith("orders/").isNotEqualTo(d.thumbnailFront());
-        assertThat(item.designBackPath()).startsWith("orders/");
-        assertThat(Files.exists(f.storage.resolve(item.designFrontPath()))).isTrue();
-        DesignDocument frozen = DesignJson.read(item.designSnapshotJson());
+        PpqhOrderItem item = order.ppqhItems().get(0);
+        assertThat(item.ppqhHasDesign()).isTrue();
+        assertThat(item.ppqhDesignName()).isEqualTo("Los Halcones");
+        assertThat(item.ppqhDesignVersion()).isEqualTo(1);
+        assertThat(item.ppqhSurchargeCents()).isEqualTo(1500);
+        assertThat(item.ppqhLineTotalCents()).isEqualTo(2 * (14990 + 1500));
+        assertThat(order.ppqhSurchargeCents()).isEqualTo(3000);
+        assertThat(item.ppqhDesignFrontPath()).startsWith("orders/").isNotEqualTo(d.pgeyThumbnailFront());
+        assertThat(item.ppqhDesignBackPath()).startsWith("orders/");
+        assertThat(Files.exists(f.storage.hepyResolve(item.ppqhDesignFrontPath()))).isTrue();
+        PgeyDesignDocument frozen = PgeyDesignJson.pgeyRead(item.ppqhDesignSnapshotJson());
 
-        DesignDocument green = frozen.withColor(Zone.JERSEY_BODY, "#0E7C3A");
-        f.designs.save(d.id(), "Otro nombre", green, png(tempDir.resolve("f2.png")), png(tempDir.resolve("b2.png")));
-        f.designs.delete(d.id());
-        OrderItem again = f.orders.order(order.id()).items().get(0);
-        assertThat(DesignJson.read(again.designSnapshotJson())).isEqualTo(frozen);
-        assertThat(again.designName()).isEqualTo("Los Halcones");
-        assertThat(Files.exists(f.storage.resolve(again.designFrontPath()))).isTrue();
-        assertThat(frozen.color(Zone.JERSEY_BODY)).isEqualTo("#D7192A");
+        PgeyDesignDocument green = frozen.pgeyWithColor(PgeyZone.JERSEY_BODY, "#0E7C3A");
+        f.designs.pgeySave(d.pgeyId(), "Otro nombre", green, png(tempDir.resolve("f2.png")), png(tempDir.resolve("b2.png")));
+        f.designs.pgeyDelete(d.pgeyId());
+        PpqhOrderItem again = f.orders.ppqhOrder(order.ppqhId()).ppqhItems().get(0);
+        assertThat(PgeyDesignJson.pgeyRead(again.ppqhDesignSnapshotJson())).isEqualTo(frozen);
+        assertThat(again.ppqhDesignName()).isEqualTo("Los Halcones");
+        assertThat(Files.exists(f.storage.hepyResolve(again.ppqhDesignFrontPath()))).isTrue();
+        assertThat(frozen.pgeyColor(PgeyZone.JERSEY_BODY)).isEqualTo("#D7192A");
     }
 
     @Test
     void deletedDesignBlocksCheckoutAndNothingIsCopied() throws Exception {
-        DesignSummary d = saveHalcones();
-        f.cart.addDesign(d.id(), f.variantId(KIT_SKU), 1);
-        f.designs.delete(d.id());
-        assertThat(f.cart.summary().canCheckout()).isFalse();
-        assertThatThrownBy(() -> f.orders.placeOrder(f.addresses.list().get(0).id(), PaymentMethod.PLIN, null))
-                .isInstanceOf(ServiceException.class);
+        PgeyDesignSummary d = saveHalcones();
+        f.cart.hepyAddDesign(d.pgeyId(), f.variantId(KIT_SKU), 1);
+        f.designs.pgeyDelete(d.pgeyId());
+        assertThat(f.cart.hepySummary().hepyCanCheckout()).isFalse();
+        assertThatThrownBy(() -> f.orders.ppqhPlaceOrder(f.addresses.ppqhList().get(0).ppqhId(), PpqhPaymentMethod.PLIN, null))
+                .isInstanceOf(PpqhServiceException.class);
         Path orders = tempDir.resolve("storage").resolve("orders");
         assertThat(!Files.exists(orders) || Files.list(orders).findAny().isEmpty()).isTrue();
     }
@@ -151,41 +151,41 @@ class DesignOrderTest {
     @Test
     void adminSeesTheTechSheetAndDownloadsTheOriginalFiles() throws Exception {
         Path logoFile = png(tempDir.resolve("escudo club.png"));
-        var logo = f.designs.uploadLogo(logoFile, true);
-        DesignDocument doc = SampleDesigns.halcones().withProduct(f.productId("SF-UFU-001"))
-                .addElement(DesignDefaults.logo(logo.id(), logo.path()).withRotation(15).withScale(1.2));
-        DesignSummary d = f.designs.save(null, "Con logo", doc, front, back);
-        f.cart.addDesign(d.id(), f.variantId(KIT_SKU), 1);
-        long itemId = f.orders.placeOrder(f.addresses.list().get(0).id(), PaymentMethod.TRANSFERENCIA, null)
-                .items().get(0).id();
+        var logo = f.designs.pgeyUploadLogo(logoFile, true);
+        PgeyDesignDocument doc = PgeySampleDesigns.pgeyHalcones().pgeyWithProduct(f.productId("SF-UFU-001"))
+                .pgeyAddElement(PgeyDesignDefaults.pgeyLogo(logo.pgeyId(), logo.pgeyPath()).pgeyWithRotation(15).pgeyWithScale(1.2));
+        PgeyDesignSummary d = f.designs.pgeySave(null, "Con logo", doc, front, back);
+        f.cart.hepyAddDesign(d.pgeyId(), f.variantId(KIT_SKU), 1);
+        long itemId = f.orders.ppqhPlaceOrder(f.addresses.ppqhList().get(0).ppqhId(), PpqhPaymentMethod.TRANSFERENCIA, null)
+                .ppqhItems().get(0).ppqhId();
 
-        assertThatThrownBy(() -> f.adminOrders.design(itemId)).isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(() -> f.adminOrders.ppqhDesign(itemId)).isInstanceOf(PpqhAccessDeniedException.class);
         f.loginAdmin();
-        AdminOrderService.OrderDesign view = f.adminOrders.design(itemId);
-        assertThat(view.sheet().zones()).anySatisfy(z -> {
-            assertThat(z.zone()).isEqualTo(Zone.JERSEY_BODY);
-            assertThat(z.hex()).isEqualTo("#D7192A");
+        PpqhAdminOrderService.PpqhOrderDesign view = f.adminOrders.ppqhDesign(itemId);
+        assertThat(view.ppqhSheet().pgeyZones()).anySatisfy(z -> {
+            assertThat(z.pgeyZone()).isEqualTo(PgeyZone.JERSEY_BODY);
+            assertThat(z.pgeyHex()).isEqualTo("#D7192A");
         });
-        assertThat(view.sheet().materials()).anySatisfy(m -> {
-            assertThat(m.slot()).isEqualTo(MaterialSlot.JERSEY);
-            assertThat(m.name()).isEqualTo("Jacquard");
+        assertThat(view.ppqhSheet().pgeyMaterials()).anySatisfy(m -> {
+            assertThat(m.pgeySlot()).isEqualTo(PgeyMaterialSlot.JERSEY);
+            assertThat(m.pgeyName()).isEqualTo("Jacquard");
         });
-        assertThat(view.sheet().elements()).anySatisfy(e -> {
-            assertThat(e.type()).isEqualTo(ElementType.LOGO);
-            assertThat(e.assetName()).isEqualTo("escudo club.png");
-            assertThat(e.rotationDeg()).isEqualTo(15);
-            assertThat(e.scalePercent()).isEqualTo(120);
+        assertThat(view.ppqhSheet().pgeyElements()).anySatisfy(e -> {
+            assertThat(e.pgeyType()).isEqualTo(PgeyElementType.LOGO);
+            assertThat(e.pgeyAssetName()).isEqualTo("escudo club.png");
+            assertThat(e.pgeyRotationDeg()).isEqualTo(15);
+            assertThat(e.pgeyScalePercent()).isEqualTo(120);
         });
-        assertThat(view.sheet().elements()).anySatisfy(e -> assertThat(e.content()).isEqualTo("QUISPE"));
+        assertThat(view.ppqhSheet().pgeyElements()).anySatisfy(e -> assertThat(e.pgeyContent()).isEqualTo("QUISPE"));
 
-        Path dir = f.adminOrders.exportDesign(itemId, tempDir.resolve("descargas"));
+        Path dir = f.adminOrders.ppqhExportDesign(itemId, tempDir.resolve("descargas"));
         assertThat(dir.resolve("diseno.json")).exists();
         assertThat(dir.resolve("captura-frente.png")).exists();
         assertThat(dir.resolve("captura-espalda.png")).exists();
         assertThat(Files.readString(dir.resolve("ficha-tecnica.csv"))).contains("Jacquard", "#D7192A", "QUISPE");
         try (var files = Files.list(dir)) {
             assertThat(files.map(p -> p.getFileName().toString()))
-                    .anyMatch(n -> n.startsWith("logo-" + logo.id()) && n.endsWith("escudo_club.png"));
+                    .anyMatch(n -> n.startsWith("logo-" + logo.pgeyId()) && n.endsWith("escudo_club.png"));
         }
     }
 }

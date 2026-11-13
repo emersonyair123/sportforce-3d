@@ -2,224 +2,224 @@ import bmesh
 import bpy
 from mathutils.bvhtree import BVHTree
 
-from malla import isla
+from malla import pgeyIsla
 
 
-class Ajustes:
-    cuadros = 45
-    calidad = 10
-    masa = 0.08
-    tension = 18.0
-    compresion = 18.0
-    corte = 8.0
-    flexion = 0.5
-    amortiguacion = 4.0
-    distancia_colision = 0.0035
-    auto_colision = True
-    distancia_auto = 0.002
-    friccion = 8.0
+class PgeyAjustes:
+    pgeyCuadros = 45
+    pgeyCalidad = 10
+    pgeyMasa = 0.08
+    pgeyTension = 18.0
+    pgeyCompresion = 18.0
+    pgeyCorte = 8.0
+    pgeyFlexion = 0.5
+    pgeyAmortiguacion = 4.0
+    pgeyDistanciaColision = 0.0035
+    pgeyAutoColision = True
+    pgeyDistanciaAuto = 0.002
+    pgeyFriccion = 8.0
 
 
-def preparar_colision(obj, grosor=0.002):
-    if not any(m.type == 'COLLISION' for m in obj.modifiers):
-        obj.modifiers.new("Colision", 'COLLISION')
-    obj.collision.thickness_outer = grosor
-    obj.collision.thickness_inner = 0.02
-    obj.collision.cloth_friction = Ajustes.friccion
-    obj.collision.damping = 0.6
+def pgeyPrepararColision(pgeyObj, pgeyGrosor=0.002):
+    if not any(pgeyM.type == 'COLLISION' for pgeyM in pgeyObj.modifiers):
+        pgeyObj.modifiers.new("Colision", 'COLLISION')
+    pgeyObj.collision.thickness_outer = pgeyGrosor
+    pgeyObj.collision.thickness_inner = 0.02
+    pgeyObj.collision.cloth_friction = PgeyAjustes.pgeyFriccion
+    pgeyObj.collision.damping = 0.6
 
 
-def simular(obj, ajustes=Ajustes, fijar="fijar"):
-    sc = bpy.context.scene
-    mod = obj.modifiers.new("Tela", 'CLOTH')
-    st = mod.settings
-    st.quality = ajustes.calidad
-    st.mass = ajustes.masa
-    st.air_damping = 1.0
-    st.tension_stiffness = ajustes.tension
-    st.compression_stiffness = ajustes.compresion
-    st.shear_stiffness = ajustes.corte
-    st.bending_stiffness = ajustes.flexion
-    st.tension_damping = ajustes.amortiguacion
-    st.compression_damping = ajustes.amortiguacion
-    st.shear_damping = ajustes.amortiguacion
-    st.bending_damping = 0.5
-    st.vertex_group_mass = fijar
-    st.pin_stiffness = 1.0
-    cs = mod.collision_settings
-    cs.collision_quality = 4
-    cs.distance_min = ajustes.distancia_colision
-    cs.use_self_collision = ajustes.auto_colision
-    cs.self_distance_min = ajustes.distancia_auto
-    cs.self_friction = 5.0
-    mod.point_cache.frame_start = 1
-    mod.point_cache.frame_end = ajustes.cuadros
-    sc.frame_start, sc.frame_end = 1, ajustes.cuadros
-    for f in range(1, ajustes.cuadros + 1):
-        sc.frame_set(f)
-    bpy.context.view_layer.objects.active = obj
-    for o in bpy.context.selected_objects:
-        o.select_set(False)
-    obj.select_set(True)
+def pgeySimular(pgeyObj, pgeyAjustes=PgeyAjustes, pgeyFijar="fijar"):
+    pgeySc = bpy.context.scene
+    pgeyMod = pgeyObj.modifiers.new("Tela", 'CLOTH')
+    pgeySt = pgeyMod.settings
+    pgeySt.quality = pgeyAjustes.pgeyCalidad
+    pgeySt.mass = pgeyAjustes.pgeyMasa
+    pgeySt.air_damping = 1.0
+    pgeySt.tension_stiffness = pgeyAjustes.pgeyTension
+    pgeySt.compression_stiffness = pgeyAjustes.pgeyCompresion
+    pgeySt.shear_stiffness = pgeyAjustes.pgeyCorte
+    pgeySt.bending_stiffness = pgeyAjustes.pgeyFlexion
+    pgeySt.tension_damping = pgeyAjustes.pgeyAmortiguacion
+    pgeySt.compression_damping = pgeyAjustes.pgeyAmortiguacion
+    pgeySt.shear_damping = pgeyAjustes.pgeyAmortiguacion
+    pgeySt.bending_damping = 0.5
+    pgeySt.vertex_group_mass = pgeyFijar
+    pgeySt.pin_stiffness = 1.0
+    pgeyCs = pgeyMod.collision_settings
+    pgeyCs.collision_quality = 4
+    pgeyCs.distance_min = pgeyAjustes.pgeyDistanciaColision
+    pgeyCs.use_self_collision = pgeyAjustes.pgeyAutoColision
+    pgeyCs.self_distance_min = pgeyAjustes.pgeyDistanciaAuto
+    pgeyCs.self_friction = 5.0
+    pgeyMod.point_cache.frame_start = 1
+    pgeyMod.point_cache.frame_end = pgeyAjustes.pgeyCuadros
+    pgeySc.frame_start, pgeySc.frame_end = 1, pgeyAjustes.pgeyCuadros
+    for pgeyF in range(1, pgeyAjustes.pgeyCuadros + 1):
+        pgeySc.frame_set(pgeyF)
+    bpy.context.view_layer.objects.active = pgeyObj
+    for pgeyO in bpy.context.selected_objects:
+        pgeyO.select_set(False)
+    pgeyObj.select_set(True)
     bpy.ops.object.modifier_apply(modifier="Tela")
-    sc.frame_set(1)
+    pgeySc.frame_set(1)
 
 
-def alisar(obj, centros, radio, piel, pasadas=12, holgura=0.004):
-    bm = bmesh.new()
-    bm.from_mesh(obj.data)
-    bm.verts.ensure_lookup_table()
-    origen = [bm.verts[i].co.copy() for i in centros]
-    zona = [v for v in bm.verts if min((v.co - c).length for c in origen) < radio]
-    for _ in range(pasadas):
-        nuevo = {}
-        for v in zona:
-            vec = [e.other_vert(v).co for e in v.link_edges if not v.is_boundary or e.is_boundary]
-            media = sum(vec, v.co * 0) / len(vec)
-            peso = 1 - min((v.co - c).length for c in origen) / radio
-            nuevo[v] = v.co + (media - v.co) * 0.5 * peso
-        for v, q in nuevo.items():
-            v.co = q
-    bvh = BVHTree.FromObject(piel, bpy.context.evaluated_depsgraph_get())
-    for v in zona:
-        loc, nrm, _, _ = bvh.find_nearest(v.co)
-        if loc is not None and (v.co - loc).dot(nrm) < holgura:
-            v.co = loc + nrm * holgura
-    bm.to_mesh(obj.data)
-    bm.free()
-    obj.data.update()
-    return len(zona)
+def pgeyAlisar(pgeyObj, pgeyCentros, pgeyRadio, pgeyPiel, pgeyPasadas=12, pgeyHolgura=0.004):
+    pgeyBm = bmesh.new()
+    pgeyBm.from_mesh(pgeyObj.data)
+    pgeyBm.verts.ensure_lookup_table()
+    pgeyOrigen = [pgeyBm.verts[pgeyI].co.copy() for pgeyI in pgeyCentros]
+    pgeyZona = [pgeyV for pgeyV in pgeyBm.verts if min((pgeyV.co - pgeyC).length for pgeyC in pgeyOrigen) < pgeyRadio]
+    for _ in range(pgeyPasadas):
+        pgeyNuevo = {}
+        for pgeyV in pgeyZona:
+            pgeyVec = [pgeyE.other_vert(pgeyV).co for pgeyE in pgeyV.link_edges if not pgeyV.is_boundary or pgeyE.is_boundary]
+            pgeyMedia = sum(pgeyVec, pgeyV.co * 0) / len(pgeyVec)
+            pgeyPeso = 1 - min((pgeyV.co - pgeyC).length for pgeyC in pgeyOrigen) / pgeyRadio
+            pgeyNuevo[pgeyV] = pgeyV.co + (pgeyMedia - pgeyV.co) * 0.5 * pgeyPeso
+        for pgeyV, pgeyQ in pgeyNuevo.items():
+            pgeyV.co = pgeyQ
+    pgeyBvh = BVHTree.FromObject(pgeyPiel, bpy.context.evaluated_depsgraph_get())
+    for pgeyV in pgeyZona:
+        pgeyLoc, pgeyNrm, _, _ = pgeyBvh.find_nearest(pgeyV.co)
+        if pgeyLoc is not None and (pgeyV.co - pgeyLoc).dot(pgeyNrm) < pgeyHolgura:
+            pgeyV.co = pgeyLoc + pgeyNrm * pgeyHolgura
+    pgeyBm.to_mesh(pgeyObj.data)
+    pgeyBm.free()
+    pgeyObj.data.update()
+    return len(pgeyZona)
 
 
-def penetraciones(obj, piel, margen=0.0):
-    me = obj.data
-    bvh = BVHTree.FromObject(piel, bpy.context.evaluated_depsgraph_get())
-    dentro = 0
-    for v in me.vertices:
-        loc, nrm, _, _ = bvh.find_nearest(v.co)
-        if loc is not None and (v.co - loc).dot(nrm) < margen:
-            dentro += 1
-    return dentro
+def pgeyPenetraciones(pgeyObj, pgeyPiel, pgeyMargen=0.0):
+    pgeyMe = pgeyObj.data
+    pgeyBvh = BVHTree.FromObject(pgeyPiel, bpy.context.evaluated_depsgraph_get())
+    pgeyDentro = 0
+    for pgeyV in pgeyMe.vertices:
+        pgeyLoc, pgeyNrm, _, _ = pgeyBvh.find_nearest(pgeyV.co)
+        if pgeyLoc is not None and (pgeyV.co - pgeyLoc).dot(pgeyNrm) < pgeyMargen:
+            pgeyDentro += 1
+    return pgeyDentro
 
 
-def ribete_cuello(obj, bucle, ancho=0.008, zona="jersey_collar"):
+def pgeyRibeteCuello(pgeyObj, pgeyBucle, pgeyAncho=0.008, pgeyZona="jersey_collar"):
 
-    me = obj.data
-    bm = bmesh.new()
-    bm.from_mesh(me)
-    bm.verts.ensure_lookup_table()
-    bm.normal_update()
-    bvh = BVHTree.FromBMesh(bm)
-    pts = [bm.verts[i].co.copy() for i in bucle]
-    nrm = [bm.verts[i].normal.copy() for i in bucle]
-    n = len(pts)
-    frente = [i for i in range(n) if pts[i].y < 0]
-    k0 = min(frente, key=lambda i: pts[i].z)
-    orden = list(range(k0, n)) + list(range(0, k0))
-    if pts[orden[1]].x < pts[orden[-1]].x:
-        orden = [orden[0]] + orden[1:][::-1]
-    pts = [pts[i] for i in orden]
-    nrm = [nrm[i] for i in orden]
-    filas = []
-    perfil = [(ancho, 0.0010), (ancho * 0.5, 0.0013), (0.0, 0.0014), (0.0, -0.0003), (ancho * 0.45, -0.0025)]
-    dirs = [nrm[i].normalized().cross((pts[(i + 1) % n] - pts[i - 1]).normalized()).normalized() for i in range(n)]
-    voto = 0
-    for i in range(n):
-        cerca = [bvh.find_nearest(pts[i] + dirs[i] * s * 0.012)[3] for s in (1, -1)]
-        voto += 1 if cerca[0] < cerca[1] else -1
-    if voto < 0:
-        dirs = [-d for d in dirs]
+    pgeyMe = pgeyObj.data
+    pgeyBm = bmesh.new()
+    pgeyBm.from_mesh(pgeyMe)
+    pgeyBm.verts.ensure_lookup_table()
+    pgeyBm.normal_update()
+    pgeyBvh = BVHTree.FromBMesh(pgeyBm)
+    pgeyPts = [pgeyBm.verts[pgeyI].co.copy() for pgeyI in pgeyBucle]
+    pgeyNrm = [pgeyBm.verts[pgeyI].normal.copy() for pgeyI in pgeyBucle]
+    pgeyN = len(pgeyPts)
+    pgeyFrente = [pgeyI for pgeyI in range(pgeyN) if pgeyPts[pgeyI].y < 0]
+    pgeyK0 = min(pgeyFrente, key=lambda pgeyI: pgeyPts[pgeyI].z)
+    pgeyOrden = list(range(pgeyK0, pgeyN)) + list(range(0, pgeyK0))
+    if pgeyPts[pgeyOrden[1]].x < pgeyPts[pgeyOrden[-1]].x:
+        pgeyOrden = [pgeyOrden[0]] + pgeyOrden[1:][::-1]
+    pgeyPts = [pgeyPts[pgeyI] for pgeyI in pgeyOrden]
+    pgeyNrm = [pgeyNrm[pgeyI] for pgeyI in pgeyOrden]
+    pgeyFilas = []
+    pgeyPerfil = [(pgeyAncho, 0.0010), (pgeyAncho * 0.5, 0.0013), (0.0, 0.0014), (0.0, -0.0003), (pgeyAncho * 0.45, -0.0025)]
+    pgeyDirs = [pgeyNrm[pgeyI].normalized().cross((pgeyPts[(pgeyI + 1) % pgeyN] - pgeyPts[pgeyI - 1]).normalized()).normalized() for pgeyI in range(pgeyN)]
+    pgeyVoto = 0
+    for pgeyI in range(pgeyN):
+        pgeyCerca = [pgeyBvh.find_nearest(pgeyPts[pgeyI] + pgeyDirs[pgeyI] * pgeyS * 0.012)[3] for pgeyS in (1, -1)]
+        pgeyVoto += 1 if pgeyCerca[0] < pgeyCerca[1] else -1
+    if pgeyVoto < 0:
+        pgeyDirs = [-pgeyD for pgeyD in pgeyDirs]
     for _ in range(8):
-        dirs = [dirs[i] if i in (0, 1, n - 1) else (dirs[i - 1] + dirs[i] * 2 + dirs[(i + 1) % n]).normalized()
-                for i in range(n)]
-    for i in range(n):
-        p, nn = pts[i], nrm[i].normalized()
-        b = (dirs[i] - nn * dirs[i].dot(nn)).normalized()
-        fila = []
-        for desp, sep in perfil:
-            fila.append(p + b * desp + nn * sep)
-        filas.append(fila)
-    largo = [0.0]
-    for i in range(1, n + 1):
-        largo.append(largo[-1] + (pts[i % n] - pts[i - 1]).length)
-    capa = bm.loops.layers.uv.active
-    idx_mat = list(me.materials.keys()).index(zona)
-    nuevos = [[bm.verts.new(q) for q in fila] for fila in filas]
-    nuevas, exteriores = [], []
-    for i in range(n):
-        i2 = (i + 1) % n
-        for r in range(len(perfil) - 1):
-            vs = [nuevos[i][r], nuevos[i2][r], nuevos[i2][r + 1], nuevos[i][r + 1]]
-            f = bm.faces.new(vs)
-            f.material_index = idx_mat
-            f.smooth = True
-            nuevas.append(f)
-            if r == 0:
-                exteriores.append(f)
-            us = [largo[i] / largo[-1], largo[i + 1] / largo[-1]]
-            for loop, (u, v) in zip(f.loops, ((us[0], r), (us[1], r), (us[1], r + 1), (us[0], r + 1))):
-                uu, vv = isla("cuello", u, v / (len(perfil) - 1))
-                loop[capa].uv = (uu, 1.0 - vv)
-    bm.normal_update()
-    igual = 0
-    for f in exteriores:
-        loc, nq, _, _ = bvh.find_nearest(f.calc_center_median())
-        igual += 1 if nq is not None and f.normal.dot(nq) > 0 else 0
-    if igual < len(exteriores) / 2:
-        bmesh.ops.reverse_faces(bm, faces=nuevas)
-    bm.to_mesh(me)
-    bm.free()
+        pgeyDirs = [pgeyDirs[pgeyI] if pgeyI in (0, 1, pgeyN - 1) else (pgeyDirs[pgeyI - 1] + pgeyDirs[pgeyI] * 2 + pgeyDirs[(pgeyI + 1) % pgeyN]).normalized()
+                for pgeyI in range(pgeyN)]
+    for pgeyI in range(pgeyN):
+        pgeyP, pgeyNn = pgeyPts[pgeyI], pgeyNrm[pgeyI].normalized()
+        pgeyB = (pgeyDirs[pgeyI] - pgeyNn * pgeyDirs[pgeyI].dot(pgeyNn)).normalized()
+        pgeyFila = []
+        for pgeyDesp, pgeySep in pgeyPerfil:
+            pgeyFila.append(pgeyP + pgeyB * pgeyDesp + pgeyNn * pgeySep)
+        pgeyFilas.append(pgeyFila)
+    pgeyLargo = [0.0]
+    for pgeyI in range(1, pgeyN + 1):
+        pgeyLargo.append(pgeyLargo[-1] + (pgeyPts[pgeyI % pgeyN] - pgeyPts[pgeyI - 1]).length)
+    pgeyCapa = pgeyBm.loops.layers.uv.active
+    pgeyIdxMat = list(pgeyMe.materials.keys()).index(pgeyZona)
+    pgeyNuevos = [[pgeyBm.verts.new(pgeyQ) for pgeyQ in pgeyFila] for pgeyFila in pgeyFilas]
+    pgeyNuevas, pgeyExteriores = [], []
+    for pgeyI in range(pgeyN):
+        pgeyI2 = (pgeyI + 1) % pgeyN
+        for pgeyR in range(len(pgeyPerfil) - 1):
+            pgeyVs = [pgeyNuevos[pgeyI][pgeyR], pgeyNuevos[pgeyI2][pgeyR], pgeyNuevos[pgeyI2][pgeyR + 1], pgeyNuevos[pgeyI][pgeyR + 1]]
+            pgeyF = pgeyBm.faces.new(pgeyVs)
+            pgeyF.material_index = pgeyIdxMat
+            pgeyF.smooth = True
+            pgeyNuevas.append(pgeyF)
+            if pgeyR == 0:
+                pgeyExteriores.append(pgeyF)
+            pgeyUs = [pgeyLargo[pgeyI] / pgeyLargo[-1], pgeyLargo[pgeyI + 1] / pgeyLargo[-1]]
+            for pgeyLoop, (pgeyU, pgeyV) in zip(pgeyF.loops, ((pgeyUs[0], pgeyR), (pgeyUs[1], pgeyR), (pgeyUs[1], pgeyR + 1), (pgeyUs[0], pgeyR + 1))):
+                pgeyUu, pgeyVv = pgeyIsla("cuello", pgeyU, pgeyV / (len(pgeyPerfil) - 1))
+                pgeyLoop[pgeyCapa].uv = (pgeyUu, 1.0 - pgeyVv)
+    pgeyBm.normal_update()
+    pgeyIgual = 0
+    for pgeyF in pgeyExteriores:
+        pgeyLoc, pgeyNq, _, _ = pgeyBvh.find_nearest(pgeyF.calc_center_median())
+        pgeyIgual += 1 if pgeyNq is not None and pgeyF.normal.dot(pgeyNq) > 0 else 0
+    if pgeyIgual < len(pgeyExteriores) / 2:
+        bmesh.ops.reverse_faces(pgeyBm, faces=pgeyNuevas)
+    pgeyBm.to_mesh(pgeyMe)
+    pgeyBm.free()
 
 
-def subdividir(obj, niveles):
-    mod = obj.modifiers.new("Subdivision", 'SUBSURF')
-    mod.levels = niveles
-    mod.render_levels = niveles
-    mod.uv_smooth = 'PRESERVE_BOUNDARIES'
-    mod.quality = 3
-    aplicar(obj, mod.name)
+def pgeySubdividir(pgeyObj, pgeyNiveles):
+    pgeyMod = pgeyObj.modifiers.new("Subdivision", 'SUBSURF')
+    pgeyMod.levels = pgeyNiveles
+    pgeyMod.render_levels = pgeyNiveles
+    pgeyMod.uv_smooth = 'PRESERVE_BOUNDARIES'
+    pgeyMod.quality = 3
+    pgeyAplicar(pgeyObj, pgeyMod.name)
 
 
-def grosor(obj, espesor=0.0016, grupo="doble"):
-    mod = obj.modifiers.new("Grosor", 'SOLIDIFY')
-    mod.thickness = espesor * 2
-    mod.offset = -1.0
-    mod.use_rim = True
-    mod.use_even_offset = False
-    mod.thickness_clamp = 0.5
-    mod.use_quality_normals = True
-    if grupo in obj.vertex_groups:
-        mod.vertex_group = grupo
-        mod.thickness_vertex_group = 0.5
-    aplicar(obj, mod.name)
+def pgeyGrosor(pgeyObj, pgeyEspesor=0.0016, pgeyGrupo="doble"):
+    pgeyMod = pgeyObj.modifiers.new("Grosor", 'SOLIDIFY')
+    pgeyMod.thickness = pgeyEspesor * 2
+    pgeyMod.offset = -1.0
+    pgeyMod.use_rim = True
+    pgeyMod.use_even_offset = False
+    pgeyMod.thickness_clamp = 0.5
+    pgeyMod.use_quality_normals = True
+    if pgeyGrupo in pgeyObj.vertex_groups:
+        pgeyMod.vertex_group = pgeyGrupo
+        pgeyMod.thickness_vertex_group = 0.5
+    pgeyAplicar(pgeyObj, pgeyMod.name)
 
 
-def aplicar(obj, nombre_mod):
-    bpy.context.view_layer.objects.active = obj
-    for o in bpy.context.selected_objects:
-        o.select_set(False)
-    obj.select_set(True)
-    bpy.ops.object.modifier_apply(modifier=nombre_mod)
+def pgeyAplicar(pgeyObj, pgeyNombreMod):
+    bpy.context.view_layer.objects.active = pgeyObj
+    for pgeyO in bpy.context.selected_objects:
+        pgeyO.select_set(False)
+    pgeyObj.select_set(True)
+    bpy.ops.object.modifier_apply(modifier=pgeyNombreMod)
 
 
-def separar_zonas(obj):
-    me = obj.data
-    me.normals_split_custom_set_from_vertices([v.normal for v in me.vertices])
-    bpy.context.view_layer.objects.active = obj
-    for o in bpy.context.selected_objects:
-        o.select_set(False)
-    obj.select_set(True)
+def pgeySepararZonas(pgeyObj):
+    pgeyMe = pgeyObj.data
+    pgeyMe.normals_split_custom_set_from_vertices([pgeyV.normal for pgeyV in pgeyMe.vertices])
+    bpy.context.view_layer.objects.active = pgeyObj
+    for pgeyO in bpy.context.selected_objects:
+        pgeyO.select_set(False)
+    pgeyObj.select_set(True)
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='SELECT')
     bpy.ops.mesh.separate(type='MATERIAL')
     bpy.ops.object.mode_set(mode='OBJECT')
-    partes = []
-    for o in bpy.context.selected_objects:
-        usados = {p.material_index for p in o.data.polygons}
-        if not usados:
+    pgeyPartes = []
+    for pgeyO in bpy.context.selected_objects:
+        pgeyUsados = {pgeyP.material_index for pgeyP in pgeyO.data.polygons}
+        if not pgeyUsados:
             continue
-        nombre = o.data.materials[usados.pop()].name
-        o.name = nombre
-        o.data.name = nombre
-        partes.append(o)
-    return partes
+        pgeyNombre = pgeyO.data.materials[pgeyUsados.pop()].name
+        pgeyO.name = pgeyNombre
+        pgeyO.data.name = pgeyNombre
+        pgeyPartes.append(pgeyO)
+    return pgeyPartes

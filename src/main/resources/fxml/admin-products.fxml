@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.sportforce3d.component.SfButton?>
-<?import com.sportforce3d.component.SfTextField?>
+<?import com.sportforce3d.component.PpqhSfButton?>
+<?import com.sportforce3d.component.PpqhSfTextField?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.sportforce3d.view.AdminProductsController"
+      fx:controller="com.sportforce3d.view.HepyAdminProductsController"
       spacing="24" styleClass="sf-page">
     <padding><Insets top="32" right="24" bottom="24" left="24"/></padding>
 
@@ -22,13 +22,13 @@
     </VBox>
 
     <HBox spacing="16" alignment="BOTTOM_LEFT">
-        <SfTextField fx:id="filterField" label="Buscar" promptText="Nombre o SKU" prefWidth="320"/>
-        <CheckBox fx:id="deletedCheck" text="Mostrar eliminados">
+        <PpqhSfTextField fx:id="hepyFilterField" id="filterField" label="Buscar" promptText="Nombre o SKU" prefWidth="320"/>
+        <CheckBox fx:id="hepyDeletedCheck" id="deletedCheck" text="Mostrar eliminados">
             <HBox.margin><Insets bottom="12"/></HBox.margin>
         </CheckBox>
         <Region HBox.hgrow="ALWAYS"/>
-        <SfButton fx:id="newButton" text="Nuevo producto" variant="PRIMARY" size="MD"/>
+        <PpqhSfButton fx:id="hepyNewButton" id="newButton" text="Nuevo producto" variant="PRIMARY" size="MD"/>
     </HBox>
 
-    <TableView fx:id="table" VBox.vgrow="ALWAYS"/>
+    <TableView fx:id="hepyTable" id="table" VBox.vgrow="ALWAYS"/>
 </VBox>

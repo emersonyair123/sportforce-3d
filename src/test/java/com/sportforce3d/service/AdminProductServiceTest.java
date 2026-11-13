@@ -1,16 +1,16 @@
 package com.sportforce3d.service;
 
-import com.sportforce3d.model.AdminProductRow;
-import com.sportforce3d.model.Garment;
-import com.sportforce3d.model.InventoryRow;
-import com.sportforce3d.model.LowStockVariant;
-import com.sportforce3d.model.PaymentMethod;
-import com.sportforce3d.model.ProductDetail;
-import com.sportforce3d.model.ProductForm;
-import com.sportforce3d.model.ProductForm.VariantForm;
-import com.sportforce3d.model.ProductImage;
-import com.sportforce3d.model.ProductQuery;
-import com.sportforce3d.model.ProductSort;
+import com.sportforce3d.model.HepyAdminProductRow;
+import com.sportforce3d.model.HepyGarment;
+import com.sportforce3d.model.HepyInventoryRow;
+import com.sportforce3d.model.HepyLowStockVariant;
+import com.sportforce3d.model.PpqhPaymentMethod;
+import com.sportforce3d.model.HepyProductDetail;
+import com.sportforce3d.model.HepyProductForm;
+import com.sportforce3d.model.HepyProductForm.HepyVariantForm;
+import com.sportforce3d.model.HepyProductImage;
+import com.sportforce3d.model.HepyProductQuery;
+import com.sportforce3d.model.HepyProductSort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -43,121 +43,121 @@ class AdminProductServiceTest {
         knit = f.queryLong("SELECT id FROM materials WHERE code = 'KNIT'");
     }
 
-    private ProductForm form(Long id, String sku, long price, Long compareAt, Set<Long> materials, List<VariantForm> variants) {
-        return new ProductForm(id, 1, 1L, sku, "Camiseta Halcones 2026", "Edición especial", Garment.JERSEY, price,
+    private HepyProductForm form(Long id, String sku, long price, Long compareAt, Set<Long> materials, List<HepyVariantForm> variants) {
+        return new HepyProductForm(id, 1, 1L, sku, "Camiseta Halcones 2026", "Edición especial", HepyGarment.JERSEY, price,
                 compareAt, true, true, false, true, materials, variants);
     }
 
-    private VariantForm variant(Long id, long sizeId, String sku, int stock) {
-        return new VariantForm(id, sizeId, "Negro", "#0B0E13", sku, 0, stock, 5, true);
+    private HepyVariantForm variant(Long id, long sizeId, String sku, int stock) {
+        return new HepyVariantForm(id, sizeId, "Negro", "#0B0E13", sku, 0, stock, 5, true);
     }
 
     @Test
     void clienteCannotManageProducts() {
         f.loginClient();
-        assertThatThrownBy(() -> f.admin.list(null, false)).isInstanceOf(AccessDeniedException.class);
-        assertThatThrownBy(() -> f.admin.save(form(null, "SF-HAL-001", 8990, null, Set.of(), List.of())))
-                .isInstanceOf(AccessDeniedException.class);
-        assertThatThrownBy(() -> f.admin.updateStock(f.variantId("SF-CAM-001-M"), 1, 1)).isInstanceOf(AccessDeniedException.class);
-        assertThatThrownBy(() -> f.admin.delete(1)).isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(() -> f.admin.hepyList(null, false)).isInstanceOf(PpqhAccessDeniedException.class);
+        assertThatThrownBy(() -> f.admin.hepySave(form(null, "SF-HAL-001", 8990, null, Set.of(), List.of())))
+                .isInstanceOf(PpqhAccessDeniedException.class);
+        assertThatThrownBy(() -> f.admin.hepyUpdateStock(f.variantId("SF-CAM-001-M"), 1, 1)).isInstanceOf(PpqhAccessDeniedException.class);
+        assertThatThrownBy(() -> f.admin.hepyDelete(1)).isInstanceOf(PpqhAccessDeniedException.class);
     }
 
     @Test
     void createsProductVisibleInTheStore() {
         f.loginAdmin();
-        ProductDetail created = f.admin.save(form(null, "SF-HAL-001", 8990, 10990L, Set.of(dryFit),
+        HepyProductDetail created = f.admin.hepySave(form(null, "SF-HAL-001", 8990, 10990L, Set.of(dryFit),
                 List.of(variant(null, sizeM, "SF-HAL-001-M", 10), variant(null, sizeL, "SF-HAL-001-L", 4))));
 
-        assertThat(created.variants()).hasSize(2);
-        assertThat(created.materials()).extracting(m -> m.code()).containsExactly("DRY_FIT");
-        assertThat(f.catalog.search(new ProductQuery("halcones", null, null, Set.of(), null, null, false, false,
-                ProductSort.NAME, 1, 12)).items()).singleElement()
+        assertThat(created.hepyVariants()).hasSize(2);
+        assertThat(created.hepyMaterials()).extracting(m -> m.hepyCode()).containsExactly("DRY_FIT");
+        assertThat(f.catalog.hepySearch(new HepyProductQuery("halcones", null, null, Set.of(), null, null, false, false,
+                HepyProductSort.NAME, 1, 12)).hepyItems()).singleElement()
                 .satisfies(p -> {
-                    assertThat(p.stock()).isEqualTo(14);
-                    assertThat(p.discountPercent()).isEqualTo(18);
+                    assertThat(p.hepyStock()).isEqualTo(14);
+                    assertThat(p.hepyDiscountPercent()).isEqualTo(18);
                 });
     }
 
     @Test
     void validatesProductData() {
         f.loginAdmin();
-        assertThatThrownBy(() -> f.admin.save(form(null, "SF-CAM-001", 8990, null, Set.of(), List.of(variant(null, sizeM, "X-NUEVO-M", 1)))))
-                .isInstanceOfSatisfying(ValidationException.class, e -> assertThat(e.fieldErrors()).containsKey("sku"));
-        assertThatThrownBy(() -> f.admin.save(form(null, "SF-HAL-002", 8990, 8990L, Set.of(), List.of(variant(null, sizeM, "SF-HAL-002-M", 1)))))
-                .isInstanceOfSatisfying(ValidationException.class, e -> assertThat(e.fieldErrors()).containsKey("compareAt"));
-        assertThatThrownBy(() -> f.admin.save(form(null, "SF-HAL-003", 8990, null, Set.of(knit), List.of(variant(null, sizeM, "SF-HAL-003-M", 1)))))
+        assertThatThrownBy(() -> f.admin.hepySave(form(null, "SF-CAM-001", 8990, null, Set.of(), List.of(variant(null, sizeM, "X-NUEVO-M", 1)))))
+                .isInstanceOfSatisfying(PpqhValidationException.class, e -> assertThat(e.ppqhFieldErrors()).containsKey("sku"));
+        assertThatThrownBy(() -> f.admin.hepySave(form(null, "SF-HAL-002", 8990, 8990L, Set.of(), List.of(variant(null, sizeM, "SF-HAL-002-M", 1)))))
+                .isInstanceOfSatisfying(PpqhValidationException.class, e -> assertThat(e.ppqhFieldErrors()).containsKey("compareAt"));
+        assertThatThrownBy(() -> f.admin.hepySave(form(null, "SF-HAL-003", 8990, null, Set.of(knit), List.of(variant(null, sizeM, "SF-HAL-003-M", 1)))))
                 .as("una camiseta no admite materiales de calzado")
-                .isInstanceOfSatisfying(ValidationException.class, e -> assertThat(e.fieldErrors()).containsKey("materials"));
-        assertThatThrownBy(() -> f.admin.save(form(null, "SF-HAL-004", 8990, null, Set.of(), List.of())))
-                .isInstanceOfSatisfying(ValidationException.class, e -> assertThat(e.fieldErrors()).containsKey("variants"));
-        assertThatThrownBy(() -> f.admin.save(form(null, "SF-HAL-005", 8990, null, Set.of(),
+                .isInstanceOfSatisfying(PpqhValidationException.class, e -> assertThat(e.ppqhFieldErrors()).containsKey("materials"));
+        assertThatThrownBy(() -> f.admin.hepySave(form(null, "SF-HAL-004", 8990, null, Set.of(), List.of())))
+                .isInstanceOfSatisfying(PpqhValidationException.class, e -> assertThat(e.ppqhFieldErrors()).containsKey("variants"));
+        assertThatThrownBy(() -> f.admin.hepySave(form(null, "SF-HAL-005", 8990, null, Set.of(),
                 List.of(variant(null, sizeM, "SF-HAL-005-M", 1), variant(null, sizeM, "SF-HAL-005-M2", 1)))))
-                .as("misma talla y color").isInstanceOf(ValidationException.class);
-        assertThatThrownBy(() -> f.admin.save(form(null, "SF-HAL-006", 8990, null, Set.of(),
-                List.of(new VariantForm(null, sizeM, "Negro", "negro", "SF-HAL-006-M", 0, 1, 5, true)))))
-                .as("HEX inválido").isInstanceOf(ValidationException.class);
-        assertThatThrownBy(() -> f.admin.save(form(null, "SF-HAL-007", 8990, null, Set.of(),
+                .as("misma talla y color").isInstanceOf(PpqhValidationException.class);
+        assertThatThrownBy(() -> f.admin.hepySave(form(null, "SF-HAL-006", 8990, null, Set.of(),
+                List.of(new HepyVariantForm(null, sizeM, "Negro", "negro", "SF-HAL-006-M", 0, 1, 5, true)))))
+                .as("HEX inválido").isInstanceOf(PpqhValidationException.class);
+        assertThatThrownBy(() -> f.admin.hepySave(form(null, "SF-HAL-007", 8990, null, Set.of(),
                 List.of(variant(null, sizeM, "SF-CAM-001-M", 1)))))
                 .as("SKU de variante usado por otro producto")
-                .isInstanceOfSatisfying(ValidationException.class, e -> assertThat(e.fieldErrors()).containsKey("variants"));
+                .isInstanceOfSatisfying(PpqhValidationException.class, e -> assertThat(e.ppqhFieldErrors()).containsKey("variants"));
     }
 
     @Test
     void updatesPriceAndStockButNeverBelowReserved() {
         f.loginAdmin();
-        ProductDetail p = f.admin.save(form(null, "SF-HAL-010", 8990, null, Set.of(),
+        HepyProductDetail p = f.admin.hepySave(form(null, "SF-HAL-010", 8990, null, Set.of(),
                 List.of(variant(null, sizeM, "SF-HAL-010-M", 5))));
-        long variantId = p.variants().get(0).id();
+        long variantId = p.hepyVariants().get(0).hepyId();
 
         f.loginClient();
-        f.cart.add(variantId, 3);
-        f.orders.placeOrder(f.addresses.list().get(0).id(), PaymentMethod.YAPE, null);
+        f.cart.hepyAdd(variantId, 3);
+        f.orders.ppqhPlaceOrder(f.addresses.ppqhList().get(0).ppqhId(), PpqhPaymentMethod.YAPE, null);
 
         f.loginAdmin();
-        assertThatThrownBy(() -> f.admin.updateStock(variantId, 2, 5)).hasMessageContaining("3 unidades reservadas");
-        InventoryRow row = f.admin.updateStock(variantId, 8, 2);
-        assertThat(row.available()).isEqualTo(5);
+        assertThatThrownBy(() -> f.admin.hepyUpdateStock(variantId, 2, 5)).hasMessageContaining("3 unidades reservadas");
+        HepyInventoryRow row = f.admin.hepyUpdateStock(variantId, 8, 2);
+        assertThat(row.hepyAvailable()).isEqualTo(5);
 
-        ProductDetail updated = f.admin.save(form(p.id(), "SF-HAL-010", 7990, null, Set.of(),
+        HepyProductDetail updated = f.admin.hepySave(form(p.hepyId(), "SF-HAL-010", 7990, null, Set.of(),
                 List.of(variant(variantId, sizeM, "SF-HAL-010-M", 8))));
-        assertThat(updated.basePriceCents()).isEqualTo(7990);
-        assertThatThrownBy(() -> f.admin.save(form(p.id(), "SF-HAL-010", 7990, null, Set.of(),
+        assertThat(updated.hepyBasePriceCents()).isEqualTo(7990);
+        assertThatThrownBy(() -> f.admin.hepySave(form(p.hepyId(), "SF-HAL-010", 7990, null, Set.of(),
                 List.of(variant(variantId, sizeM, "SF-HAL-010-M", 1)))))
-                .isInstanceOfSatisfying(ValidationException.class,
-                        e -> assertThat(e.fieldErrors().get("variants")).contains("reservadas"));
+                .isInstanceOfSatisfying(PpqhValidationException.class,
+                        e -> assertThat(e.ppqhFieldErrors().get("variants")).contains("reservadas"));
     }
 
     @Test
     void adminChangesTheZoneColorsOfTheRealisticPhoto() {
         long id = f.productId("SF-ZAP-003");
         f.loginClient();
-        assertThatThrownBy(() -> f.admin.updateZoneColors(id, java.util.Map.of("paneles", "#0B0E13")))
-                .isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(() -> f.admin.hepyUpdateZoneColors(id, java.util.Map.of("paneles", "#0B0E13")))
+                .isInstanceOf(PpqhAccessDeniedException.class);
         f.loginAdmin();
-        assertThat(f.admin.look(id).orElseThrow().zoneColors()).containsEntry("paneles", "#f2f5f8");
+        assertThat(f.admin.hepyLook(id).orElseThrow().hepyZoneColors()).containsEntry("paneles", "#f2f5f8");
 
-        var look = f.admin.updateZoneColors(id, java.util.Map.of("paneles", "#0b0e13"));
-        assertThat(look.modelKey()).isEqualTo("producto_zapatilla_running");
-        assertThat(look.zoneColors()).containsEntry("paneles", "#0b0e13").containsEntry("principal", "#1f5fff");
-        assertThat(f.catalog.realisticLook(id).orElseThrow().zoneColors()).containsEntry("paneles", "#0b0e13");
+        var look = f.admin.hepyUpdateZoneColors(id, java.util.Map.of("paneles", "#0b0e13"));
+        assertThat(look.hepyModelKey()).isEqualTo("producto_zapatilla_running");
+        assertThat(look.hepyZoneColors()).containsEntry("paneles", "#0b0e13").containsEntry("principal", "#1f5fff");
+        assertThat(f.catalog.hepyRealisticLook(id).orElseThrow().hepyZoneColors()).containsEntry("paneles", "#0b0e13");
 
-        assertThatThrownBy(() -> f.admin.updateZoneColors(id, java.util.Map.of("camiseta", "#0B0E13")))
-                .as("zona que la foto no tiene").isInstanceOf(ValidationException.class);
-        assertThatThrownBy(() -> f.admin.updateZoneColors(id, java.util.Map.of("paneles", "blanco")))
-                .as("HEX inválido").isInstanceOf(ValidationException.class);
+        assertThatThrownBy(() -> f.admin.hepyUpdateZoneColors(id, java.util.Map.of("camiseta", "#0B0E13")))
+                .as("zona que la foto no tiene").isInstanceOf(PpqhValidationException.class);
+        assertThatThrownBy(() -> f.admin.hepyUpdateZoneColors(id, java.util.Map.of("paneles", "blanco")))
+                .as("HEX inválido").isInstanceOf(PpqhValidationException.class);
     }
 
     @Test
     void softDeleteAndRestore() {
         f.loginAdmin();
         long id = f.productId("SF-CAM-003");
-        f.admin.delete(id);
-        assertThat(f.admin.list("reflect", false)).isEmpty();
-        assertThat(f.admin.list("reflect", true)).singleElement().satisfies(r -> assertThat(r.deleted()).isTrue());
+        f.admin.hepyDelete(id);
+        assertThat(f.admin.hepyList("reflect", false)).isEmpty();
+        assertThat(f.admin.hepyList("reflect", true)).singleElement().satisfies(r -> assertThat(r.hepyDeleted()).isTrue());
 
-        f.admin.restore(id);
-        assertThat(f.admin.get(id).deleted()).isFalse();
-        assertThat(f.admin.get(id).active()).as("queda inactivo hasta que el ADMIN lo active").isFalse();
+        f.admin.hepyRestore(id);
+        assertThat(f.admin.hepyGet(id).hepyDeleted()).isFalse();
+        assertThat(f.admin.hepyGet(id).hepyActive()).as("queda inactivo hasta que el ADMIN lo active").isFalse();
     }
 
     @Test
@@ -169,49 +169,49 @@ class AdminProductServiceTest {
         Path fake = tempDir.resolve("virus.png");
         Files.writeString(fake, "esto no es una imagen");
 
-        ProductImage image = f.admin.addImage(id, png);
-        assertThat(image.path()).startsWith("products/").endsWith(".png").doesNotContain("foto");
-        assertThat(Files.exists(f.storage.resolve(image.path()))).isTrue();
-        assertThatThrownBy(() -> f.admin.addImage(id, fake)).isInstanceOf(ValidationException.class);
+        HepyProductImage image = f.admin.hepyAddImage(id, png);
+        assertThat(image.hepyPath()).startsWith("products/").endsWith(".png").doesNotContain("foto");
+        assertThat(Files.exists(f.storage.hepyResolve(image.hepyPath()))).isTrue();
+        assertThatThrownBy(() -> f.admin.hepyAddImage(id, fake)).isInstanceOf(PpqhValidationException.class);
 
-        f.admin.removeImage(id, image.id());
-        assertThat(Files.exists(f.storage.resolve(image.path()))).isFalse();
-        assertThat(f.admin.get(id).images()).isEmpty();
+        f.admin.hepyRemoveImage(id, image.hepyId());
+        assertThat(Files.exists(f.storage.hepyResolve(image.hepyPath()))).isFalse();
+        assertThat(f.admin.hepyGet(id).hepyImages()).isEmpty();
     }
 
     @Test
     void lowStockBadgeNamesTheVariantThatTriggersIt() {
         f.loginAdmin();
-        AdminProductRow jersey = f.admin.list("SF-CAM-001", false).get(0);
-        assertThat(jersey.stock()).isGreaterThan(100);
-        assertThat(jersey.lowStock()).isTrue();
-        assertThat(jersey.lowStockVariants()).extracting(LowStockVariant::label).contains("Talla XXL: 2 u.");
+        HepyAdminProductRow jersey = f.admin.hepyList("SF-CAM-001", false).get(0);
+        assertThat(jersey.hepyStock()).isGreaterThan(100);
+        assertThat(jersey.hepyLowStock()).isTrue();
+        assertThat(jersey.hepyLowStockVariants()).extracting(HepyLowStockVariant::hepyLabel).contains("Talla XXL: 2 u.");
 
-        AdminProductRow shinGuards = f.admin.list("canilleras", false).get(0);
-        assertThat(shinGuards.stock()).isEqualTo(16);
-        assertThat(shinGuards.lowStock()).isFalse();
+        HepyAdminProductRow shinGuards = f.admin.hepyList("canilleras", false).get(0);
+        assertThat(shinGuards.hepyStock()).isEqualTo(16);
+        assertThat(shinGuards.hepyLowStock()).isFalse();
 
-        f.admin.updateStock(f.variantId("SF-ACC-001-UNICA"), 5, 5);
-        AdminProductRow after = f.admin.list("canilleras", false).get(0);
-        assertThat(after.stock()).isEqualTo(5);
-        assertThat(after.lowStockVariants()).extracting(LowStockVariant::label).containsExactly("Talla Única: 5 u.");
+        f.admin.hepyUpdateStock(f.variantId("SF-ACC-001-UNICA"), 5, 5);
+        HepyAdminProductRow after = f.admin.hepyList("canilleras", false).get(0);
+        assertThat(after.hepyStock()).isEqualTo(5);
+        assertThat(after.hepyLowStockVariants()).extracting(HepyLowStockVariant::hepyLabel).containsExactly("Talla Única: 5 u.");
 
-        AdminProductRow soldOut = f.admin.list("SF-ZAP-003", false).get(0);
-        assertThat(soldOut.lowStockVariants()).hasSize(9)
-                .allSatisfy(v -> assertThat(v.label()).endsWith("0 u. (agotada)"));
+        HepyAdminProductRow soldOut = f.admin.hepyList("SF-ZAP-003", false).get(0);
+        assertThat(soldOut.hepyLowStockVariants()).hasSize(9)
+                .allSatisfy(v -> assertThat(v.hepyLabel()).endsWith("0 u. (agotada)"));
     }
 
     @Test
     void lowStockLabelShowsColorOnlyWhenProductHasSeveralColors() {
-        assertThat(new LowStockVariant("M", "Negro", 2, 5, false).label()).isEqualTo("Talla M: 2 u.");
-        assertThat(new LowStockVariant("M", "Negro", 0, 5, true).label()).isEqualTo("Talla M · Negro: 0 u. (agotada)");
+        assertThat(new HepyLowStockVariant("M", "Negro", 2, 5, false).hepyLabel()).isEqualTo("Talla M: 2 u.");
+        assertThat(new HepyLowStockVariant("M", "Negro", 0, 5, true).hepyLabel()).isEqualTo("Talla M · Negro: 0 u. (agotada)");
     }
 
     @Test
     void inventoryListsLowStockFirst() {
         f.loginAdmin();
-        List<InventoryRow> low = f.admin.inventory(null, true);
-        assertThat(low).isNotEmpty().allMatch(InventoryRow::lowStock);
-        assertThat(low).extracting(InventoryRow::sku).contains("SF-CAM-001-XXL", "SF-ZAP-003-40");
+        List<HepyInventoryRow> low = f.admin.hepyInventory(null, true);
+        assertThat(low).isNotEmpty().allMatch(HepyInventoryRow::hepyLowStock);
+        assertThat(low).extracting(HepyInventoryRow::hepySku).contains("SF-CAM-001-XXL", "SF-ZAP-003-40");
     }
 }

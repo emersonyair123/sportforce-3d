@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.sportforce3d.component.SfLink?>
+<?import com.sportforce3d.component.PpqhSfLink?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.VBox?>
 
 <ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.sportforce3d.view.OrderController"
+            fx:controller="com.sportforce3d.view.PpqhOrderController"
             fitToWidth="true" styleClass="sf-page">
     <VBox spacing="24" maxWidth="1080">
         <padding><Insets top="24" right="24" bottom="64" left="24"/></padding>
-        <SfLink fx:id="backLink" text="Mis pedidos"/>
-        <VBox fx:id="content" spacing="24"/>
+        <PpqhSfLink fx:id="ppqhBackLink" id="backLink" text="Mis pedidos"/>
+        <VBox fx:id="ppqhContent" id="content" spacing="24"/>
     </VBox>
 </ScrollPane>

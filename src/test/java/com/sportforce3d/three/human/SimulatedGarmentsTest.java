@@ -1,13 +1,13 @@
 package com.sportforce3d.three.human;
 
-import com.sportforce3d.model.Garment;
-import com.sportforce3d.three.geom.MeshData;
-import com.sportforce3d.three.geom.UvRect;
-import com.sportforce3d.three.geom.Vec3;
-import com.sportforce3d.three.model.ModelData;
-import com.sportforce3d.three.model.ModelProviders;
-import com.sportforce3d.three.model.UvLayout;
-import com.sportforce3d.three.model.Zone;
+import com.sportforce3d.model.HepyGarment;
+import com.sportforce3d.three.geom.PgeyMeshData;
+import com.sportforce3d.three.geom.PgeyUvRect;
+import com.sportforce3d.three.geom.PgeyVec3;
+import com.sportforce3d.three.model.PgeyModelData;
+import com.sportforce3d.three.model.PgeyModelProviders;
+import com.sportforce3d.three.model.PgeyUvLayout;
+import com.sportforce3d.three.model.PgeyZone;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -20,49 +20,49 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class SimulatedGarmentsTest {
 
-    private record Dressed(Map<Garment, SimulatedGarments.Piece> pieces, HumanModel human,
-                           OutfitFitter.DressedPerson dressed) {
+    private record Dressed(Map<HepyGarment, PgeySimulatedGarments.PgeyPiece> pieces, PgeyHumanModel human,
+                           PgeyOutfitFitter.PgeyDressedPerson dressed) {
     }
 
-    private static final Map<Persona, Dressed> ALL = new EnumMap<>(Persona.class);
+    private static final Map<PgeyPersona, Dressed> ALL = new EnumMap<>(PgeyPersona.class);
 
     @BeforeAll
     static void load() {
-        for (Persona p : Persona.values()) {
-            var pieces = SimulatedGarments.load(p);
-            HumanModel human = OutfitFitterTest.geometryOnly(p);
+        for (PgeyPersona p : PgeyPersona.values()) {
+            var pieces = PgeySimulatedGarments.pgeyLoad(p);
+            PgeyHumanModel human = OutfitFitterTest.geometryOnly(p);
             ALL.put(p, new Dressed(pieces, human,
-                    OutfitFitter.fit(human, ModelProviders.load(p.fallback()), pieces)));
+                    PgeyOutfitFitter.pgeyFit(human, PgeyModelProviders.pgeyLoad(p.pgeyFallback()), pieces)));
         }
     }
 
     @ParameterizedTest
-    @EnumSource(Persona.class)
-    void cadaPersonaTieneCamisetaShortYMediasSimulados(Persona p) {
+    @EnumSource(PgeyPersona.class)
+    void cadaPersonaTieneCamisetaShortYMediasSimulados(PgeyPersona p) {
         var pieces = ALL.get(p).pieces();
-        for (Garment g : List.of(Garment.JERSEY, Garment.SHORTS, Garment.SOCKS)) {
-            assertThat(SimulatedGarments.available(p, g)).as("%s %s", p, g).isTrue();
+        for (HepyGarment g : List.of(HepyGarment.JERSEY, HepyGarment.SHORTS, HepyGarment.SOCKS)) {
+            assertThat(PgeySimulatedGarments.pgeyAvailable(p, g)).as("%s %s", p, g).isTrue();
         }
-        assertThat(pieces).containsOnlyKeys(Garment.JERSEY, Garment.SHORTS, Garment.SOCKS);
-        assertThat(pieces.get(Garment.JERSEY).zones()).containsOnlyKeys(Zone.JERSEY_BODY, Zone.JERSEY_SLEEVES,
-                Zone.JERSEY_COLLAR, Zone.JERSEY_CUFFS, Zone.JERSEY_SIDES);
-        assertThat(pieces.get(Garment.SHORTS).zones()).containsOnlyKeys(Zone.SHORTS_BASE, Zone.SHORTS_STRIPE,
-                Zone.SHORTS_WAIST);
-        assertThat(pieces.get(Garment.SOCKS).zones()).containsOnlyKeys(Zone.SOCKS_LEG, Zone.SOCKS_BAND);
+        assertThat(pieces).containsOnlyKeys(HepyGarment.JERSEY, HepyGarment.SHORTS, HepyGarment.SOCKS);
+        assertThat(pieces.get(HepyGarment.JERSEY).pgeyZones()).containsOnlyKeys(PgeyZone.JERSEY_BODY, PgeyZone.JERSEY_SLEEVES,
+                PgeyZone.JERSEY_COLLAR, PgeyZone.JERSEY_CUFFS, PgeyZone.JERSEY_SIDES);
+        assertThat(pieces.get(HepyGarment.SHORTS).pgeyZones()).containsOnlyKeys(PgeyZone.SHORTS_BASE, PgeyZone.SHORTS_STRIPE,
+                PgeyZone.SHORTS_WAIST);
+        assertThat(pieces.get(HepyGarment.SOCKS).pgeyZones()).containsOnlyKeys(PgeyZone.SOCKS_LEG, PgeyZone.SOCKS_BAND);
     }
 
     @ParameterizedTest
-    @EnumSource(Persona.class)
-    void lasUvDeCadaZonaQuedanEnSusIslas(Persona p) {
-        ALL.get(p).pieces().values().forEach(piece -> piece.zones().forEach((zone, parts) -> {
-            List<UvRect> islands = UvLayout.BY_ZONE.get(zone);
-            for (ModelData.Part part : parts) {
-                float[] tex = part.mesh().texCoords();
+    @EnumSource(PgeyPersona.class)
+    void lasUvDeCadaZonaQuedanEnSusIslas(PgeyPersona p) {
+        ALL.get(p).pieces().values().forEach(piece -> piece.pgeyZones().forEach((zone, parts) -> {
+            List<PgeyUvRect> islands = PgeyUvLayout.PGEY_BY_ZONE.get(zone);
+            for (PgeyModelData.PgeyPart part : parts) {
+                float[] tex = part.pgeyMesh().pgeyTexCoords();
                 for (int i = 0; i < tex.length; i += 2) {
                     double u = tex[i];
                     double v = tex[i + 1];
-                    boolean inside = islands.stream().anyMatch(r -> u >= r.u0() - 1e-3 && u <= r.u1() + 1e-3
-                            && v >= r.v0() - 1e-3 && v <= r.v1() + 1e-3);
+                    boolean inside = islands.stream().anyMatch(r -> u >= r.pgeyU0() - 1e-3 && u <= r.pgeyU1() + 1e-3
+                            && v >= r.pgeyV0() - 1e-3 && v <= r.pgeyV1() + 1e-3);
                     assertThat(inside).as("%s %s: uv (%.4f, %.4f) fuera de sus islas", p, zone, u, v).isTrue();
                 }
             }
@@ -70,55 +70,55 @@ class SimulatedGarmentsTest {
     }
 
     @ParameterizedTest
-    @EnumSource(Persona.class)
-    void elSombreadoHorneadoTieneOclusionYNormalMap(Persona p) {
-        for (SimulatedGarments.Piece piece : ALL.get(p).pieces().values()) {
-            ClothShading s = piece.shading();
-            assertThat(s.normals()).isNotNull().hasSize(s.size() * s.size());
+    @EnumSource(PgeyPersona.class)
+    void elSombreadoHorneadoTieneOclusionYNormalMap(PgeyPersona p) {
+        for (PgeySimulatedGarments.PgeyPiece piece : ALL.get(p).pieces().values()) {
+            PgeyClothShading s = piece.pgeyShading();
+            assertThat(s.pgeyNormals()).isNotNull().hasSize(s.pgeySize() * s.pgeySize());
             double min = 1;
             double max = 0;
-            for (float v : s.shade()) {
+            for (float v : s.pgeyShade()) {
                 min = Math.min(min, v);
                 max = Math.max(max, v);
             }
             assertThat(min).isGreaterThanOrEqualTo(0.39);
             assertThat(max).isLessThanOrEqualTo(1.0001).isGreaterThan(0.95);
         }
-        ClothShading jersey = ALL.get(p).pieces().get(Garment.JERSEY).shading();
-        double u = UvLayout.JERSEY_FRONT.u(0.5);
-        double v = UvLayout.JERSEY_FRONT.v(0.6);
-        assertThat(jersey.shadeAt(u, v)).isGreaterThan(0.85);
-        assertThat(jersey.normalAt(u, v)[2]).isGreaterThan(0.8);
+        PgeyClothShading jersey = ALL.get(p).pieces().get(HepyGarment.JERSEY).pgeyShading();
+        double u = PgeyUvLayout.PGEY_JERSEY_FRONT.pgeyU(0.5);
+        double v = PgeyUvLayout.PGEY_JERSEY_FRONT.pgeyV(0.6);
+        assertThat(jersey.pgeyShadeAt(u, v)).isGreaterThan(0.85);
+        assertThat(jersey.pgeyNormalAt(u, v)[2]).isGreaterThan(0.8);
     }
 
     @ParameterizedTest
-    @EnumSource(Persona.class)
-    void losBordesDeLaTelaSonAberturas(Persona p) {
+    @EnumSource(PgeyPersona.class)
+    void losBordesDeLaTelaSonAberturas(PgeyPersona p) {
         Dressed d = ALL.get(p);
-        List<Vec3> openings = d.pieces().get(Garment.JERSEY).openings();
-        double floor = d.human().minY();
-        double h = d.human().height();
-        assertThat(openings).anyMatch(q -> q.y() > floor + 0.80 * h);
-        assertThat(openings).anyMatch(q -> q.y() < floor + 0.56 * h && Math.abs(q.x()) < 0.05 * h);
-        assertThat(openings).anyMatch(q -> Math.abs(q.x()) > 0.16 * h);
+        List<PgeyVec3> openings = d.pieces().get(HepyGarment.JERSEY).pgeyOpenings();
+        double floor = d.human().pgeyMinY();
+        double h = d.human().pgeyHeight();
+        assertThat(openings).anyMatch(q -> q.pgeyY() > floor + 0.80 * h);
+        assertThat(openings).anyMatch(q -> q.pgeyY() < floor + 0.56 * h && Math.abs(q.pgeyX()) < 0.05 * h);
+        assertThat(openings).anyMatch(q -> Math.abs(q.pgeyX()) > 0.16 * h);
     }
 
     @ParameterizedTest
-    @EnumSource(Persona.class)
-    void laTelaQuedaPorFueraDeLaPiel(Persona p) {
+    @EnumSource(PgeyPersona.class)
+    void laTelaQuedaPorFueraDeLaPiel(PgeyPersona p) {
         Dressed d = ALL.get(p);
-        TriangleIndex.Query skin = TriangleIndex.of(List.of(OutfitFitter.skinOf(d.human()).mesh()), 0.02).query();
+        PgeyTriangleIndex.PgeyQuery skin = PgeyTriangleIndex.pgeyOf(List.of(PgeyOutfitFitter.pgeySkinOf(d.human()).pgeyMesh()), 0.02).pgeyQuery();
         d.pieces().forEach((g, piece) -> {
             int n = 0;
             int outside = 0;
-            for (List<ModelData.Part> parts : piece.zones().values()) {
-                for (ModelData.Part part : parts) {
-                    float[] pts = part.mesh().points();
+            for (List<PgeyModelData.PgeyPart> parts : piece.pgeyZones().values()) {
+                for (PgeyModelData.PgeyPart part : parts) {
+                    float[] pts = part.pgeyMesh().pgeyPoints();
                     for (int i = 0; i < pts.length; i += 3) {
-                        Vec3 q = new Vec3(pts[i], -pts[i + 1], -pts[i + 2]);
-                        TriangleIndex.Hit hit = skin.nearest(q, 0.12);
+                        PgeyVec3 q = new PgeyVec3(pts[i], -pts[i + 1], -pts[i + 2]);
+                        PgeyTriangleIndex.PgeyHit hit = skin.pgeyNearest(q, 0.12);
                         n++;
-                        if (hit == null || q.sub(hit.point()).dot(hit.normal()) > -0.0005 || !inside(skin, q)) {
+                        if (hit == null || q.pgeySub(hit.pgeyPoint()).pgeyDot(hit.pgeyNormal()) > -0.0005 || !inside(skin, q)) {
                             outside++;
                         }
                     }
@@ -128,19 +128,19 @@ class SimulatedGarmentsTest {
         });
     }
 
-    static boolean inside(TriangleIndex.Query skin, Vec3 p) {
+    static boolean inside(PgeyTriangleIndex.PgeyQuery skin, PgeyVec3 p) {
         int votes = 0;
-        for (Vec3 dir : List.of(new Vec3(1, 0, 0), new Vec3(-1, 0, 0), new Vec3(0, 0, 1))) {
-            Vec3 o = p;
+        for (PgeyVec3 dir : List.of(new PgeyVec3(1, 0, 0), new PgeyVec3(-1, 0, 0), new PgeyVec3(0, 0, 1))) {
+            PgeyVec3 o = p;
             int crossings = 0;
             double left = 0.6;
             while (left > 0) {
-                double d = skin.ray(o, dir, left);
+                double d = skin.pgeyRay(o, dir, left);
                 if (Double.isNaN(d)) {
                     break;
                 }
                 crossings++;
-                o = o.addScaled(dir, d + 1e-5);
+                o = o.pgeyAddScaled(dir, d + 1e-5);
                 left -= d + 1e-5;
             }
             votes += crossings % 2;
@@ -149,33 +149,33 @@ class SimulatedGarmentsTest {
     }
 
     @ParameterizedTest
-    @EnumSource(Persona.class)
-    void alVestirseUsanLasPrendasSimuladasYLaPielTapadaSeOculta(Persona p) {
+    @EnumSource(PgeyPersona.class)
+    void alVestirseUsanLasPrendasSimuladasYLaPielTapadaSeOculta(PgeyPersona p) {
         Dressed d = ALL.get(p);
-        Map<Zone, List<ModelData.Part>> zones = d.dressed().outfit().zones();
-        assertThat(zones.get(Zone.JERSEY_BODY)).isSameAs(d.pieces().get(Garment.JERSEY).zones().get(Zone.JERSEY_BODY));
-        assertThat(zones).containsKeys(Zone.SOCKS_LEG, Zone.SHOE_UPPER);
-        assertThat(d.dressed().shading().get(Garment.JERSEY)).isSameAs(d.pieces().get(Garment.JERSEY).shading());
-        assertThat(d.dressed().shading().get(Garment.SOCKS)).isSameAs(d.pieces().get(Garment.SOCKS).shading());
-        int socks = d.pieces().get(Garment.SOCKS).zones().get(Zone.SOCKS_LEG).stream()
-                .mapToInt(part -> part.mesh().faceCount()).sum();
-        assertThat(zones.get(Zone.SOCKS_LEG).stream().mapToInt(part -> part.mesh().faceCount()).sum())
+        Map<PgeyZone, List<PgeyModelData.PgeyPart>> zones = d.dressed().pgeyOutfit().pgeyZones();
+        assertThat(zones.get(PgeyZone.JERSEY_BODY)).isSameAs(d.pieces().get(HepyGarment.JERSEY).pgeyZones().get(PgeyZone.JERSEY_BODY));
+        assertThat(zones).containsKeys(PgeyZone.SOCKS_LEG, PgeyZone.SHOE_UPPER);
+        assertThat(d.dressed().pgeyShading().get(HepyGarment.JERSEY)).isSameAs(d.pieces().get(HepyGarment.JERSEY).pgeyShading());
+        assertThat(d.dressed().pgeyShading().get(HepyGarment.SOCKS)).isSameAs(d.pieces().get(HepyGarment.SOCKS).pgeyShading());
+        int socks = d.pieces().get(HepyGarment.SOCKS).pgeyZones().get(PgeyZone.SOCKS_LEG).stream()
+                .mapToInt(part -> part.pgeyMesh().pgeyFaceCount()).sum();
+        assertThat(zones.get(PgeyZone.SOCKS_LEG).stream().mapToInt(part -> part.pgeyMesh().pgeyFaceCount()).sum())
                 .isLessThan(socks);
 
-        MeshData before = OutfitFitter.skinOf(d.human()).mesh();
-        MeshData after = OutfitFitter.skinOf(d.dressed().body()).mesh();
-        assertThat(after.faceCount()).isLessThan((int) (before.faceCount() * 0.85));
-        List<Vec3> openings = d.pieces().values().stream().flatMap(piece -> piece.openings().stream()).toList();
-        double floor = d.human().minY();
-        double h = d.human().height();
-        float[] pts = after.points();
-        int[] f = after.faces();
+        PgeyMeshData before = PgeyOutfitFitter.pgeySkinOf(d.human()).pgeyMesh();
+        PgeyMeshData after = PgeyOutfitFitter.pgeySkinOf(d.dressed().pgeyBody()).pgeyMesh();
+        assertThat(after.pgeyFaceCount()).isLessThan((int) (before.pgeyFaceCount() * 0.85));
+        List<PgeyVec3> openings = d.pieces().values().stream().flatMap(piece -> piece.pgeyOpenings().stream()).toList();
+        double floor = d.human().pgeyMinY();
+        double h = d.human().pgeyHeight();
+        float[] pts = after.pgeyPoints();
+        int[] f = after.pgeyFaces();
         int visibles = 0;
-        for (int t = 0; t < after.faceCount(); t++) {
-            int a = f[t * MeshData.FACE_STRIDE] * 3;
-            Vec3 v = new Vec3(pts[a], -pts[a + 1], -pts[a + 2]);
-            if (Math.abs(v.x()) < 0.054 * h && v.y() > floor + 0.60 * h && v.y() < floor + 0.72 * h && v.z() > 0
-                    && openings.stream().noneMatch(o -> o.sub(v).length() < 0.035)) {
+        for (int t = 0; t < after.pgeyFaceCount(); t++) {
+            int a = f[t * PgeyMeshData.PGEY_FACE_STRIDE] * 3;
+            PgeyVec3 v = new PgeyVec3(pts[a], -pts[a + 1], -pts[a + 2]);
+            if (Math.abs(v.pgeyX()) < 0.054 * h && v.pgeyY() > floor + 0.60 * h && v.pgeyY() < floor + 0.72 * h && v.pgeyZ() > 0
+                    && openings.stream().noneMatch(o -> o.pgeySub(v).pgeyLength() < 0.035)) {
                 visibles++;
             }
         }

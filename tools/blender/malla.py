@@ -2,9 +2,9 @@ import bmesh
 import bpy
 import numpy as np
 
-from cuerpo import a_blender
+from cuerpo import pgeyABlender
 
-ISLAS = {
+PGEY_ISLAS = {
     "frente": (0.02, 0.02, 0.48, 0.54),
     "espalda": (0.52, 0.02, 0.98, 0.54),
     "manga_der": (0.02, 0.58, 0.30, 0.78),
@@ -30,163 +30,163 @@ ISLAS = {
 }
 
 
-def isla(nombre, u, v):
-    r = ISLAS[nombre]
-    u = min(max(u, 0.0), 1.0)
-    v = min(max(v, 0.0), 1.0)
-    return r[0] + (r[2] - r[0]) * u, r[1] + (r[3] - r[1]) * v
+def pgeyIsla(pgeyNombre, pgeyU, pgeyV):
+    pgeyR = PGEY_ISLAS[pgeyNombre]
+    pgeyU = min(max(pgeyU, 0.0), 1.0)
+    pgeyV = min(max(pgeyV, 0.0), 1.0)
+    return pgeyR[0] + (pgeyR[2] - pgeyR[0]) * pgeyU, pgeyR[1] + (pgeyR[3] - pgeyR[1]) * pgeyV
 
 
-def smoothstep(a, b, x):
-    t = np.clip((x - a) / (b - a), 0.0, 1.0)
-    return t * t * (3 - 2 * t)
+def pgeySmoothstep(pgeyA, pgeyB, pgeyX):
+    pgeyT = np.clip((pgeyX - pgeyA) / (pgeyB - pgeyA), 0.0, 1.0)
+    return pgeyT * pgeyT * (3 - 2 * pgeyT)
 
 
-class Malla:
-    def __init__(self, zonas):
-        self.zonas = list(zonas)
-        self.v = []
-        self.caras = []
-        self.grupos = {}
+class PgeyMalla:
+    def __init__(self, pgeyZonas):
+        self.pgeyZonas = list(pgeyZonas)
+        self.pgeyV = []
+        self.pgeyCaras = []
+        self.pgeyGrupos = {}
 
-    def vert(self, p):
-        self.v.append(np.asarray(p, dtype=float))
-        return len(self.v) - 1
+    def pgeyVert(self, pgeyP):
+        self.pgeyV.append(np.asarray(pgeyP, dtype=float))
+        return len(self.pgeyV) - 1
 
-    def cara(self, idx, uvs, zona):
-        self.caras.append((tuple(idx), tuple(uvs), zona))
+    def pgeyCara(self, pgeyIdx, pgeyUvs, pgeyZona):
+        self.pgeyCaras.append((tuple(pgeyIdx), tuple(pgeyUvs), pgeyZona))
 
-    def peso(self, grupo, i, w):
-        g = self.grupos.setdefault(grupo, {})
-        g[i] = max(g.get(i, 0.0), float(w))
+    def pgeyPeso(self, pgeyGrupo, pgeyI, pgeyW):
+        pgeyG = self.pgeyGrupos.setdefault(pgeyGrupo, {})
+        pgeyG[pgeyI] = max(pgeyG.get(pgeyI, 0.0), float(pgeyW))
 
-    def vecinos(self):
-        n = len(self.v)
-        ady = [set() for _ in range(n)]
-        for idx, _, _ in self.caras:
-            for k in range(len(idx)):
-                a, b = idx[k], idx[(k + 1) % len(idx)]
-                ady[a].add(b)
-                ady[b].add(a)
-        return ady
+    def pgeyVecinos(self):
+        pgeyN = len(self.pgeyV)
+        pgeyAdy = [set() for _ in range(pgeyN)]
+        for pgeyIdx, _, _ in self.pgeyCaras:
+            for pgeyK in range(len(pgeyIdx)):
+                pgeyA, pgeyB = pgeyIdx[pgeyK], pgeyIdx[(pgeyK + 1) % len(pgeyIdx)]
+                pgeyAdy[pgeyA].add(pgeyB)
+                pgeyAdy[pgeyB].add(pgeyA)
+        return pgeyAdy
 
-    def empujar_afuera(self, cuerpo, holgura, fijos=()):
-        movidos = 0
-        fijos = set(fijos)
-        for i, p in enumerate(self.v):
-            if i in fijos:
+    def pgeyEmpujarAfuera(self, pgeyCuerpo, pgeyHolgura, pgeyFijos=()):
+        pgeyMovidos = 0
+        pgeyFijos = set(pgeyFijos)
+        for pgeyI, pgeyP in enumerate(self.pgeyV):
+            if pgeyI in pgeyFijos:
                 continue
-            q, n, _ = cuerpo.cercano(p)
-            d = float(np.dot(p - q, n))
-            if d < holgura:
-                self.v[i] = p + n * (holgura - d)
-                movidos += 1
-        return movidos
+            pgeyQ, pgeyN, _ = pgeyCuerpo.pgeyCercano(pgeyP)
+            pgeyD = float(np.dot(pgeyP - pgeyQ, pgeyN))
+            if pgeyD < pgeyHolgura:
+                self.pgeyV[pgeyI] = pgeyP + pgeyN * (pgeyHolgura - pgeyD)
+                pgeyMovidos += 1
+        return pgeyMovidos
 
-    def orientar(self, cuerpo):
-        vueltas = 0
-        for k, (idx, uvs, zona) in enumerate(self.caras):
-            pts = [self.v[i] for i in idx]
-            nrm = np.zeros(3)
-            for a in range(len(pts)):
-                nrm += np.cross(pts[a], pts[(a + 1) % len(pts)])
-            centro = np.mean(pts, axis=0)
-            q, _, _ = cuerpo.cercano(centro)
-            if np.dot(nrm, centro - q) < 0:
-                self.caras[k] = (idx[::-1], uvs[::-1], zona)
-                vueltas += 1
-        return vueltas
+    def pgeyOrientar(self, pgeyCuerpo):
+        pgeyVueltas = 0
+        for pgeyK, (pgeyIdx, pgeyUvs, pgeyZona) in enumerate(self.pgeyCaras):
+            pgeyPts = [self.pgeyV[pgeyI] for pgeyI in pgeyIdx]
+            pgeyNrm = np.zeros(3)
+            for pgeyA in range(len(pgeyPts)):
+                pgeyNrm += np.cross(pgeyPts[pgeyA], pgeyPts[(pgeyA + 1) % len(pgeyPts)])
+            pgeyCentro = np.mean(pgeyPts, axis=0)
+            pgeyQ, _, _ = pgeyCuerpo.pgeyCercano(pgeyCentro)
+            if np.dot(pgeyNrm, pgeyCentro - pgeyQ) < 0:
+                self.pgeyCaras[pgeyK] = (pgeyIdx[::-1], pgeyUvs[::-1], pgeyZona)
+                pgeyVueltas += 1
+        return pgeyVueltas
 
-    def relajar(self, solo, pasadas, factor=0.5, rectas=None):
+    def pgeyRelajar(self, pgeySolo, pgeyPasadas, pgeyFactor=0.5, pgeyRectas=None):
 
-        rectas = rectas or {}
+        pgeyRectas = pgeyRectas or {}
 
-        def sobre(pol, q):
-            mejor, dmin = None, 1e9
-            for a, b in zip(pol, pol[1:]):
-                t = float(np.clip(np.dot(q - a, b - a) / max(np.dot(b - a, b - a), 1e-12), 0.0, 1.0))
-                p = a + (b - a) * t
-                d = float(np.linalg.norm(p - q))
-                if d < dmin:
-                    mejor, dmin = p, d
-            return mejor
+        def pgeySobre(pgeyPol, pgeyQ):
+            pgeyMejor, pgeyDmin = None, 1e9
+            for pgeyA, pgeyB in zip(pgeyPol, pgeyPol[1:]):
+                pgeyT = float(np.clip(np.dot(pgeyQ - pgeyA, pgeyB - pgeyA) / max(np.dot(pgeyB - pgeyA, pgeyB - pgeyA), 1e-12), 0.0, 1.0))
+                pgeyP = pgeyA + (pgeyB - pgeyA) * pgeyT
+                pgeyD = float(np.linalg.norm(pgeyP - pgeyQ))
+                if pgeyD < pgeyDmin:
+                    pgeyMejor, pgeyDmin = pgeyP, pgeyD
+            return pgeyMejor
         from mathutils import Vector
         from mathutils.bvhtree import BVHTree
-        tris = []
-        for idx, _, _ in self.caras:
-            for k in range(1, len(idx) - 1):
-                tris.append((idx[0], idx[k], idx[k + 1]))
-        bvh = BVHTree.FromPolygons([Vector(p) for p in self.v], tris)
-        ady = self.vecinos()
-        for _ in range(pasadas):
-            nuevo = {}
-            for i in solo:
-                if i in rectas:
-                    pol, ant, sig = rectas[i]
-                    q = self.v[i] + ((self.v[ant] + self.v[sig]) / 2 - self.v[i]) * factor
-                    nuevo[i] = sobre(pol, q)
-                elif ady[i]:
-                    m = np.mean([self.v[j] for j in ady[i]], axis=0)
-                    q = self.v[i] + (m - self.v[i]) * factor
-                    loc, _, _, _ = bvh.find_nearest(Vector(q))
-                    nuevo[i] = np.array(loc) if loc is not None else q
-            for i, q in nuevo.items():
-                self.v[i] = q
+        pgeyTris = []
+        for pgeyIdx, _, _ in self.pgeyCaras:
+            for pgeyK in range(1, len(pgeyIdx) - 1):
+                pgeyTris.append((pgeyIdx[0], pgeyIdx[pgeyK], pgeyIdx[pgeyK + 1]))
+        pgeyBvh = BVHTree.FromPolygons([Vector(pgeyP) for pgeyP in self.pgeyV], pgeyTris)
+        pgeyAdy = self.pgeyVecinos()
+        for _ in range(pgeyPasadas):
+            pgeyNuevo = {}
+            for pgeyI in pgeySolo:
+                if pgeyI in pgeyRectas:
+                    pgeyPol, pgeyAnt, pgeySig = pgeyRectas[pgeyI]
+                    pgeyQ = self.pgeyV[pgeyI] + ((self.pgeyV[pgeyAnt] + self.pgeyV[pgeySig]) / 2 - self.pgeyV[pgeyI]) * pgeyFactor
+                    pgeyNuevo[pgeyI] = pgeySobre(pgeyPol, pgeyQ)
+                elif pgeyAdy[pgeyI]:
+                    pgeyM = np.mean([self.pgeyV[pgeyJ] for pgeyJ in pgeyAdy[pgeyI]], axis=0)
+                    pgeyQ = self.pgeyV[pgeyI] + (pgeyM - self.pgeyV[pgeyI]) * pgeyFactor
+                    pgeyLoc, _, _, _ = pgeyBvh.find_nearest(Vector(pgeyQ))
+                    pgeyNuevo[pgeyI] = np.array(pgeyLoc) if pgeyLoc is not None else pgeyQ
+            for pgeyI, pgeyQ in pgeyNuevo.items():
+                self.pgeyV[pgeyI] = pgeyQ
 
-    def suavizar(self, pasadas, factor=0.5, solo=None):
-        ady = self.vecinos()
-        for _ in range(pasadas):
-            nuevo = list(self.v)
-            for i, vs in enumerate(ady):
-                if not vs or (solo is not None and i not in solo):
+    def pgeySuavizar(self, pgeyPasadas, pgeyFactor=0.5, pgeySolo=None):
+        pgeyAdy = self.pgeyVecinos()
+        for _ in range(pgeyPasadas):
+            pgeyNuevo = list(self.pgeyV)
+            for pgeyI, pgeyVs in enumerate(pgeyAdy):
+                if not pgeyVs or (pgeySolo is not None and pgeyI not in pgeySolo):
                     continue
-                m = np.mean([self.v[j] for j in vs], axis=0)
-                nuevo[i] = self.v[i] + (m - self.v[i]) * factor
-            self.v = nuevo
+                pgeyM = np.mean([self.pgeyV[pgeyJ] for pgeyJ in pgeyVs], axis=0)
+                pgeyNuevo[pgeyI] = self.pgeyV[pgeyI] + (pgeyM - self.pgeyV[pgeyI]) * pgeyFactor
+            self.pgeyV = pgeyNuevo
 
-    def crear(self, nombre, cuerpo=None):
+    def pgeyCrear(self, pgeyNombre, pgeyCuerpo=None):
 
-        me = bpy.data.meshes.new(nombre)
-        bm = bmesh.new()
-        bv = [bm.verts.new(a_blender(p)) for p in self.v]
-        bm.verts.ensure_lookup_table()
-        capa = bm.loops.layers.uv.new("UVMap")
-        omitidas = 0
-        for idx, uvs, zona in self.caras:
+        pgeyMe = bpy.data.meshes.new(pgeyNombre)
+        pgeyBm = bmesh.new()
+        pgeyBv = [pgeyBm.verts.new(pgeyABlender(pgeyP)) for pgeyP in self.pgeyV]
+        pgeyBm.verts.ensure_lookup_table()
+        pgeyCapa = pgeyBm.loops.layers.uv.new("UVMap")
+        pgeyOmitidas = 0
+        for pgeyIdx, pgeyUvs, pgeyZona in self.pgeyCaras:
             try:
-                f = bm.faces.new([bv[k] for k in idx])
+                pgeyF = pgeyBm.faces.new([pgeyBv[pgeyK] for pgeyK in pgeyIdx])
             except ValueError:
-                omitidas += 1
+                pgeyOmitidas += 1
                 continue
-            f.material_index = self.zonas.index(zona)
-            for loop, uv in zip(f.loops, uvs):
-                loop[capa].uv = (uv[0], 1.0 - uv[1])
-            f.smooth = True
-        if cuerpo is not None:
-            bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-            voto = 0
-            for f in list(bm.faces)[:: max(1, len(bm.faces) // 400)]:
-                c = f.calc_center_median()
-                p = np.array((c.x, c.z, -c.y))
-                q, _, _ = cuerpo.cercano(p)
-                nn = np.array((f.normal.x, f.normal.z, -f.normal.y))
-                voto += 1 if np.dot(nn, p - q) > 0 else -1
-            if voto < 0:
-                bmesh.ops.reverse_faces(bm, faces=bm.faces, flip_multires=False)
-        bm.to_mesh(me)
-        bm.free()
-        obj = bpy.data.objects.new(nombre, me)
-        bpy.context.scene.collection.objects.link(obj)
-        for z in self.zonas:
-            mat = bpy.data.materials.get(z) or bpy.data.materials.new(z)
-            me.materials.append(mat)
-        for g, pesos in self.grupos.items():
-            vg = obj.vertex_groups.new(name=g)
-            por_peso = {}
-            for i, w in pesos.items():
-                por_peso.setdefault(round(w, 3), []).append(i)
-            for w, ids in por_peso.items():
-                vg.add(ids, w, 'REPLACE')
-        if omitidas:
-            print("AVISO: %d caras repetidas omitidas en %s" % (omitidas, nombre))
-        return obj
+            pgeyF.material_index = self.pgeyZonas.index(pgeyZona)
+            for pgeyLoop, pgeyUv in zip(pgeyF.loops, pgeyUvs):
+                pgeyLoop[pgeyCapa].uv = (pgeyUv[0], 1.0 - pgeyUv[1])
+            pgeyF.smooth = True
+        if pgeyCuerpo is not None:
+            bmesh.ops.recalc_face_normals(pgeyBm, faces=pgeyBm.faces)
+            pgeyVoto = 0
+            for pgeyF in list(pgeyBm.faces)[:: max(1, len(pgeyBm.faces) // 400)]:
+                pgeyC = pgeyF.calc_center_median()
+                pgeyP = np.array((pgeyC.x, pgeyC.z, -pgeyC.y))
+                pgeyQ, _, _ = pgeyCuerpo.pgeyCercano(pgeyP)
+                pgeyNn = np.array((pgeyF.normal.x, pgeyF.normal.z, -pgeyF.normal.y))
+                pgeyVoto += 1 if np.dot(pgeyNn, pgeyP - pgeyQ) > 0 else -1
+            if pgeyVoto < 0:
+                bmesh.ops.reverse_faces(pgeyBm, faces=pgeyBm.faces, flip_multires=False)
+        pgeyBm.to_mesh(pgeyMe)
+        pgeyBm.free()
+        pgeyObj = bpy.data.objects.new(pgeyNombre, pgeyMe)
+        bpy.context.scene.collection.objects.link(pgeyObj)
+        for pgeyZ in self.pgeyZonas:
+            pgeyMat = bpy.data.materials.get(pgeyZ) or bpy.data.materials.new(pgeyZ)
+            pgeyMe.materials.append(pgeyMat)
+        for pgeyG, pgeyPesos in self.pgeyGrupos.items():
+            pgeyVg = pgeyObj.vertex_groups.new(name=pgeyG)
+            pgeyPorPeso = {}
+            for pgeyI, pgeyW in pgeyPesos.items():
+                pgeyPorPeso.setdefault(round(pgeyW, 3), []).append(pgeyI)
+            for pgeyW, pgeyIds in pgeyPorPeso.items():
+                pgeyVg.add(pgeyIds, pgeyW, 'REPLACE')
+        if pgeyOmitidas:
+            print("AVISO: %d caras repetidas omitidas en %s" % (pgeyOmitidas, pgeyNombre))
+        return pgeyObj

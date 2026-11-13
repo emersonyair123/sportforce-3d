@@ -1,19 +1,19 @@
 package com.sportforce3d.service;
 
-import com.sportforce3d.db.Database;
+import com.sportforce3d.db.HepyDatabase;
 import com.sportforce3d.db.TestDatabases;
-import com.sportforce3d.repository.AddressRepository;
-import com.sportforce3d.repository.CartRepository;
-import com.sportforce3d.repository.CatalogRepository;
-import com.sportforce3d.repository.DashboardRepository;
-import com.sportforce3d.repository.DesignRepository;
-import com.sportforce3d.repository.OrderRepository;
-import com.sportforce3d.repository.PaymentRepository;
-import com.sportforce3d.repository.ProductRepository;
-import com.sportforce3d.repository.ReportRepository;
-import com.sportforce3d.repository.SettingsRepository;
-import com.sportforce3d.repository.UserRepository;
-import com.sportforce3d.storage.StorageService;
+import com.sportforce3d.repository.HepyAddressRepository;
+import com.sportforce3d.repository.HepyCartRepository;
+import com.sportforce3d.repository.HepyCatalogRepository;
+import com.sportforce3d.repository.HepyDashboardRepository;
+import com.sportforce3d.repository.HepyDesignRepository;
+import com.sportforce3d.repository.HepyOrderRepository;
+import com.sportforce3d.repository.HepyPaymentRepository;
+import com.sportforce3d.repository.HepyProductRepository;
+import com.sportforce3d.repository.HepyReportRepository;
+import com.sportforce3d.repository.HepySettingsRepository;
+import com.sportforce3d.repository.HepyUserRepository;
+import com.sportforce3d.storage.HepyStorageService;
 
 import java.nio.file.Path;
 import java.sql.PreparedStatement;
@@ -25,64 +25,64 @@ final class Fixture {
     static final String ADMIN = "admin@sportforce3d.pe";
     static final String CLIENT = "cliente@sportforce3d.pe";
 
-    final Database db;
+    final HepyDatabase db;
     final MutableClock clock = new MutableClock(Instant.parse("2026-10-17T15:00:00Z"));
-    final Session session;
-    final UserRepository users;
-    final ProductRepository products;
-    final StorageService storage;
-    final AuthService auth;
-    final CatalogService catalog;
-    final CartService cart;
-    final AddressService addresses;
-    final OrderService orders;
-    final AdminProductService admin;
-    final DesignService designs;
-    final PaymentService payments;
-    final AdminOrderService adminOrders;
-    final DashboardService dashboard;
-    final ReportService reports;
-    final StoreSettingsService settings;
+    final PpqhSession session;
+    final HepyUserRepository users;
+    final HepyProductRepository products;
+    final HepyStorageService storage;
+    final PpqhAuthService auth;
+    final HepyCatalogService catalog;
+    final HepyCartService cart;
+    final PpqhAddressService addresses;
+    final PpqhOrderService orders;
+    final HepyAdminProductService admin;
+    final PgeyDesignService designs;
+    final PpqhPaymentService payments;
+    final PpqhAdminOrderService adminOrders;
+    final PpqhDashboardService dashboard;
+    final PpqhReportService reports;
+    final PpqhStoreSettingsService settings;
 
     Fixture(Path tempDir) {
         db = TestDatabases.migrated(tempDir);
-        users = new UserRepository(db);
-        session = new Session(users::findById);
-        products = new ProductRepository(db);
-        CartRepository carts = new CartRepository(db);
-        AddressRepository addressRepo = new AddressRepository(db);
-        storage = new StorageService(tempDir.resolve("storage"));
-        auth = new AuthService(users, new PasswordHasher(4), session, new LoginThrottle(clock), clock);
-        catalog = new CatalogService(new CatalogRepository(db), products);
-        DesignRepository designRepo = new DesignRepository(db);
-        OrderRepository orderRepo = new OrderRepository(db);
-        PaymentRepository paymentRepo = new PaymentRepository(db);
-        cart = new CartService(carts, products, catalog, designRepo, session);
-        addresses = new AddressService(addressRepo, session);
-        orders = new OrderService(db, orderRepo, carts, addressRepo, cart, designRepo, catalog, storage, session, clock);
-        admin = new AdminProductService(products, new CatalogRepository(db), storage, session, clock);
-        designs = new DesignService(designRepo, storage, new com.sportforce3d.design.DraftStore(tempDir.resolve("drafts")),
+        users = new HepyUserRepository(db);
+        session = new PpqhSession(users::hepyFindById);
+        products = new HepyProductRepository(db);
+        HepyCartRepository carts = new HepyCartRepository(db);
+        HepyAddressRepository addressRepo = new HepyAddressRepository(db);
+        storage = new HepyStorageService(tempDir.resolve("storage"));
+        auth = new PpqhAuthService(users, new PpqhPasswordHasher(4), session, new PpqhLoginThrottle(clock), clock);
+        catalog = new HepyCatalogService(new HepyCatalogRepository(db), products);
+        HepyDesignRepository designRepo = new HepyDesignRepository(db);
+        HepyOrderRepository orderRepo = new HepyOrderRepository(db);
+        HepyPaymentRepository paymentRepo = new HepyPaymentRepository(db);
+        cart = new HepyCartService(carts, products, catalog, designRepo, session);
+        addresses = new PpqhAddressService(addressRepo, session);
+        orders = new PpqhOrderService(db, orderRepo, carts, addressRepo, cart, designRepo, catalog, storage, session, clock);
+        admin = new HepyAdminProductService(products, new HepyCatalogRepository(db), storage, session, clock);
+        designs = new PgeyDesignService(designRepo, storage, new com.sportforce3d.design.PgeyDraftStore(tempDir.resolve("drafts")),
                 session, clock);
-        payments = new PaymentService(db, paymentRepo, orderRepo, storage, session, clock);
-        adminOrders = new AdminOrderService(db, orderRepo, orders, designRepo, catalog, storage, session, clock);
-        dashboard = new DashboardService(new DashboardRepository(db), orderRepo, paymentRepo, session, clock);
-        reports = new ReportService(new ReportRepository(db), session, clock);
-        settings = new StoreSettingsService(new SettingsRepository(db), session, clock);
+        payments = new PpqhPaymentService(db, paymentRepo, orderRepo, storage, session, clock);
+        adminOrders = new PpqhAdminOrderService(db, orderRepo, orders, designRepo, catalog, storage, session, clock);
+        dashboard = new PpqhDashboardService(new HepyDashboardRepository(db), orderRepo, paymentRepo, session, clock);
+        reports = new PpqhReportService(new HepyReportRepository(db), session, clock);
+        settings = new PpqhStoreSettingsService(new HepySettingsRepository(db), session, clock);
     }
 
     void loginAdmin() {
-        auth.logout();
-        auth.login(ADMIN, "Admin123!".toCharArray());
+        auth.ppqhLogout();
+        auth.ppqhLogin(ADMIN, "Admin123!".toCharArray());
     }
 
     void loginClient() {
-        auth.logout();
-        auth.login(CLIENT, "Cliente123!".toCharArray());
+        auth.ppqhLogout();
+        auth.ppqhLogin(CLIENT, "Cliente123!".toCharArray());
     }
 
     void loginNewClient(String email) {
-        auth.logout();
-        auth.register("Otro Cliente", email, null, "Futbol2026".toCharArray(), "Futbol2026".toCharArray());
+        auth.ppqhLogout();
+        auth.ppqhRegister("Otro Cliente", email, null, "Futbol2026".toCharArray(), "Futbol2026".toCharArray());
     }
 
     long variantId(String sku) {
@@ -102,7 +102,7 @@ final class Fixture {
     }
 
     long queryLong(String sql) {
-        return db.withConnection(c -> {
+        return db.hepyWithConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
                     throw new IllegalStateException("Sin resultados: " + sql);
@@ -113,6 +113,6 @@ final class Fixture {
     }
 
     void exec(String sql) {
-        db.withConnection(c -> c.createStatement().executeUpdate(sql));
+        db.hepyWithConnection(c -> c.createStatement().executeUpdate(sql));
     }
 }

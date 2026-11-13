@@ -1,13 +1,13 @@
 package com.sportforce3d.ui;
 
-import com.sportforce3d.app.AppContext;
-import com.sportforce3d.app.Routes;
-import com.sportforce3d.design.ElementType;
-import com.sportforce3d.model.Garment;
-import com.sportforce3d.three.OrbitState;
-import com.sportforce3d.three.Viewer3D;
-import com.sportforce3d.three.model.Zone;
-import com.sportforce3d.viewmodel.DesignerViewModel;
+import com.sportforce3d.app.PpqhAppContext;
+import com.sportforce3d.app.PpqhRoutes;
+import com.sportforce3d.design.PgeyElementType;
+import com.sportforce3d.model.HepyGarment;
+import com.sportforce3d.three.PgeyOrbitState;
+import com.sportforce3d.three.PgeyViewer3D;
+import com.sportforce3d.three.model.PgeyZone;
+import com.sportforce3d.viewmodel.PgeyDesignerViewModel;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Labeled;
@@ -35,7 +35,7 @@ class DesignerUiTest {
     @TempDir
     Path tempDir;
 
-    private AppContext context;
+    private PpqhAppContext context;
 
     @Start
     void start(Stage stage) {
@@ -48,20 +48,20 @@ class DesignerUiTest {
         type(robot, "Contraseña", "Cliente123!");
         click(robot, "Iniciar sesión");
         waitUntil("la tienda", () -> UiTestSupport.labeled(robot, "Catálogo").isPresent());
-        robot.interact(() -> context.router().go(Routes.DESIGNER, null));
+        robot.interact(() -> context.ppqhRouter().ppqhGo(PpqhRoutes.PPQH_DESIGNER, null));
         click(robot, "Vista 3D");
-        Viewer3D viewer = robot.lookup(".sf-viewer3d").queryAs(Viewer3D.class);
-        DesignerViewModel vm = viewModel(robot);
+        PgeyViewer3D viewer = robot.lookup(".sf-viewer3d").queryAs(PgeyViewer3D.class);
+        PgeyDesignerViewModel vm = viewModel(robot);
         waitUntil("persona o maniquí en el visor", () -> viewer.getModel() != null);
 
         click(robot, "Espalda");
-        robot.interact(() -> viewer.zoomBy(0.82));
-        OrbitState before = viewer.cameraGoal();
-        assertThat(Math.abs(before.yaw())).isCloseTo(180, within(0.5));
+        robot.interact(() -> viewer.pgeyZoomBy(0.82));
+        PgeyOrbitState before = viewer.pgeyCameraGoal();
+        assertThat(Math.abs(before.pgeyYaw())).isCloseTo(180, within(0.5));
 
-        robot.interact(() -> vm.edit("Color", d -> d.withColor(Zone.JERSEY_BODY, "#D7141E"), null));
-        robot.interact(() -> vm.garmentProperty().set(Garment.SHORTS));
-        robot.interact(() -> vm.garmentProperty().set(Garment.JERSEY));
+        robot.interact(() -> vm.pgeyEdit("Color", d -> d.pgeyWithColor(PgeyZone.JERSEY_BODY, "#D7141E"), null));
+        robot.interact(() -> vm.garmentProperty().set(HepyGarment.SHORTS));
+        robot.interact(() -> vm.garmentProperty().set(HepyGarment.JERSEY));
 
         click(robot, "Texto");
         click(robot, "Número en el pecho");
@@ -76,22 +76,22 @@ class DesignerUiTest {
         assertThat(isInside(UiTestSupport.field(robot, "Nombre (máx. 12)").orElseThrow(), nameCard)).isTrue();
         robot.interact(() -> UiTestSupport.field(robot, "Nombre (máx. 12)").orElseThrow().getInput().clear());
         type(robot, "Nombre (máx. 12)", "quispe");
-        waitUntil("nombre en el documento", () -> vm.doc().elements().stream()
-                .anyMatch(e -> e.type() == ElementType.NAME && "QUISPE".equals(e.text())));
+        waitUntil("nombre en el documento", () -> vm.pgeyDoc().pgeyElements().stream()
+                .anyMatch(e -> e.pgeyType() == PgeyElementType.NAME && "QUISPE".equals(e.pgeyText())));
 
         WaitForAsyncUtils.sleep(4500, java.util.concurrent.TimeUnit.MILLISECONDS);
         WaitForAsyncUtils.waitForFxEvents();
-        OrbitState after = viewer.cameraGoal();
-        assertThat(after.yaw()).isCloseTo(before.yaw(), within(1e-6));
-        assertThat(after.pitch()).isCloseTo(before.pitch(), within(1e-6));
-        assertThat(after.distance()).isCloseTo(before.distance(), within(1e-6));
-        assertThat(after.target()).isEqualTo(before.target());
+        PgeyOrbitState after = viewer.pgeyCameraGoal();
+        assertThat(after.pgeyYaw()).isCloseTo(before.pgeyYaw(), within(1e-6));
+        assertThat(after.pgeyPitch()).isCloseTo(before.pgeyPitch(), within(1e-6));
+        assertThat(after.pgeyDistance()).isCloseTo(before.pgeyDistance(), within(1e-6));
+        assertThat(after.pgeyTarget()).isEqualTo(before.pgeyTarget());
 
         Node remove = robot.lookup((Predicate<Node>) n -> "Quitar nombre en la espalda".equals(n.getAccessibleText())
                 && isInside(n, card(robot, "Nombre en la espalda"))).query();
         UiTestSupport.clickNode(robot, remove);
-        waitUntil("nombre quitado", () -> vm.doc().elements().stream().noneMatch(e -> e.type() == ElementType.NAME));
-        assertThat(vm.doc().elements()).hasSize(1);
+        waitUntil("nombre quitado", () -> vm.pgeyDoc().pgeyElements().stream().noneMatch(e -> e.pgeyType() == PgeyElementType.NAME));
+        assertThat(vm.pgeyDoc().pgeyElements()).hasSize(1);
     }
 
     @Test
@@ -100,21 +100,21 @@ class DesignerUiTest {
         type(robot, "Contraseña", "Cliente123!");
         click(robot, "Iniciar sesión");
         waitUntil("la tienda", () -> UiTestSupport.labeled(robot, "Catálogo").isPresent());
-        robot.interact(() -> context.router().go(Routes.DESIGNER, null));
-        DesignerViewModel vm = viewModel(robot);
+        robot.interact(() -> context.ppqhRouter().ppqhGo(PpqhRoutes.PPQH_DESIGNER, null));
+        PgeyDesignerViewModel vm = viewModel(robot);
 
         saveAs(robot, "Serie");
         java.awt.image.BufferedImage serie = savedFront("Serie");
         assertThat(luminance(serie.getRGB(4, 4))).as("fondo de estudio de la foto realista").isGreaterThan(60);
 
-        robot.interact(() -> vm.edit("Manga larga", d -> d.withCut(d.cut().withSleeve(
-                com.sportforce3d.design.GarmentCut.Sleeve.LARGA)), null));
+        robot.interact(() -> vm.pgeyEdit("Manga larga", d -> d.pgeyWithCut(d.pgeyCut().pgeyWithSleeve(
+                com.sportforce3d.design.PgeyGarmentCut.PgeySleeve.LARGA)), null));
         saveAs(robot, "Manga larga");
         java.awt.image.BufferedImage foto = savedFront("Manga larga");
         assertThat((double) foto.getWidth() / foto.getHeight()).as("foto realista 720 × 900").isCloseTo(0.8, within(0.01));
 
-        robot.interact(() -> vm.edit("Short corto", d -> d.withCut(d.cut().withShorts(
-                com.sportforce3d.design.GarmentCut.ShortsLength.CORTO)), null));
+        robot.interact(() -> vm.pgeyEdit("Short corto", d -> d.pgeyWithCut(d.pgeyCut().pgeyWithShorts(
+                com.sportforce3d.design.PgeyGarmentCut.PgeyShortsLength.CORTO)), null));
         saveAs(robot, "Short corto");
         java.awt.image.BufferedImage larga = savedFront("Short corto");
         assertThat((double) larga.getWidth() / larga.getHeight()).isCloseTo(0.75, within(0.01));
@@ -129,23 +129,23 @@ class DesignerUiTest {
         waitUntil("diálogo de guardar", () -> UiTestSupport.field(robot, "Nombre del diseño").isPresent());
         robot.interact(() -> UiTestSupport.field(robot, "Nombre del diseño").orElseThrow().getInput().setText(name));
         click(robot, "Guardar");
-        waitUntil("diseño guardado: " + name, 90, () -> context.designService().myDesigns().stream()
-                .anyMatch(d -> d.name().equals(name)));
+        waitUntil("diseño guardado: " + name, 90, () -> context.ppqhDesignService().pgeyMyDesigns().stream()
+                .anyMatch(d -> d.pgeyName().equals(name)));
     }
 
     private java.awt.image.BufferedImage savedFront(String name) throws Exception {
-        String path = context.designService().myDesigns().stream().filter(d -> d.name().equals(name)).findFirst()
-                .orElseThrow().thumbnailFront();
-        return javax.imageio.ImageIO.read(context.storage().resolve(path).toFile());
+        String path = context.ppqhDesignService().pgeyMyDesigns().stream().filter(d -> d.pgeyName().equals(name)).findFirst()
+                .orElseThrow().pgeyThumbnailFront();
+        return javax.imageio.ImageIO.read(context.ppqhStorage().hepyResolve(path).toFile());
     }
 
     private static int luminance(int argb) {
         return (int) (0.3 * ((argb >> 16) & 0xFF) + 0.59 * ((argb >> 8) & 0xFF) + 0.11 * (argb & 0xFF));
     }
 
-    private static DesignerViewModel viewModel(FxRobot robot) {
-        Node root = robot.lookup((Predicate<Node>) n -> n.getProperties().containsKey(DesignerViewModel.class)).query();
-        return (DesignerViewModel) root.getProperties().get(DesignerViewModel.class);
+    private static PgeyDesignerViewModel viewModel(FxRobot robot) {
+        Node root = robot.lookup((Predicate<Node>) n -> n.getProperties().containsKey(PgeyDesignerViewModel.class)).query();
+        return (PgeyDesignerViewModel) root.getProperties().get(PgeyDesignerViewModel.class);
     }
 
     private static Node card(FxRobot robot, String label) {

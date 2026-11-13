@@ -1,8 +1,8 @@
 package com.sportforce3d.ui;
 
-import com.sportforce3d.app.AppContext;
-import com.sportforce3d.component.FilterChip;
-import com.sportforce3d.component.ProductCard;
+import com.sportforce3d.app.PpqhAppContext;
+import com.sportforce3d.component.HepyFilterChip;
+import com.sportforce3d.component.HepyProductCard;
 import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
@@ -31,7 +31,7 @@ class ShopFlowUiTest {
     @TempDir
     Path tempDir;
 
-    private AppContext context;
+    private PpqhAppContext context;
 
     @Start
     void start(Stage stage) {
@@ -85,17 +85,17 @@ class ShopFlowUiTest {
     }
 
     private static Node card(FxRobot robot, String name) {
-        return robot.lookup((Predicate<Node>) n -> n instanceof ProductCard c && c.lookupAll(".title-s").stream()
+        return robot.lookup((Predicate<Node>) n -> n instanceof HepyProductCard c && c.lookupAll(".title-s").stream()
                 .anyMatch(t -> t instanceof javafx.scene.control.Labeled l && name.equals(l.getText()))).tryQuery().orElse(null);
     }
 
     private static Node size(FxRobot robot, String name) {
-        return robot.lookup((Predicate<Node>) n -> n instanceof FilterChip c && name.equals(c.getText()) && !c.isDisabled())
+        return robot.lookup((Predicate<Node>) n -> n instanceof HepyFilterChip c && name.equals(c.getText()) && !c.isDisabled())
                 .tryQuery().orElse(null);
     }
 
     private long query(String sql) {
-        return context.database().withConnection(c -> {
+        return context.ppqhDatabase().hepyWithConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
                 rs.next();
                 return rs.getLong(1);

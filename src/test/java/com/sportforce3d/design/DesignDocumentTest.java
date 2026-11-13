@@ -1,8 +1,8 @@
 package com.sportforce3d.design;
 
-import com.sportforce3d.model.Garment;
-import com.sportforce3d.three.model.BodyType;
-import com.sportforce3d.three.model.Zone;
+import com.sportforce3d.model.HepyGarment;
+import com.sportforce3d.three.model.PgeyBodyType;
+import com.sportforce3d.three.model.PgeyZone;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,149 +12,149 @@ class DesignDocumentTest {
 
     @Test
     void jsonRoundTripKeepsEverything() {
-        DesignDocument doc = SampleDesigns.halcones()
-                .withBodyType(BodyType.ADULTO_MUJER)
-                .withProduct(4L)
-                .addElement(DesignDefaults.logo(7, "uploads/abc.png").withRotation(30).withScale(1.4));
+        PgeyDesignDocument doc = PgeySampleDesigns.pgeyHalcones()
+                .pgeyWithBodyType(PgeyBodyType.ADULTO_MUJER)
+                .pgeyWithProduct(4L)
+                .pgeyAddElement(PgeyDesignDefaults.pgeyLogo(7, "uploads/abc.png").pgeyWithRotation(30).pgeyWithScale(1.4));
 
-        String json = DesignJson.write(doc);
-        DesignDocument back = DesignJson.read(json);
+        String json = PgeyDesignJson.pgeyWrite(doc);
+        PgeyDesignDocument back = PgeyDesignJson.pgeyRead(json);
 
         assertThat(back).isEqualTo(doc);
         assertThat(json).contains("\"schemaVersion\":4", "\"JERSEY_BODY\":\"#D7192A\"", "FRANJAS_VERTICALES", "QUISPE");
-        assertThat(back.elements()).extracting(DesignElement::id)
-                .containsExactlyElementsOf(doc.elements().stream().map(DesignElement::id).toList());
+        assertThat(back.pgeyElements()).extracting(PgeyDesignElement::pgeyId)
+                .containsExactlyElementsOf(doc.pgeyElements().stream().map(PgeyDesignElement::pgeyId).toList());
     }
 
     @Test
     void cutRoundTripsAndDesignsBeforeStage10OpenWithTheUsualCut() {
-        GarmentCut cut = new GarmentCut(GarmentCut.Sleeve.LARGA, GarmentCut.ShortsLength.CORTO,
-                GarmentCut.SocksLength.TOBILLERA);
-        DesignDocument doc = SampleDesigns.halcones().withCut(cut);
-        String json = DesignJson.write(doc);
+        PgeyGarmentCut cut = new PgeyGarmentCut(PgeyGarmentCut.PgeySleeve.LARGA, PgeyGarmentCut.PgeyShortsLength.CORTO,
+                PgeyGarmentCut.PgeySocksLength.TOBILLERA);
+        PgeyDesignDocument doc = PgeySampleDesigns.pgeyHalcones().pgeyWithCut(cut);
+        String json = PgeyDesignJson.pgeyWrite(doc);
         assertThat(json).contains("\"sleeve\":\"LARGA\"", "\"shorts\":\"CORTO\"", "\"socks\":\"TOBILLERA\"");
-        assertThat(DesignJson.read(json).cut()).isEqualTo(cut);
-        assertThat(doc.withColor(Zone.JERSEY_BODY, "#000000").cut()).isEqualTo(cut);
+        assertThat(PgeyDesignJson.pgeyRead(json).pgeyCut()).isEqualTo(cut);
+        assertThat(doc.pgeyWithColor(PgeyZone.JERSEY_BODY, "#000000").pgeyCut()).isEqualTo(cut);
 
-        String v2 = DesignJson.write(SampleDesigns.halcones()).replace("\"schemaVersion\":4", "\"schemaVersion\":2")
+        String v2 = PgeyDesignJson.pgeyWrite(PgeySampleDesigns.pgeyHalcones()).replace("\"schemaVersion\":4", "\"schemaVersion\":2")
                 .replaceAll(",?\"cut\":\\{[^}]*\\}", "");
         assertThat(v2).doesNotContain("\"cut\"");
-        DesignDocument old = DesignJson.read(v2);
-        assertThat(old.schemaVersion()).isEqualTo(DesignDocument.SCHEMA_VERSION);
-        assertThat(old.cut()).isEqualTo(GarmentCut.DEFAULT);
-        assertThat(old.withCut(null).cut()).isEqualTo(GarmentCut.DEFAULT);
+        PgeyDesignDocument old = PgeyDesignJson.pgeyRead(v2);
+        assertThat(old.pgeySchemaVersion()).isEqualTo(PgeyDesignDocument.PGEY_SCHEMA_VERSION);
+        assertThat(old.pgeyCut()).isEqualTo(PgeyGarmentCut.PGEY_DEFAULT);
+        assertThat(old.pgeyWithCut(null).pgeyCut()).isEqualTo(PgeyGarmentCut.PGEY_DEFAULT);
     }
 
     @Test
     void shortsNumberFollowsTheShortsLengthUnlessTheClientMovedIt() {
-        DesignElement auto = DesignDefaults.shortsNumber("7", "#FFFFFF", "#000000");
-        DesignElement moved = DesignDefaults.shortsNumber("8", "#FFFFFF", "#000000").at(0.4, 0.8);
-        assertThat(auto.u()).isEqualTo(GarmentCut.ShortsLength.MEDIO.numberU());
-        DesignDocument doc = DesignDefaults.document(BodyType.ADULTO_HOMBRE).addElement(auto).addElement(moved);
-        assertThat(auto.v()).isEqualTo(GarmentCut.ShortsLength.MEDIO.numberV());
+        PgeyDesignElement auto = PgeyDesignDefaults.pgeyShortsNumber("7", "#FFFFFF", "#000000");
+        PgeyDesignElement moved = PgeyDesignDefaults.pgeyShortsNumber("8", "#FFFFFF", "#000000").pgeyAt(0.4, 0.8);
+        assertThat(auto.pgeyU()).isEqualTo(PgeyGarmentCut.PgeyShortsLength.MEDIO.pgeyNumberU());
+        PgeyDesignDocument doc = PgeyDesignDefaults.pgeyDocument(PgeyBodyType.ADULTO_HOMBRE).pgeyAddElement(auto).pgeyAddElement(moved);
+        assertThat(auto.pgeyV()).isEqualTo(PgeyGarmentCut.PgeyShortsLength.MEDIO.pgeyNumberV());
 
-        DesignDocument corto = doc.withCut(doc.cut().withShorts(GarmentCut.ShortsLength.CORTO));
-        assertThat(corto.element(auto.id()).orElseThrow().v()).isEqualTo(GarmentCut.ShortsLength.CORTO.numberV());
-        assertThat(corto.element(auto.id()).orElseThrow().u()).isEqualTo(GarmentCut.ShortsLength.CORTO.numberU());
-        assertThat(corto.element(moved.id()).orElseThrow().v()).isEqualTo(0.8);
-        DesignDocument largo = corto.withCut(corto.cut().withShorts(GarmentCut.ShortsLength.LARGO));
-        assertThat(largo.element(auto.id()).orElseThrow().v()).isEqualTo(GarmentCut.ShortsLength.LARGO.numberV());
-        assertThat(largo.withCut(largo.cut().withSleeve(GarmentCut.Sleeve.LARGA)).elements()).isEqualTo(largo.elements());
-        assertThat(DesignDefaults.shortsNumber("9", "#FFFFFF", "#000000", GarmentCut.ShortsLength.CORTO).v())
-                .isEqualTo(GarmentCut.ShortsLength.CORTO.numberV());
+        PgeyDesignDocument corto = doc.pgeyWithCut(doc.pgeyCut().pgeyWithShorts(PgeyGarmentCut.PgeyShortsLength.CORTO));
+        assertThat(corto.pgeyElement(auto.pgeyId()).orElseThrow().pgeyV()).isEqualTo(PgeyGarmentCut.PgeyShortsLength.CORTO.pgeyNumberV());
+        assertThat(corto.pgeyElement(auto.pgeyId()).orElseThrow().pgeyU()).isEqualTo(PgeyGarmentCut.PgeyShortsLength.CORTO.pgeyNumberU());
+        assertThat(corto.pgeyElement(moved.pgeyId()).orElseThrow().pgeyV()).isEqualTo(0.8);
+        PgeyDesignDocument largo = corto.pgeyWithCut(corto.pgeyCut().pgeyWithShorts(PgeyGarmentCut.PgeyShortsLength.LARGO));
+        assertThat(largo.pgeyElement(auto.pgeyId()).orElseThrow().pgeyV()).isEqualTo(PgeyGarmentCut.PgeyShortsLength.LARGO.pgeyNumberV());
+        assertThat(largo.pgeyWithCut(largo.pgeyCut().pgeyWithSleeve(PgeyGarmentCut.PgeySleeve.LARGA)).pgeyElements()).isEqualTo(largo.pgeyElements());
+        assertThat(PgeyDesignDefaults.pgeyShortsNumber("9", "#FFFFFF", "#000000", PgeyGarmentCut.PgeyShortsLength.CORTO).pgeyV())
+                .isEqualTo(PgeyGarmentCut.PgeyShortsLength.CORTO.pgeyNumberV());
     }
 
     @Test
     void rejectsNewerOrForeignJson() {
-        String newer = DesignJson.write(DesignDefaults.document(BodyType.JUVENIL)).replace("\"schemaVersion\":4", "\"schemaVersion\":9");
-        assertThatThrownBy(() -> DesignJson.read(newer)).hasMessageContaining("versión más nueva");
-        assertThatThrownBy(() -> DesignJson.read("{\"hola\":1}")).hasMessageContaining("no es un diseño");
-        assertThatThrownBy(() -> DesignJson.read("{no es json")).hasMessageContaining("dañado");
+        String newer = PgeyDesignJson.pgeyWrite(PgeyDesignDefaults.pgeyDocument(PgeyBodyType.JUVENIL)).replace("\"schemaVersion\":4", "\"schemaVersion\":9");
+        assertThatThrownBy(() -> PgeyDesignJson.pgeyRead(newer)).hasMessageContaining("versión más nueva");
+        assertThatThrownBy(() -> PgeyDesignJson.pgeyRead("{\"hola\":1}")).hasMessageContaining("no es un diseño");
+        assertThatThrownBy(() -> PgeyDesignJson.pgeyRead("{no es json")).hasMessageContaining("dañado");
     }
 
     @Test
     void realisticViewRoundTripsAndOldDesignsStillOpen() {
-        DesignDocument doc = DesignDefaults.document(BodyType.ADULTO_MUJER).withRealistic(RealisticSpec.defaults()
-                .withModel("voley_mujer_frente").withColor("camiseta", "#d7141e").withPattern("banda")
-                .withPatternColor("#f2f5f8").withName("QUISPE").withNumber(7));
-        DesignDocument back = DesignJson.read(DesignJson.write(doc));
+        PgeyDesignDocument doc = PgeyDesignDefaults.pgeyDocument(PgeyBodyType.ADULTO_MUJER).pgeyWithRealistic(PgeyRealisticSpec.pgeyDefaults()
+                .pgeyWithModel("voley_mujer_frente").pgeyWithColor("camiseta", "#d7141e").pgeyWithPattern("banda")
+                .pgeyWithPatternColor("#f2f5f8").pgeyWithName("QUISPE").pgeyWithNumber(7));
+        PgeyDesignDocument back = PgeyDesignJson.pgeyRead(PgeyDesignJson.pgeyWrite(doc));
         assertThat(back).isEqualTo(doc);
-        assertThat(back.realistic().color("camiseta")).isEqualTo("#D7141E");
-        assertThat(back.realistic().modelKey()).isEqualTo("voley_mujer_frente");
+        assertThat(back.pgeyRealistic().pgeyColor("camiseta")).isEqualTo("#D7141E");
+        assertThat(back.pgeyRealistic().pgeyModelKey()).isEqualTo("voley_mujer_frente");
 
         String v1 = "{\"schemaVersion\":1,\"bodyType\":\"JUVENIL\",\"productId\":4,"
                 + "\"colors\":{\"JERSEY_BODY\":\"#D7192A\"},\"patterns\":{},\"materials\":{},\"elements\":[]}";
-        DesignDocument old = DesignJson.read(v1);
-        assertThat(old.schemaVersion()).isEqualTo(DesignDocument.SCHEMA_VERSION);
-        assertThat(old.bodyType()).isEqualTo(BodyType.JUVENIL);
-        assertThat(old.color(Zone.JERSEY_BODY)).isEqualTo("#D7192A");
-        assertThat(old.realistic()).isNull();
-        assertThat(old.realisticOrDefault()).isEqualTo(RealisticSpec.defaults());
-        assertThat(DesignRules.problems(old)).isEmpty();
+        PgeyDesignDocument old = PgeyDesignJson.pgeyRead(v1);
+        assertThat(old.pgeySchemaVersion()).isEqualTo(PgeyDesignDocument.PGEY_SCHEMA_VERSION);
+        assertThat(old.pgeyBodyType()).isEqualTo(PgeyBodyType.JUVENIL);
+        assertThat(old.pgeyColor(PgeyZone.JERSEY_BODY)).isEqualTo("#D7192A");
+        assertThat(old.pgeyRealistic()).isNull();
+        assertThat(old.pgeyRealisticOrDefault()).isEqualTo(PgeyRealisticSpec.pgeyDefaults());
+        assertThat(PgeyDesignRules.pgeyProblems(old)).isEmpty();
     }
 
     @Test
     void realisticRulesRejectLongNamesBadNumbersAndColors() {
-        RealisticSpec ok = RealisticSpec.defaults().withName("ABCDEFGHIJKL").withNumber(99);
-        assertThat(ok.problems()).isEmpty();
-        assertThat(ok.withName("ABCDEFGHIJKLM").problems()).isNotEmpty();
-        assertThat(ok.withNumber(100).problems()).isNotEmpty();
-        assertThat(ok.withColor("short", "rojo").problems()).isNotEmpty();
-        assertThat(ok.withPattern("cuadros").problems()).isNotEmpty();
-        assertThat(ok.withPattern("rayas").withPatternColor(null).problems()).isNotEmpty();
-        assertThat(DesignRules.problems(DesignDefaults.document(BodyType.ADULTO_HOMBRE)
-                .withRealistic(ok.withNumber(-1)))).isNotEmpty();
+        PgeyRealisticSpec ok = PgeyRealisticSpec.pgeyDefaults().pgeyWithName("ABCDEFGHIJKL").pgeyWithNumber(99);
+        assertThat(ok.pgeyProblems()).isEmpty();
+        assertThat(ok.pgeyWithName("ABCDEFGHIJKLM").pgeyProblems()).isNotEmpty();
+        assertThat(ok.pgeyWithNumber(100).pgeyProblems()).isNotEmpty();
+        assertThat(ok.pgeyWithColor("short", "rojo").pgeyProblems()).isNotEmpty();
+        assertThat(ok.pgeyWithPattern("cuadros").pgeyProblems()).isNotEmpty();
+        assertThat(ok.pgeyWithPattern("rayas").pgeyWithPatternColor(null).pgeyProblems()).isNotEmpty();
+        assertThat(PgeyDesignRules.pgeyProblems(PgeyDesignDefaults.pgeyDocument(PgeyBodyType.ADULTO_HOMBRE)
+                .pgeyWithRealistic(ok.pgeyWithNumber(-1)))).isNotEmpty();
     }
 
     @Test
     void ignoresUnknownFieldsFromLaterMinorChanges() {
-        String json = DesignJson.write(DesignDefaults.document(BodyType.ADULTO_HOMBRE)).replaceFirst("\\{", "{\"campoNuevo\":true,");
-        assertThat(DesignJson.read(json).bodyType()).isEqualTo(BodyType.ADULTO_HOMBRE);
+        String json = PgeyDesignJson.pgeyWrite(PgeyDesignDefaults.pgeyDocument(PgeyBodyType.ADULTO_HOMBRE)).replaceFirst("\\{", "{\"campoNuevo\":true,");
+        assertThat(PgeyDesignJson.pgeyRead(json).pgeyBodyType()).isEqualTo(PgeyBodyType.ADULTO_HOMBRE);
     }
 
     @Test
     void documentsAreImmutableAndChangesReturnCopies() {
-        DesignDocument a = DesignDefaults.document(BodyType.ADULTO_HOMBRE);
-        DesignDocument b = a.withColor(Zone.JERSEY_BODY, "#ff7a00");
-        assertThat(a.color(Zone.JERSEY_BODY)).isEqualTo("#1F5FFF");
-        assertThat(b.color(Zone.JERSEY_BODY)).isEqualTo("#FF7A00");
-        assertThat(a.pattern(Garment.JERSEY).type()).isEqualTo(PatternType.LISO);
-        assertThat(a.material(MaterialSlot.SOCKS)).isEqualTo("LICRA");
+        PgeyDesignDocument a = PgeyDesignDefaults.pgeyDocument(PgeyBodyType.ADULTO_HOMBRE);
+        PgeyDesignDocument b = a.pgeyWithColor(PgeyZone.JERSEY_BODY, "#ff7a00");
+        assertThat(a.pgeyColor(PgeyZone.JERSEY_BODY)).isEqualTo("#1F5FFF");
+        assertThat(b.pgeyColor(PgeyZone.JERSEY_BODY)).isEqualTo("#FF7A00");
+        assertThat(a.pgeyPattern(HepyGarment.JERSEY).pgeyType()).isEqualTo(PgeyPatternType.LISO);
+        assertThat(a.pgeyMaterial(PgeyMaterialSlot.SOCKS)).isEqualTo("LICRA");
     }
 
     @Test
     void elementsClampScaleRotationAndPosition() {
-        DesignElement e = DesignDefaults.emblem("rayo", null, null).withScale(5).withRotation(270).at(1.7, -3);
-        assertThat(e.scale()).isEqualTo(DesignElement.MAX_SCALE);
-        assertThat(e.rotation()).isEqualTo(-90);
-        assertThat(e.u()).isEqualTo(1);
-        assertThat(e.v()).isEqualTo(0);
-        assertThat(DesignDefaults.emblem("rayo", null, null).withScale(0.01).scale()).isEqualTo(DesignElement.MIN_SCALE);
+        PgeyDesignElement e = PgeyDesignDefaults.pgeyEmblem("rayo", null, null).pgeyWithScale(5).pgeyWithRotation(270).pgeyAt(1.7, -3);
+        assertThat(e.pgeyScale()).isEqualTo(PgeyDesignElement.PGEY_MAX_SCALE);
+        assertThat(e.pgeyRotation()).isEqualTo(-90);
+        assertThat(e.pgeyU()).isEqualTo(1);
+        assertThat(e.pgeyV()).isEqualTo(0);
+        assertThat(PgeyDesignDefaults.pgeyEmblem("rayo", null, null).pgeyWithScale(0.01).pgeyScale()).isEqualTo(PgeyDesignElement.PGEY_MIN_SCALE);
     }
 
     @Test
     void layersMoveUpAndDown() {
-        DesignElement a = DesignDefaults.name("A", "#FFFFFF", "#000000");
-        DesignElement b = DesignDefaults.backNumber("9", "#FFFFFF", "#000000");
-        DesignDocument d = DesignDefaults.document(BodyType.ADULTO_HOMBRE).addElement(a).addElement(b);
-        assertThat(d.moveLayer(a.id(), 1).elements()).extracting(DesignElement::id).containsExactly(b.id(), a.id());
-        assertThat(d.moveLayer(a.id(), -1).elements()).extracting(DesignElement::id).containsExactly(a.id(), b.id());
-        assertThat(d.removeElement(a.id()).elements()).containsExactly(b);
+        PgeyDesignElement a = PgeyDesignDefaults.pgeyName("A", "#FFFFFF", "#000000");
+        PgeyDesignElement b = PgeyDesignDefaults.pgeyBackNumber("9", "#FFFFFF", "#000000");
+        PgeyDesignDocument d = PgeyDesignDefaults.pgeyDocument(PgeyBodyType.ADULTO_HOMBRE).pgeyAddElement(a).pgeyAddElement(b);
+        assertThat(d.pgeyMoveLayer(a.pgeyId(), 1).pgeyElements()).extracting(PgeyDesignElement::pgeyId).containsExactly(b.pgeyId(), a.pgeyId());
+        assertThat(d.pgeyMoveLayer(a.pgeyId(), -1).pgeyElements()).extracting(PgeyDesignElement::pgeyId).containsExactly(a.pgeyId(), b.pgeyId());
+        assertThat(d.pgeyRemoveElement(a.pgeyId()).pgeyElements()).containsExactly(b);
     }
 
     @Test
     void rulesValidateNamesNumbersColorsAndEmblems() {
-        assertThat(DesignRules.cleanName("guerrero-pérez 2026!")).isEqualTo("GUERRERO-PÉR").hasSize(DesignRules.NAME_MAX);
-        assertThat(DesignRules.cleanNumber("007")).isEqualTo("0");
-        assertThat(DesignRules.cleanNumber("99")).isEqualTo("99");
-        assertThat(DesignRules.cleanNumber("abc")).isNull();
+        assertThat(PgeyDesignRules.pgeyCleanName("guerrero-pérez 2026!")).isEqualTo("GUERRERO-PÉR").hasSize(PgeyDesignRules.PGEY_NAME_MAX);
+        assertThat(PgeyDesignRules.pgeyCleanNumber("007")).isEqualTo("0");
+        assertThat(PgeyDesignRules.pgeyCleanNumber("99")).isEqualTo("99");
+        assertThat(PgeyDesignRules.pgeyCleanNumber("abc")).isNull();
 
-        assertThat(DesignRules.problems(SampleDesigns.halcones())).isEmpty();
-        DesignDocument bad = DesignDefaults.document(BodyType.ADULTO_HOMBRE)
-                .withColor(Zone.JERSEY_BODY, "azul")
-                .addElement(DesignDefaults.backNumber("100", "#FFFFFF", "#000000"))
-                .addElement(DesignDefaults.name("NOMBREDEMASIADOLARGO", "#FFFFFF", "#000000"))
-                .addElement(DesignDefaults.emblem("marca-famosa", null, null));
-        assertThat(DesignRules.problems(bad)).hasSize(4);
+        assertThat(PgeyDesignRules.pgeyProblems(PgeySampleDesigns.pgeyHalcones())).isEmpty();
+        PgeyDesignDocument bad = PgeyDesignDefaults.pgeyDocument(PgeyBodyType.ADULTO_HOMBRE)
+                .pgeyWithColor(PgeyZone.JERSEY_BODY, "azul")
+                .pgeyAddElement(PgeyDesignDefaults.pgeyBackNumber("100", "#FFFFFF", "#000000"))
+                .pgeyAddElement(PgeyDesignDefaults.pgeyName("NOMBREDEMASIADOLARGO", "#FFFFFF", "#000000"))
+                .pgeyAddElement(PgeyDesignDefaults.pgeyEmblem("marca-famosa", null, null));
+        assertThat(PgeyDesignRules.pgeyProblems(bad)).hasSize(4);
     }
 }

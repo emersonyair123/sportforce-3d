@@ -1,10 +1,10 @@
 package com.sportforce3d.view;
 
-import com.sportforce3d.design.RealisticSpec;
-import com.sportforce3d.render.RealisticModel;
-import com.sportforce3d.render.RealisticModelRepository;
-import com.sportforce3d.render.RealisticPattern;
-import com.sportforce3d.render.RecolorRequest;
+import com.sportforce3d.design.PgeyRealisticSpec;
+import com.sportforce3d.render.PgeyRealisticModel;
+import com.sportforce3d.render.PgeyRealisticModelRepository;
+import com.sportforce3d.render.PgeyRealisticPattern;
+import com.sportforce3d.render.PgeyRecolorRequest;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -14,18 +14,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class RealisticDesignerTest {
 
-    private final RealisticModelRepository models = new RealisticModelRepository();
+    private final PgeyRealisticModelRepository models = new PgeyRealisticModelRepository();
 
     private List<String> cuts(String audience) {
-        return RealisticDesigner.CUTS.keySet().stream()
-                .filter(cut -> models.find(RealisticDesigner.key(cut, audience)).isPresent())
+        return PgeyRealisticDesigner.PGEY_CUTS.keySet().stream()
+                .filter(cut -> models.pgeyFind(PgeyRealisticDesigner.pgeyKey(cut, audience)).isPresent())
                 .collect(Collectors.toList());
     }
 
     @Test
     void eachCategoryShowsOnlyTheCutsThatHavePhotos() {
-        assertThat(RealisticDesigner.CATEGORIES.values()).containsExactly("Hombre", "Mujer", "Niño", "Niña");
-        assertThat(RealisticDesigner.CUTS.values()).containsExactly("Fútbol cuello V", "Polo", "Cuello redondo",
+        assertThat(PgeyRealisticDesigner.PGEY_CATEGORIES.values()).containsExactly("Hombre", "Mujer", "Niño", "Niña");
+        assertThat(PgeyRealisticDesigner.PGEY_CUTS.values()).containsExactly("Fútbol cuello V", "Polo", "Cuello redondo",
                 "Raglán", "Manga larga", "Vóley", "Básquet", "Buzo", "Short largo", "Licra", "Arquero", "Compresión", "Casaca");
         assertThat(cuts("hombre")).containsExactly("futbol", "polo", "redondo", "mangalarga", "voley", "basquet",
                 "buzo", "shortlargo", "arquero", "compresion", "casaca");
@@ -37,36 +37,36 @@ class RealisticDesignerTest {
     @Test
     void shirtsHaveFrontAndBackAndHoodiesOnlyFront() {
         java.util.Set<String> frontOnly = java.util.Set.of("buzo", "arquero", "compresion", "casaca");
-        for (String audience : RealisticDesigner.CATEGORIES.keySet()) {
+        for (String audience : PgeyRealisticDesigner.PGEY_CATEGORIES.keySet()) {
             for (String cut : cuts(audience)) {
-                RealisticModel front = models.require(RealisticDesigner.key(cut, audience));
-                assertThat(models.otherView(front).isPresent()).as(front.key()).isEqualTo(!frontOnly.contains(cut));
+                PgeyRealisticModel front = models.pgeyRequire(PgeyRealisticDesigner.pgeyKey(cut, audience));
+                assertThat(models.pgeyOtherView(front).isPresent()).as(front.pgeyKey()).isEqualTo(!frontOnly.contains(cut));
             }
         }
     }
 
     @Test
     void requestCarriesColorsPatternAndTexts() {
-        RealisticSpec spec = RealisticSpec.defaults().withPattern("rayas").withPatternColor("#0B2A6B")
-                .withName("QUISPE").withNumber(9);
-        RecolorRequest req = RealisticPreview.request("futbol_hombre_espalda", spec);
-        assertThat(req.modelKey()).isEqualTo("futbol_hombre_espalda");
-        assertThat(req.pattern()).isEqualTo(RealisticPattern.RAYAS);
-        assertThat(req.patternColor()).isEqualTo("#0b2a6b");
-        assertThat(req.name()).isEqualTo("QUISPE");
-        assertThat(req.number()).isEqualTo(9);
-        assertThat(req.zoneColors()).containsEntry("camiseta", "#1f5fff");
+        PgeyRealisticSpec spec = PgeyRealisticSpec.pgeyDefaults().pgeyWithPattern("rayas").pgeyWithPatternColor("#0B2A6B")
+                .pgeyWithName("QUISPE").pgeyWithNumber(9);
+        PgeyRecolorRequest req = PgeyRealisticPreview.pgeyRequest("futbol_hombre_espalda", spec);
+        assertThat(req.pgeyModelKey()).isEqualTo("futbol_hombre_espalda");
+        assertThat(req.pgeyPattern()).isEqualTo(PgeyRealisticPattern.RAYAS);
+        assertThat(req.pgeyPatternColor()).isEqualTo("#0b2a6b");
+        assertThat(req.pgeyName()).isEqualTo("QUISPE");
+        assertThat(req.pgeyNumber()).isEqualTo(9);
+        assertThat(req.pgeyZoneColors()).containsEntry("camiseta", "#1f5fff");
 
-        RecolorRequest plain = RealisticPreview.request("futbol_hombre_frente", RealisticSpec.defaults());
-        assertThat(plain.pattern()).isEqualTo(RealisticPattern.LISO);
-        assertThat(plain.patternColor()).isNull();
-        assertThat(plain.hasOverlay()).isFalse();
+        PgeyRecolorRequest plain = PgeyRealisticPreview.pgeyRequest("futbol_hombre_frente", PgeyRealisticSpec.pgeyDefaults());
+        assertThat(plain.pgeyPattern()).isEqualTo(PgeyRealisticPattern.LISO);
+        assertThat(plain.pgeyPatternColor()).isNull();
+        assertThat(plain.pgeyHasOverlay()).isFalse();
     }
 
     @Test
     void zoneLabelsFollowTheCut() {
-        assertThat(RealisticDesigner.zoneLabel(models.require("raglan_mujer_frente"), "paneles")).isEqualTo("Mangas");
-        assertThat(RealisticDesigner.zoneLabel(models.require("futbol_hombre_frente"), "paneles")).isEqualTo("Paneles");
-        assertThat(RealisticDesigner.zoneLabel(models.require("buzo_hombre_frente"), "principal")).isEqualTo("Buzo");
+        assertThat(PgeyRealisticDesigner.pgeyZoneLabel(models.pgeyRequire("raglan_mujer_frente"), "paneles")).isEqualTo("Mangas");
+        assertThat(PgeyRealisticDesigner.pgeyZoneLabel(models.pgeyRequire("futbol_hombre_frente"), "paneles")).isEqualTo("Paneles");
+        assertThat(PgeyRealisticDesigner.pgeyZoneLabel(models.pgeyRequire("buzo_hombre_frente"), "principal")).isEqualTo("Buzo");
     }
 }

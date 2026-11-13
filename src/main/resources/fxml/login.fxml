@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.sportforce3d.component.Logo?>
-<?import com.sportforce3d.component.SfButton?>
-<?import com.sportforce3d.component.SfLink?>
-<?import com.sportforce3d.component.SfTextField?>
+<?import com.sportforce3d.component.PpqhLogo?>
+<?import com.sportforce3d.component.PpqhSfButton?>
+<?import com.sportforce3d.component.PpqhSfLink?>
+<?import com.sportforce3d.component.PpqhSfTextField?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.FlowPane?>
@@ -12,13 +12,13 @@
 <?import javafx.scene.layout.VBox?>
 
 <HBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.sportforce3d.view.LoginController"
+      fx:controller="com.sportforce3d.view.PpqhLoginController"
       styleClass="sf-page">
 
     <StackPane styleClass="sf-band" HBox.hgrow="ALWAYS" minWidth="420">
         <VBox spacing="24" maxWidth="520" alignment="CENTER_LEFT">
             <padding><Insets top="48" right="48" bottom="48" left="48"/></padding>
-            <Logo fontSize="32"/>
+            <PpqhLogo fontSize="32"/>
             <Label text="FORJA TU EQUIPO" styleClass="display-xl, ink" wrapText="true"/>
             <Label text="Ropa deportiva que diseñas tú. Elige tu uniforme, personalízalo en 3D y recíbelo en todo el Perú."
                    styleClass="body, ink-muted" wrapText="true"/>
@@ -36,19 +36,19 @@
             <Label text="Inicia sesión" styleClass="heading-m, ink"/>
             <Label text="Entra para seguir tus pedidos y guardar tus diseños." styleClass="body-s, ink-muted" wrapText="true"/>
 
-            <HBox fx:id="errorBox" styleClass="sf-alert-error">
-                <Label fx:id="errorLabel" wrapText="true"/>
+            <HBox fx:id="ppqhErrorBox" id="errorBox" styleClass="sf-alert-error">
+                <Label fx:id="ppqhErrorLabel" id="errorLabel" wrapText="true"/>
             </HBox>
 
-            <SfTextField fx:id="emailField" label="Correo" promptText="nombre@correo.com"/>
-            <SfTextField fx:id="passwordField" label="Contraseña" password="true"/>
+            <PpqhSfTextField fx:id="ppqhEmailField" id="emailField" label="Correo" promptText="nombre@correo.com"/>
+            <PpqhSfTextField fx:id="ppqhPasswordField" id="passwordField" label="Contraseña" password="true"/>
 
-            <SfButton fx:id="loginButton" text="Iniciar sesión" variant="PRIMARY" size="MD"
+            <PpqhSfButton fx:id="ppqhLoginButton" id="loginButton" text="Iniciar sesión" variant="PRIMARY" size="MD"
                       maxWidth="Infinity" defaultButton="true"/>
 
             <HBox spacing="6" alignment="CENTER_LEFT">
                 <Label text="¿No tienes cuenta?" styleClass="body-s, ink-muted"/>
-                <SfLink fx:id="registerLink" text="Regístrate"/>
+                <PpqhSfLink fx:id="ppqhRegisterLink" id="registerLink" text="Regístrate"/>
             </HBox>
         </VBox>
     </StackPane>

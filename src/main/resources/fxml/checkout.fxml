@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.sportforce3d.component.SfLink?>
+<?import com.sportforce3d.component.PpqhSfLink?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
@@ -8,12 +8,12 @@
 <?import javafx.scene.layout.VBox?>
 
 <ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.sportforce3d.view.CheckoutController"
+            fx:controller="com.sportforce3d.view.PpqhCheckoutController"
             fitToWidth="true" styleClass="sf-page">
     <VBox spacing="24" maxWidth="1280">
         <padding><Insets top="24" right="24" bottom="64" left="24"/></padding>
-        <SfLink fx:id="backLink" text="Volver al carrito"/>
+        <PpqhSfLink fx:id="ppqhBackLink" id="backLink" text="Volver al carrito"/>
         <Label text="FINALIZA TU COMPRA" styleClass="display-l, ink"/>
-        <FlowPane fx:id="layout" hgap="24" vgap="24"/>
+        <FlowPane fx:id="ppqhLayout" id="layout" hgap="24" vgap="24"/>
     </VBox>
 </ScrollPane>

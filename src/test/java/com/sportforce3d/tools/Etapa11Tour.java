@@ -1,26 +1,26 @@
 package com.sportforce3d.tools;
 
-import com.sportforce3d.app.AppContext;
-import com.sportforce3d.app.Fonts;
-import com.sportforce3d.app.Routes;
-import com.sportforce3d.app.SportForceApp;
-import com.sportforce3d.app.UiSettings;
-import com.sportforce3d.component.SfButton;
-import com.sportforce3d.component.SfTextField;
-import com.sportforce3d.config.AppConfig;
-import com.sportforce3d.db.Database;
-import com.sportforce3d.design.DesignDocument;
-import com.sportforce3d.design.GarmentCut;
-import com.sportforce3d.design.GarmentCut.ShortsLength;
-import com.sportforce3d.design.GarmentCut.Sleeve;
-import com.sportforce3d.design.GarmentCut.SocksLength;
-import com.sportforce3d.design.SampleDesigns;
-import com.sportforce3d.model.Garment;
-import com.sportforce3d.model.PaymentMethod;
-import com.sportforce3d.three.Png;
-import com.sportforce3d.three.ViewPreset;
-import com.sportforce3d.three.Viewer3D;
-import com.sportforce3d.viewmodel.DesignerViewModel;
+import com.sportforce3d.app.PpqhAppContext;
+import com.sportforce3d.app.PpqhFonts;
+import com.sportforce3d.app.PpqhRoutes;
+import com.sportforce3d.app.PpqhSportForceApp;
+import com.sportforce3d.app.PpqhUiSettings;
+import com.sportforce3d.component.PpqhSfButton;
+import com.sportforce3d.component.PpqhSfTextField;
+import com.sportforce3d.config.PpqhAppConfig;
+import com.sportforce3d.db.HepyDatabase;
+import com.sportforce3d.design.PgeyDesignDocument;
+import com.sportforce3d.design.PgeyGarmentCut;
+import com.sportforce3d.design.PgeyGarmentCut.PgeyShortsLength;
+import com.sportforce3d.design.PgeyGarmentCut.PgeySleeve;
+import com.sportforce3d.design.PgeyGarmentCut.PgeySocksLength;
+import com.sportforce3d.design.PgeySampleDesigns;
+import com.sportforce3d.model.HepyGarment;
+import com.sportforce3d.model.PpqhPaymentMethod;
+import com.sportforce3d.three.PgeyPng;
+import com.sportforce3d.three.PgeyViewPreset;
+import com.sportforce3d.three.PgeyViewer3D;
+import com.sportforce3d.viewmodel.PgeyDesignerViewModel;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -46,7 +46,7 @@ public final class Etapa11Tour {
     private static final String DESIGN_NAME = "Halcones Etapa 11";
 
     private final Path out;
-    private AppContext context;
+    private PpqhAppContext context;
     private Stage stage;
 
     private Etapa11Tour(Path out) {
@@ -68,15 +68,15 @@ public final class Etapa11Tour {
     private void run() throws Exception {
         Files.createDirectories(out);
         Path data = Files.createTempDirectory("sf-etapa11");
-        Database.deleteFiles(data.resolve("tour.db"));
+        HepyDatabase.hepyDeleteFiles(data.resolve("tour.db"));
         fx(() -> {
-            Fonts.loadAll();
-            UiSettings settings = new UiSettings(Preferences.userRoot().node("com/sportforce3d-tour"));
+            PpqhFonts.ppqhLoadAll();
+            PpqhUiSettings settings = new PpqhUiSettings(Preferences.userRoot().node("com/sportforce3d-tour"));
             settings.reduceMotionProperty().set(true);
-            context = new AppContext(new AppConfig(data.resolve("tour.db")), settings);
-            context.database().migrate();
+            context = new PpqhAppContext(new PpqhAppConfig(data.resolve("tour.db")), settings);
+            context.ppqhDatabase().hepyMigrate();
             stage = new Stage();
-            SportForceApp.openMainWindow(stage, context);
+            PpqhSportForceApp.ppqhOpenMainWindow(stage, context);
             stage.setWidth(W);
             stage.setHeight(H);
             stage.show();
@@ -84,7 +84,7 @@ public final class Etapa11Tour {
         });
         pause(800);
         loginAs("cliente@sportforce3d.pe", "Cliente123!");
-        go(Routes.DESIGNER, null);
+        go(PpqhRoutes.PPQH_DESIGNER, null);
         fx(() -> {
             toggle("Vista 3D").fire();
             return null;
@@ -103,15 +103,15 @@ public final class Etapa11Tour {
 
     private void sameDesign() throws Exception {
         fx(() -> {
-            DesignDocument d = SampleDesigns.halcones();
-            vm().edit("Diseño", x -> d.withRealistic(d.realisticOrDefault().withModel("futbol_hombre_frente")), null);
-            vm().seal();
+            PgeyDesignDocument d = PgeySampleDesigns.pgeyHalcones();
+            vm().pgeyEdit("Diseño", x -> d.pgeyWithRealistic(d.pgeyRealisticOrDefault().pgeyWithModel("futbol_hombre_frente")), null);
+            vm().pgeySeal();
             return null;
         });
         waitDressed();
         shot("11-01-3d-diseno-frente");
         fx(() -> {
-            viewer().jumpTo(ViewPreset.BACK, Garment.KIT);
+            viewer().pgeyJumpTo(PgeyViewPreset.BACK, HepyGarment.KIT);
             return null;
         });
         pause(1000);
@@ -126,9 +126,9 @@ public final class Etapa11Tour {
 
     private void realisticToThreeD() throws Exception {
         fx(() -> {
-            vm().editRealistic("Colores", s -> s.withColor("camiseta", "#D7141E").withColor("short", "#0B0E13")
-                    .withName("QUISPE").withNumber(9), null);
-            vm().seal();
+            vm().pgeyEditRealistic("Colores", s -> s.pgeyWithColor("camiseta", "#D7141E").pgeyWithColor("short", "#0B0E13")
+                    .pgeyWithName("QUISPE").pgeyWithNumber(9), null);
+            vm().pgeySeal();
             return null;
         });
         pause(3000);
@@ -139,13 +139,13 @@ public final class Etapa11Tour {
         });
         waitDressed();
         fx(() -> {
-            viewer().jumpTo(ViewPreset.FRONT, Garment.KIT);
+            viewer().pgeyJumpTo(PgeyViewPreset.FRONT, HepyGarment.KIT);
             return null;
         });
         pause(1000);
         shot("11-05-3d-tras-cambiar-en-realista-frente");
         fx(() -> {
-            viewer().jumpTo(ViewPreset.BACK, Garment.KIT);
+            viewer().pgeyJumpTo(PgeyViewPreset.BACK, HepyGarment.KIT);
             return null;
         });
         pause(1000);
@@ -153,12 +153,12 @@ public final class Etapa11Tour {
     }
 
     private void notices() throws Exception {
-        GarmentCut cut = new GarmentCut(Sleeve.LARGA, ShortsLength.CORTO, SocksLength.TOBILLERA);
+        PgeyGarmentCut cut = new PgeyGarmentCut(PgeySleeve.LARGA, PgeyShortsLength.CORTO, PgeySocksLength.TOBILLERA);
         fx(() -> {
             toggle("Vista realista").fire();
-            vm().editRealistic("Categoría", s -> s.withModel("futbol_mujer_frente"), null);
-            vm().edit("Corte", d -> d.withCut(cut), null);
-            vm().seal();
+            vm().pgeyEditRealistic("Categoría", s -> s.pgeyWithModel("futbol_mujer_frente"), null);
+            vm().pgeyEdit("Corte", d -> d.pgeyWithCut(cut), null);
+            vm().pgeySeal();
             return null;
         });
         pause(3000);
@@ -171,9 +171,9 @@ public final class Etapa11Tour {
         shot("11-08-3d-mujer-manga-larga-short-corto-tobilleras");
         fx(() -> {
             toggle("Vista realista").fire();
-            vm().edit("Corte", d -> d.withCut(GarmentCut.DEFAULT), null);
-            vm().editRealistic("Modelo", s -> s.withModel("polo_hombre_frente"), null);
-            vm().seal();
+            vm().pgeyEdit("Corte", d -> d.pgeyWithCut(PgeyGarmentCut.PGEY_DEFAULT), null);
+            vm().pgeyEditRealistic("Modelo", s -> s.pgeyWithModel("polo_hombre_frente"), null);
+            vm().pgeySeal();
             return null;
         });
         pause(3000);
@@ -189,13 +189,13 @@ public final class Etapa11Tour {
     private void orderAndAdmin() throws Exception {
         fx(() -> {
             toggle("Vista realista").fire();
-            vm().editRealistic("Modelo", s -> s.withModel("futbol_hombre_frente"), null);
-            vm().seal();
+            vm().pgeyEditRealistic("Modelo", s -> s.pgeyWithModel("futbol_hombre_frente"), null);
+            vm().pgeySeal();
             return null;
         });
         pause(3000);
         shot("11-11-realista-antes-de-guardar");
-        if (!com.sportforce3d.three.human.HumanModels.available(com.sportforce3d.three.human.Persona.HOMBRE)) {
+        if (!com.sportforce3d.three.human.PgeyHumanModels.pgeyAvailable(com.sportforce3d.three.human.PgeyPersona.HOMBRE)) {
             System.out.println("Sin las personas 3D (models/humanos): se omiten las capturas 11-12 a 11-16.");
             return;
         }
@@ -209,36 +209,36 @@ public final class Etapa11Tour {
             button("Guardar").fire();
             return null;
         });
-        waitFor(() -> context.designService().myDesigns().stream().anyMatch(d -> d.name().equals(DESIGN_NAME)), 120_000);
+        waitFor(() -> context.ppqhDesignService().pgeyMyDesigns().stream().anyMatch(d -> d.pgeyName().equals(DESIGN_NAME)), 120_000);
         pause(1000);
-        long design = context.designService().myDesigns().stream()
-                .filter(d -> d.name().equals(DESIGN_NAME)).findFirst().orElseThrow().id();
-        long address = context.addressService().list().get(0).id();
-        long variant = context.database().withConnection(c -> {
+        long design = context.ppqhDesignService().pgeyMyDesigns().stream()
+                .filter(d -> d.pgeyName().equals(DESIGN_NAME)).findFirst().orElseThrow().pgeyId();
+        long address = context.ppqhAddressService().ppqhList().get(0).ppqhId();
+        long variant = context.ppqhDatabase().hepyWithConnection(c -> {
             try (var ps = c.prepareStatement("SELECT id FROM product_variants WHERE sku = 'SF-UFU-001-M'");
                  var rs = ps.executeQuery()) {
                 rs.next();
                 return rs.getLong(1);
             }
         });
-        context.cartService().addDesign(design, variant, 1);
-        long order = context.orderService().placeOrder(address, PaymentMethod.YAPE, null).id();
+        context.ppqhCartService().hepyAddDesign(design, variant, 1);
+        long order = context.ppqhOrderService().ppqhPlaceOrder(address, PpqhPaymentMethod.YAPE, null).ppqhId();
         fx(() -> {
-            context.navigator().logout();
+            context.ppqhNavigator().ppqhLogout();
             return null;
         });
         pause(500);
         loginAs("admin@sportforce3d.pe", "Admin123!");
-        var line = context.adminOrderService().order(order).items().stream().filter(i -> i.hasDesign())
+        var line = context.ppqhAdminOrderService().ppqhOrder(order).ppqhItems().stream().filter(i -> i.ppqhHasDesign())
                 .findFirst().orElseThrow();
-        Files.copy(context.storage().resolve(line.designFrontPath()), out.resolve("11-12-foto-del-pedido-frente.png"),
+        Files.copy(context.ppqhStorage().hepyResolve(line.ppqhDesignFrontPath()), out.resolve("11-12-foto-del-pedido-frente.png"),
                 StandardCopyOption.REPLACE_EXISTING);
-        if (line.designBackPath() != null) {
-            Files.copy(context.storage().resolve(line.designBackPath()), out.resolve("11-13-foto-del-pedido-espalda.png"),
+        if (line.ppqhDesignBackPath() != null) {
+            Files.copy(context.ppqhStorage().hepyResolve(line.ppqhDesignBackPath()), out.resolve("11-13-foto-del-pedido-espalda.png"),
                     StandardCopyOption.REPLACE_EXISTING);
         }
-        System.out.println("Fotos del pedido: " + line.designFrontPath() + ", " + line.designBackPath());
-        go(Routes.ADMIN_DESIGN, line.id());
+        System.out.println("Fotos del pedido: " + line.ppqhDesignFrontPath() + ", " + line.ppqhDesignBackPath());
+        go(PpqhRoutes.PPQH_ADMIN_DESIGN, line.ppqhId());
         pause(4000);
         fx(() -> {
             ToggleButton real = toggleOrNull("Vista realista");
@@ -302,16 +302,16 @@ public final class Etapa11Tour {
         return null;
     }
 
-    private Viewer3D viewer() {
-        return (Viewer3D) stage.getScene().getRoot().lookup(".sf-viewer3d");
+    private PgeyViewer3D viewer() {
+        return (PgeyViewer3D) stage.getScene().getRoot().lookup(".sf-viewer3d");
     }
 
-    private DesignerViewModel vm() {
-        Node n = find(stage.getScene().getRoot(), x -> x.getProperties().containsKey(DesignerViewModel.class));
+    private PgeyDesignerViewModel vm() {
+        Node n = find(stage.getScene().getRoot(), x -> x.getProperties().containsKey(PgeyDesignerViewModel.class));
         if (n == null) {
             throw new IllegalStateException("No está abierto el diseñador");
         }
-        return (DesignerViewModel) n.getProperties().get(DesignerViewModel.class);
+        return (PgeyDesignerViewModel) n.getProperties().get(PgeyDesignerViewModel.class);
     }
 
     private ToggleButton toggleOrNull(String text) {
@@ -330,8 +330,8 @@ public final class Etapa11Tour {
 
     private void loginAs(String email, String password) throws Exception {
         fx(() -> {
-            if (!context.session().isAuthenticated()) {
-                context.navigator().showLogin();
+            if (!context.ppqhSession().ppqhIsAuthenticated()) {
+                context.ppqhNavigator().ppqhShowLogin();
             }
             return null;
         });
@@ -347,7 +347,7 @@ public final class Etapa11Tour {
 
     private void go(String route, Object param) throws Exception {
         fx(() -> {
-            context.router().go(route, param);
+            context.ppqhRouter().ppqhGo(route, param);
             return null;
         });
         pause(1300);
@@ -359,13 +359,13 @@ public final class Etapa11Tour {
 
     private void save(WritableImage img, String name) throws Exception {
         Path file = out.resolve(name + ".png");
-        Png.write(img, file);
+        PgeyPng.pgeyWrite(img, file);
         System.out.println("Captura: " + file);
     }
 
-    private SfTextField field(String label) {
+    private PpqhSfTextField field(String label) {
         for (Node n : stage.getScene().getRoot().lookupAll(".sf-field")) {
-            if (n instanceof SfTextField f && f.isVisible() && f.lookupAll(".sf-field-label").stream()
+            if (n instanceof PpqhSfTextField f && f.isVisible() && f.lookupAll(".sf-field-label").stream()
                     .anyMatch(l -> l instanceof Labeled ll && ll.getText().equalsIgnoreCase(label))) {
                 return f;
             }
@@ -373,12 +373,12 @@ public final class Etapa11Tour {
         throw new IllegalStateException("No hay campo " + label);
     }
 
-    private SfButton button(String text) {
-        Node found = find(stage.getScene().getRoot(), x -> x instanceof SfButton b && text.equalsIgnoreCase(b.getText()));
+    private PpqhSfButton button(String text) {
+        Node found = find(stage.getScene().getRoot(), x -> x instanceof PpqhSfButton b && text.equalsIgnoreCase(b.getText()));
         if (found == null) {
             throw new IllegalStateException("No hay botón " + text);
         }
-        return (SfButton) found;
+        return (PpqhSfButton) found;
     }
 
     private static void waitFor(Callable<Boolean> condition, long maxMs) throws Exception {

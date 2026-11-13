@@ -7,9 +7,9 @@ public final class TestDatabases {
     private TestDatabases() {
     }
 
-    public static Database migrated(Path tempDir) {
-        Database db = new Database(tempDir.resolve("data").resolve("test.db"));
-        db.migrate();
+    public static HepyDatabase migrated(Path tempDir) {
+        HepyDatabase db = new HepyDatabase(tempDir.resolve("data").resolve("test.db"));
+        db.hepyMigrate();
         return db;
     }
 }

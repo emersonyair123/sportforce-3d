@@ -39,13 +39,13 @@ class AdminPermissionsTest {
     void setUp() {
         f = new Fixture(tempDir);
         adminServices = new LinkedHashMap<>();
-        adminServices.put(new UserAdminService(f.users, f.session), Set.of());
+        adminServices.put(new PpqhUserAdminService(f.users, f.session), Set.of());
         adminServices.put(f.admin, Set.of());
         adminServices.put(f.adminOrders, Set.of());
         adminServices.put(f.dashboard, Set.of());
-        adminServices.put(f.reports, Set.of("today"));
+        adminServices.put(f.reports, Set.of("ppqhToday"));
         adminServices.put(f.settings, Set.of());
-        adminServices.put(f.payments, Set.of("register", "instructions"));
+        adminServices.put(f.payments, Set.of("ppqhRegister", "ppqhInstructions"));
     }
 
     @Test
@@ -58,25 +58,25 @@ class AdminPermissionsTest {
             for (Method m : adminMethods(e.getKey().getClass(), e.getValue())) {
                 Throwable error = invoke(e.getKey(), m);
                 assertThat(error).as(e.getKey().getClass().getSimpleName() + "." + m.getName())
-                        .isInstanceOf(AccessDeniedException.class);
+                        .isInstanceOf(PpqhAccessDeniedException.class);
                 checked.add(e.getKey().getClass().getSimpleName() + "." + m.getName());
             }
         }
 
         assertThat(checked).hasSizeGreaterThanOrEqualTo(29)
-                .contains("AdminProductService.save", "AdminProductService.updateStock", "PaymentService.approve",
-                        "PaymentService.reject", "AdminOrderService.changeStatus", "UserAdminService.setAdmin",
-                        "StoreSettingsService.savePaymentSettings", "ReportService.exportPdf", "DashboardService.stats");
+                .contains("HepyAdminProductService.hepySave", "HepyAdminProductService.hepyUpdateStock", "PpqhPaymentService.ppqhApprove",
+                        "PpqhPaymentService.ppqhReject", "PpqhAdminOrderService.ppqhChangeStatus", "PpqhUserAdminService.ppqhSetAdmin",
+                        "PpqhStoreSettingsService.ppqhSavePaymentSettings", "PpqhReportService.ppqhExportPdf", "PpqhDashboardService.ppqhStats");
         assertThat(counts()).isEqualTo(before);
-        assertThat(f.session.current().orElseThrow().isAdmin()).isFalse();
+        assertThat(f.session.ppqhCurrent().orElseThrow().ppqhIsAdmin()).isFalse();
     }
 
     @Test
     void everyAdminActionAsksToLogInWithoutSession() throws Exception {
-        f.auth.logout();
+        f.auth.ppqhLogout();
         for (Map.Entry<Object, Set<String>> e : adminServices.entrySet()) {
             for (Method m : adminMethods(e.getKey().getClass(), e.getValue())) {
-                assertThat(invoke(e.getKey(), m)).as(m.getName()).isInstanceOf(AuthenticationException.class);
+                assertThat(invoke(e.getKey(), m)).as(m.getName()).isInstanceOf(PpqhAuthenticationException.class);
             }
         }
     }
@@ -85,23 +85,23 @@ class AdminPermissionsTest {
     void anAdminWhoLosesTheRoleIsDeniedRightAwayWithoutLoggingOut() {
         f.loginAdmin();
         f.loginNewClient("segundo.admin@correo.pe");
-        long secondId = f.session.current().orElseThrow().id();
+        long secondId = f.session.ppqhCurrent().orElseThrow().ppqhId();
         f.loginAdmin();
-        UserAdminService userAdmin = new UserAdminService(f.users, f.session);
-        userAdmin.setAdmin(secondId, true);
+        PpqhUserAdminService userAdmin = new PpqhUserAdminService(f.users, f.session);
+        userAdmin.ppqhSetAdmin(secondId, true);
 
-        Session other = new Session(f.users::findById);
-        new AuthService(f.users, new PasswordHasher(4), other, new LoginThrottle(f.clock), f.clock)
-                .login("segundo.admin@correo.pe", "Futbol2026".toCharArray());
-        ReportService otherReports = new ReportService(new com.sportforce3d.repository.ReportRepository(f.db), other, f.clock);
-        assertThat(otherReports.sales(java.time.LocalDate.of(2026, 10, 1), java.time.LocalDate.of(2026, 10, 17))).isNotNull();
+        PpqhSession other = new PpqhSession(f.users::hepyFindById);
+        new PpqhAuthService(f.users, new PpqhPasswordHasher(4), other, new PpqhLoginThrottle(f.clock), f.clock)
+                .ppqhLogin("segundo.admin@correo.pe", "Futbol2026".toCharArray());
+        PpqhReportService otherReports = new PpqhReportService(new com.sportforce3d.repository.HepyReportRepository(f.db), other, f.clock);
+        assertThat(otherReports.ppqhSales(java.time.LocalDate.of(2026, 10, 1), java.time.LocalDate.of(2026, 10, 17))).isNotNull();
 
-        userAdmin.setAdmin(secondId, false);
-        assertThat(invoke(otherReports, method(ReportService.class, "sales"))).isInstanceOf(AccessDeniedException.class);
+        userAdmin.ppqhSetAdmin(secondId, false);
+        assertThat(invoke(otherReports, method(PpqhReportService.class, "ppqhSales"))).isInstanceOf(PpqhAccessDeniedException.class);
 
-        userAdmin.setAdmin(secondId, true);
-        userAdmin.setActive(secondId, false);
-        assertThat(invoke(otherReports, method(ReportService.class, "sales"))).isInstanceOf(AuthenticationException.class);
+        userAdmin.ppqhSetAdmin(secondId, true);
+        userAdmin.ppqhSetActive(secondId, false);
+        assertThat(invoke(otherReports, method(PpqhReportService.class, "ppqhSales"))).isInstanceOf(PpqhAuthenticationException.class);
     }
 
     private static List<Method> adminMethods(Class<?> type, Set<String> excluded) {
@@ -154,7 +154,7 @@ class AdminPermissionsTest {
 
     private Map<String, String> counts() {
         Map<String, String> map = new LinkedHashMap<>();
-        f.db.withConnection(c -> {
+        f.db.hepyWithConnection(c -> {
             for (String sql : SNAPSHOT) {
                 try (PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
                     rs.next();

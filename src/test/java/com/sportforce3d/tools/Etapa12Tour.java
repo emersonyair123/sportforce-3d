@@ -1,15 +1,15 @@
 package com.sportforce3d.tools;
 
-import com.sportforce3d.app.AppContext;
-import com.sportforce3d.app.Fonts;
-import com.sportforce3d.app.Routes;
-import com.sportforce3d.app.SportForceApp;
-import com.sportforce3d.app.UiSettings;
-import com.sportforce3d.component.SfButton;
-import com.sportforce3d.component.SfTextField;
-import com.sportforce3d.config.AppConfig;
-import com.sportforce3d.db.Database;
-import com.sportforce3d.three.Png;
+import com.sportforce3d.app.PpqhAppContext;
+import com.sportforce3d.app.PpqhFonts;
+import com.sportforce3d.app.PpqhRoutes;
+import com.sportforce3d.app.PpqhSportForceApp;
+import com.sportforce3d.app.PpqhUiSettings;
+import com.sportforce3d.component.PpqhSfButton;
+import com.sportforce3d.component.PpqhSfTextField;
+import com.sportforce3d.config.PpqhAppConfig;
+import com.sportforce3d.db.HepyDatabase;
+import com.sportforce3d.three.PgeyPng;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -33,7 +33,7 @@ public final class Etapa12Tour {
     private static final int H = 900;
 
     private final Path out;
-    private AppContext context;
+    private PpqhAppContext context;
     private Stage stage;
 
     private final String mode;
@@ -58,15 +58,15 @@ public final class Etapa12Tour {
     private void run() throws Exception {
         Files.createDirectories(out);
         Path data = Files.createTempDirectory("sf-etapa12");
-        Database.deleteFiles(data.resolve("tour.db"));
+        HepyDatabase.hepyDeleteFiles(data.resolve("tour.db"));
         fx(() -> {
-            Fonts.loadAll();
-            UiSettings settings = new UiSettings(Preferences.userRoot().node("com/sportforce3d-tour"));
+            PpqhFonts.ppqhLoadAll();
+            PpqhUiSettings settings = new PpqhUiSettings(Preferences.userRoot().node("com/sportforce3d-tour"));
             settings.reduceMotionProperty().set(true);
-            context = new AppContext(new AppConfig(data.resolve("tour.db")), settings);
-            context.database().migrate();
+            context = new PpqhAppContext(new PpqhAppConfig(data.resolve("tour.db")), settings);
+            context.ppqhDatabase().hepyMigrate();
             stage = new Stage();
-            SportForceApp.openMainWindow(stage, context);
+            PpqhSportForceApp.ppqhOpenMainWindow(stage, context);
             stage.setWidth(W);
             stage.setHeight(H);
             stage.show();
@@ -92,12 +92,12 @@ public final class Etapa12Tour {
     }
 
     private void tourA() throws Exception {
-        go(Routes.CATALOG, new Routes.CatalogParams(null, null));
+        go(PpqhRoutes.PPQH_CATALOG, new PpqhRoutes.PpqhCatalogParams(null, null));
         pause(3500);
         shot("12a-01-catalogo");
         for (int page = 1; page <= 20; page++) {
             resultsShot(String.format("12a-%02d-catalogo-completo-pagina-%d", page + 1, page));
-            SfButton next = fx(() -> nextPage());
+            PpqhSfButton next = fx(() -> nextPage());
             if (next == null) {
                 break;
             }
@@ -111,12 +111,12 @@ public final class Etapa12Tour {
 
     private void tourB() throws Exception {
         int n = 1;
-        for (com.sportforce3d.model.Category c : fx(() -> context.catalogService().categories())) {
-            go(Routes.CATALOG, new Routes.CatalogParams(null, c.id()));
+        for (com.sportforce3d.model.HepyCategory c : fx(() -> context.ppqhCatalogService().hepyCategories())) {
+            go(PpqhRoutes.PPQH_CATALOG, new PpqhRoutes.PpqhCatalogParams(null, c.hepyId()));
             pause(3500);
             for (int page = 1; page <= 10; page++) {
-                resultsShot(String.format("12b-%02d-catalogo-%s%s", n++, c.slug(), page == 1 ? "" : "-pagina-" + page));
-                SfButton next = fx(this::nextPage);
+                resultsShot(String.format("12b-%02d-catalogo-%s%s", n++, c.hepySlug(), page == 1 ? "" : "-pagina-" + page));
+                PpqhSfButton next = fx(this::nextPage);
                 if (next == null) {
                     break;
                 }
@@ -129,11 +129,11 @@ public final class Etapa12Tour {
         }
         n = 20;
         for (String sku : new String[]{"SF-UFU-003", "SF-ZAP-003", "SF-ACC-003", "SF-BUZ-002", "SF-ENT-002"}) {
-            go(Routes.PRODUCT, productId(sku));
+            go(PpqhRoutes.PPQH_PRODUCT, productId(sku));
             pause(3500);
             shot(String.format("12b-%02d-ficha-%s", n++, sku.toLowerCase(java.util.Locale.ROOT)));
         }
-        go(Routes.DESIGNER, new Routes.DesignerParams(null, null, productId("SF-UFU-003")));
+        go(PpqhRoutes.PPQH_DESIGNER, new PpqhRoutes.PpqhDesignerParams(null, null, productId("SF-UFU-003")));
         pause(5000);
         fx(() -> {
             field("Nombre (espalda)").setText("QUISPE");
@@ -142,7 +142,7 @@ public final class Etapa12Tour {
         });
         pause(3000);
         shot("12b-30-disenador-arquero");
-        go(Routes.DESIGNER, new Routes.DesignerParams(null, null, productId("SF-ENT-002")));
+        go(PpqhRoutes.PPQH_DESIGNER, new PpqhRoutes.PpqhDesignerParams(null, null, productId("SF-ENT-002")));
         pause(5000);
         fx(() -> {
             field("Número (0–99)").setText("7");
@@ -151,23 +151,23 @@ public final class Etapa12Tour {
         pause(3000);
         shot("12b-31-disenador-compresion");
         fx(() -> {
-            context.navigator().logout();
+            context.ppqhNavigator().ppqhLogout();
             return null;
         });
         pause(800);
         login("admin@sportforce3d.pe", "Admin123!");
-        go(Routes.ADMIN_PRODUCT_EDIT, productId("SF-ZAP-003"));
+        go(PpqhRoutes.PPQH_ADMIN_PRODUCT_EDIT, productId("SF-ZAP-003"));
         pause(3500);
         nodeShot("#content", "12b-40-admin-zapatilla-running");
     }
 
     private void tourC() throws Exception {
         long id = productId("SF-ZAP-003");
-        go(Routes.ADMIN_PRODUCT_EDIT, id);
+        go(PpqhRoutes.PPQH_ADMIN_PRODUCT_EDIT, id);
         pause(3500);
         nodeShot("#content", "12b-50-admin-suela-antes");
         fx(() -> {
-            SfTextField hex = zoneHex("SUELA");
+            PpqhSfTextField hex = zoneHex("SUELA");
             hex.getInput().requestFocus();
             hex.getInput().setText("#D7192A");
             hex.getInput().fireEvent(new javafx.event.ActionEvent());
@@ -181,7 +181,7 @@ public final class Etapa12Tour {
         });
         pause(3500);
         shot("12b-52-admin-guardado");
-        String saved = fx(() -> context.database().withConnection(c -> {
+        String saved = fx(() -> context.ppqhDatabase().hepyWithConnection(c -> {
             try (var ps = c.prepareStatement("SELECT zone_colors FROM products WHERE id = ?")) {
                 ps.setLong(1, id);
                 try (var rs = ps.executeQuery()) {
@@ -195,32 +195,32 @@ public final class Etapa12Tour {
             throw new IllegalStateException("La suela no se guardó: " + saved);
         }
         fx(() -> {
-            context.navigator().logout();
+            context.ppqhNavigator().ppqhLogout();
             return null;
         });
         pause(800);
         login("cliente@sportforce3d.pe", "Cliente123!");
-        long zapatillas = fx(() -> context.catalogService().categories().stream()
-                .filter(c -> c.slug().equals("zapatillas")).findFirst().orElseThrow().id());
-        go(Routes.CATALOG, new Routes.CatalogParams(null, zapatillas));
+        long zapatillas = fx(() -> context.ppqhCatalogService().hepyCategories().stream()
+                .filter(c -> c.hepySlug().equals("zapatillas")).findFirst().orElseThrow().hepyId());
+        go(PpqhRoutes.PPQH_CATALOG, new PpqhRoutes.PpqhCatalogParams(null, zapatillas));
         pause(3500);
         resultsShot("12b-53-catalogo-suela-roja");
-        go(Routes.PRODUCT, id);
+        go(PpqhRoutes.PPQH_PRODUCT, id);
         pause(3500);
         shot("12b-54-ficha-suela-roja");
     }
 
-    private SfTextField zoneHex(String zoneLabel) {
+    private PpqhSfTextField zoneHex(String zoneLabel) {
         for (Node n : stage.getScene().getRoot().lookupAll(".label")) {
             if (n instanceof javafx.scene.control.Label l && zoneLabel.equals(l.getText())) {
-                return (SfTextField) l.getParent().lookup(".sf-field");
+                return (PpqhSfTextField) l.getParent().lookup(".sf-field");
             }
         }
         throw new IllegalStateException("No hay zona " + zoneLabel);
     }
 
     private long productId(String sku) throws Exception {
-        return fx(() -> context.database().withConnection(c -> {
+        return fx(() -> context.ppqhDatabase().hepyWithConnection(c -> {
             try (var ps = c.prepareStatement("SELECT id FROM products WHERE sku = ?")) {
                 ps.setString(1, sku);
                 try (var rs = ps.executeQuery()) {
@@ -246,9 +246,9 @@ public final class Etapa12Tour {
         }
     }
 
-    private SfButton nextPage() {
+    private PpqhSfButton nextPage() {
         for (Node n : stage.getScene().getRoot().lookupAll(".sf-btn")) {
-            if (n instanceof SfButton b && !b.isDisabled() && b.isVisible()
+            if (n instanceof PpqhSfButton b && !b.isDisabled() && b.isVisible()
                     && ("Página siguiente".equals(b.getAccessibleText()) || "Siguiente".equalsIgnoreCase(b.getText()))) {
                 return b;
             }
@@ -258,8 +258,8 @@ public final class Etapa12Tour {
 
     private void login(String email, String password) throws Exception {
         fx(() -> {
-            if (!context.session().isAuthenticated()) {
-                context.navigator().showLogin();
+            if (!context.ppqhSession().ppqhIsAuthenticated()) {
+                context.ppqhNavigator().ppqhShowLogin();
             }
             return null;
         });
@@ -275,7 +275,7 @@ public final class Etapa12Tour {
 
     private void go(String route, Object param) throws Exception {
         fx(() -> {
-            context.router().go(route, param);
+            context.ppqhRouter().ppqhGo(route, param);
             return null;
         });
         pause(1300);
@@ -302,13 +302,13 @@ public final class Etapa12Tour {
 
     private void save(WritableImage img, String name) throws Exception {
         Path file = out.resolve(name + ".png");
-        Png.write(img, file);
+        PgeyPng.pgeyWrite(img, file);
         System.out.println("Captura: " + file);
     }
 
-    private SfTextField field(String label) {
+    private PpqhSfTextField field(String label) {
         for (Node n : stage.getScene().getRoot().lookupAll(".sf-field")) {
-            if (n instanceof SfTextField f && f.lookupAll(".sf-field-label").stream()
+            if (n instanceof PpqhSfTextField f && f.lookupAll(".sf-field-label").stream()
                     .anyMatch(l -> l instanceof Labeled ll && ll.getText().equalsIgnoreCase(label))) {
                 return f;
             }
@@ -316,21 +316,21 @@ public final class Etapa12Tour {
         throw new IllegalStateException("No hay campo " + label);
     }
 
-    private SfButton button(String text) {
-        SfButton found = find(stage.getScene().getRoot(), text);
+    private PpqhSfButton button(String text) {
+        PpqhSfButton found = find(stage.getScene().getRoot(), text);
         if (found == null) {
             throw new IllegalStateException("No hay botón " + text);
         }
         return found;
     }
 
-    private static SfButton find(Node node, String text) {
-        if (node instanceof SfButton b && text.equalsIgnoreCase(b.getText())) {
+    private static PpqhSfButton find(Node node, String text) {
+        if (node instanceof PpqhSfButton b && text.equalsIgnoreCase(b.getText())) {
             return b;
         }
         if (node instanceof Parent p) {
             for (Node child : p.getChildrenUnmodifiable()) {
-                SfButton f = find(child, text);
+                PpqhSfButton f = find(child, text);
                 if (f != null) {
                     return f;
                 }

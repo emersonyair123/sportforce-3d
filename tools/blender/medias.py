@@ -2,110 +2,110 @@ import math
 
 import numpy as np
 
-from cuerpo import hull2d, radio_polar
-from malla import Malla, isla
+from cuerpo import pgeyHull2d, pgeyRadioPolar
+from malla import PgeyMalla, pgeyIsla
 
-ZONAS = ["socks_leg", "socks_band"]
-
-
-class Corte:
-    arista = 0.012
-    alto_media = 0.253
-    alto_banda = 0.029
-    tobillo = 0.075
-    fondo = 0.03
-    holgura = 0.0030
-    holgura_pie = 0.0065
-    holgura_banda = 0.0065
-    alto_ref = None
+PGEY_ZONAS = ["socks_leg", "socks_band"]
 
 
-def _alturas(c, corte, alto_media):
-    e = corte.arista
-    h, s0 = c.alto, c.suelo
-    y_top = s0 + alto_media * h
-    y_banda = y_top - corte.alto_banda * h
-    y_tob = s0 + corte.tobillo * h
-    y_fin = s0 + corte.fondo * h
-    n_leg = max(8, round((y_banda - y_tob) / e))
-    n_pie = max(4, round((y_tob - y_fin) / (e / 2)))
-    return ([y_top - (y_top - y_banda) * i / 3 for i in range(3)]
-            + [y_banda - (y_banda - y_tob) * i / n_leg for i in range(n_leg)]
-            + [y_tob - (y_tob - y_fin) * i / n_pie for i in range(n_pie + 1)])
+class PgeyCorte:
+    pgeyArista = 0.012
+    pgeyAltoMedia = 0.253
+    pgeyAltoBanda = 0.029
+    pgeyTobillo = 0.075
+    pgeyFondo = 0.03
+    pgeyHolgura = 0.0030
+    pgeyHolguraPie = 0.0065
+    pgeyHolguraBanda = 0.0065
+    pgeyAltoRef = None
 
 
-def construir(c, corte=Corte):
-    e = corte.arista
-    h, s0 = c.alto, c.suelo
-    y_top = s0 + corte.alto_media * h
-    y_banda = y_top - corte.alto_banda * h
-    y_tob = s0 + corte.tobillo * h
-    y_fin = s0 + corte.fondo * h
-    m = Malla(ZONAS)
-    datos = {"bordes": {}}
-    for lado in (1, -1):
-        secciones = {}
+def _pgeyAlturas(pgeyC, pgeyCorte, pgeyAltoMedia):
+    pgeyE = pgeyCorte.pgeyArista
+    pgeyH, pgeyS0 = pgeyC.pgeyAlto, pgeyC.pgeySuelo
+    pgeyYTop = pgeyS0 + pgeyAltoMedia * pgeyH
+    pgeyYBanda = pgeyYTop - pgeyCorte.pgeyAltoBanda * pgeyH
+    pgeyYTob = pgeyS0 + pgeyCorte.pgeyTobillo * pgeyH
+    pgeyYFin = pgeyS0 + pgeyCorte.pgeyFondo * pgeyH
+    pgeyNLeg = max(8, round((pgeyYBanda - pgeyYTob) / pgeyE))
+    pgeyNPie = max(4, round((pgeyYTob - pgeyYFin) / (pgeyE / 2)))
+    return ([pgeyYTop - (pgeyYTop - pgeyYBanda) * pgeyI / 3 for pgeyI in range(3)]
+            + [pgeyYBanda - (pgeyYBanda - pgeyYTob) * pgeyI / pgeyNLeg for pgeyI in range(pgeyNLeg)]
+            + [pgeyYTob - (pgeyYTob - pgeyYFin) * pgeyI / pgeyNPie for pgeyI in range(pgeyNPie + 1)])
 
-        def corte_en(y):
-            clave = round(y / 0.003)
-            if clave not in secciones:
-                p = c.pierna_corte(clave * 0.003, lado)
-                hull = hull2d(p)
-                centro = np.array(((hull[:, 0].max() + hull[:, 0].min()) / 2,
-                                   (hull[:, 1].max() + hull[:, 1].min()) / 2))
-                secciones[clave] = (hull, centro)
-            return secciones[clave]
 
-        def seccion(y):
-            if y >= y_tob:
-                return corte_en(y)
-            hull_t, centro_t = corte_en(y_tob)
-            p = c.pierna_corte(y, lado)
-            if len(p) < 3:
-                return hull_t, centro_t
-            return hull2d(np.concatenate((hull_t, p))), centro_t
+def pgeyConstruir(pgeyC, pgeyCorte=PgeyCorte):
+    pgeyE = pgeyCorte.pgeyArista
+    pgeyH, pgeyS0 = pgeyC.pgeyAlto, pgeyC.pgeySuelo
+    pgeyYTop = pgeyS0 + pgeyCorte.pgeyAltoMedia * pgeyH
+    pgeyYBanda = pgeyYTop - pgeyCorte.pgeyAltoBanda * pgeyH
+    pgeyYTob = pgeyS0 + pgeyCorte.pgeyTobillo * pgeyH
+    pgeyYFin = pgeyS0 + pgeyCorte.pgeyFondo * pgeyH
+    pgeyM = PgeyMalla(PGEY_ZONAS)
+    pgeyDatos = {"bordes": {}}
+    for pgeyLado in (1, -1):
+        pgeySecciones = {}
 
-        hull, centro = seccion(y_top)
-        circ = float(np.sum(np.linalg.norm(np.diff(np.vstack((hull, hull[:1])), axis=0), axis=1)))
-        cols = max(24, 2 * round(circ / e / 2))
-        ys = _alturas(c, corte, corte.alto_media)
-        if corte.alto_ref is None:
-            v_cana = [(fi - 3) / (len(ys) - 4) for fi in range(len(ys))]
+        def pgeyCorteEn(pgeyY):
+            pgeyClave = round(pgeyY / 0.003)
+            if pgeyClave not in pgeySecciones:
+                pgeyP = pgeyC.pgeyPiernaCorte(pgeyClave * 0.003, pgeyLado)
+                pgeyHull = pgeyHull2d(pgeyP)
+                pgeyCentro = np.array(((pgeyHull[:, 0].max() + pgeyHull[:, 0].min()) / 2,
+                                   (pgeyHull[:, 1].max() + pgeyHull[:, 1].min()) / 2))
+                pgeySecciones[pgeyClave] = (pgeyHull, pgeyCentro)
+            return pgeySecciones[pgeyClave]
+
+        def pgeySeccion(pgeyY):
+            if pgeyY >= pgeyYTob:
+                return pgeyCorteEn(pgeyY)
+            pgeyHullT, pgeyCentroT = pgeyCorteEn(pgeyYTob)
+            pgeyP = pgeyC.pgeyPiernaCorte(pgeyY, pgeyLado)
+            if len(pgeyP) < 3:
+                return pgeyHullT, pgeyCentroT
+            return pgeyHull2d(np.concatenate((pgeyHullT, pgeyP))), pgeyCentroT
+
+        pgeyHull, pgeyCentro = pgeySeccion(pgeyYTop)
+        pgeyCirc = float(np.sum(np.linalg.norm(np.diff(np.vstack((pgeyHull, pgeyHull[:1])), axis=0), axis=1)))
+        pgeyCols = max(24, 2 * round(pgeyCirc / pgeyE / 2))
+        pgeyYs = _pgeyAlturas(pgeyC, pgeyCorte, pgeyCorte.pgeyAltoMedia)
+        if pgeyCorte.pgeyAltoRef is None:
+            pgeyVCana = [(pgeyFi - 3) / (len(pgeyYs) - 4) for pgeyFi in range(len(pgeyYs))]
         else:
-            ref = _alturas(c, corte, corte.alto_ref)[3:]
-            v_ref = [i / (len(ref) - 1) for i in range(len(ref))]
-            v_cana = [float(np.interp(y, ref[::-1], v_ref[::-1])) for y in ys]
-        angs = [2 * math.pi * k / cols for k in range(cols)]
-        filas = []
-        for y in ys:
-            hull, centro = seccion(y)
-            rad = radio_polar(hull, centro, [a if lado > 0 else -a for a in angs])
-            hol = corte.holgura_banda if y > y_banda + 1e-6 else corte.holgura if y >= y_tob else corte.holgura_pie
-            fila = []
-            for a, r in zip(angs, rad):
-                x = centro[0] + lado * math.sin(a) * (r + hol)
-                z = centro[1] + math.cos(a) * (r + hol)
-                fila.append(m.vert((x, y, z)))
-            filas.append(fila)
-        isla_l = "media_izq" if lado > 0 else "media_der"
-        isla_b = "banda_izq" if lado > 0 else "banda_der"
-        for i in range(len(filas) - 1):
-            banda = i < 3
-            for k in range(cols):
-                k2 = (k + 1) % cols
-                us = (k / cols, 1.0 if k2 == 0 else k2 / cols)
-                esquinas = [(i, k, us[0]), (i + 1, k, us[0]), (i + 1, k2, us[1]), (i, k2, us[1])]
-                if lado < 0:
-                    esquinas = esquinas[::-1]
-                uv = []
-                for fi, _, u in esquinas:
-                    if banda:
-                        uv.append(isla(isla_b, u, (3 - fi) / 3 * 0.8))
+            pgeyRef = _pgeyAlturas(pgeyC, pgeyCorte, pgeyCorte.pgeyAltoRef)[3:]
+            pgeyVRef = [pgeyI / (len(pgeyRef) - 1) for pgeyI in range(len(pgeyRef))]
+            pgeyVCana = [float(np.interp(pgeyY, pgeyRef[::-1], pgeyVRef[::-1])) for pgeyY in pgeyYs]
+        pgeyAngs = [2 * math.pi * pgeyK / pgeyCols for pgeyK in range(pgeyCols)]
+        pgeyFilas = []
+        for pgeyY in pgeyYs:
+            pgeyHull, pgeyCentro = pgeySeccion(pgeyY)
+            pgeyRad = pgeyRadioPolar(pgeyHull, pgeyCentro, [pgeyA if pgeyLado > 0 else -pgeyA for pgeyA in pgeyAngs])
+            pgeyHol = pgeyCorte.pgeyHolguraBanda if pgeyY > pgeyYBanda + 1e-6 else pgeyCorte.pgeyHolgura if pgeyY >= pgeyYTob else pgeyCorte.pgeyHolguraPie
+            pgeyFila = []
+            for pgeyA, pgeyR in zip(pgeyAngs, pgeyRad):
+                pgeyX = pgeyCentro[0] + pgeyLado * math.sin(pgeyA) * (pgeyR + pgeyHol)
+                pgeyZ = pgeyCentro[1] + math.cos(pgeyA) * (pgeyR + pgeyHol)
+                pgeyFila.append(pgeyM.pgeyVert((pgeyX, pgeyY, pgeyZ)))
+            pgeyFilas.append(pgeyFila)
+        pgeyIslaL = "media_izq" if pgeyLado > 0 else "media_der"
+        pgeyIslaB = "banda_izq" if pgeyLado > 0 else "banda_der"
+        for pgeyI in range(len(pgeyFilas) - 1):
+            pgeyBanda = pgeyI < 3
+            for pgeyK in range(pgeyCols):
+                pgeyK2 = (pgeyK + 1) % pgeyCols
+                pgeyUs = (pgeyK / pgeyCols, 1.0 if pgeyK2 == 0 else pgeyK2 / pgeyCols)
+                pgeyEsquinas = [(pgeyI, pgeyK, pgeyUs[0]), (pgeyI + 1, pgeyK, pgeyUs[0]), (pgeyI + 1, pgeyK2, pgeyUs[1]), (pgeyI, pgeyK2, pgeyUs[1])]
+                if pgeyLado < 0:
+                    pgeyEsquinas = pgeyEsquinas[::-1]
+                pgeyUv = []
+                for pgeyFi, _, pgeyU in pgeyEsquinas:
+                    if pgeyBanda:
+                        pgeyUv.append(pgeyIsla(pgeyIslaB, pgeyU, (3 - pgeyFi) / 3 * 0.8))
                     else:
-                        uv.append(isla(isla_l, u, v_cana[fi]))
-                m.cara([filas[fi][kk] for fi, kk, _ in esquinas], uv, "socks_band" if banda else "socks_leg")
-        for fi in (0, 1):
-            for v in filas[fi]:
-                m.peso("doble", v, 1.0)
-        datos["bordes"][lado] = filas[0]
-    return m, datos
+                        pgeyUv.append(pgeyIsla(pgeyIslaL, pgeyU, pgeyVCana[pgeyFi]))
+                pgeyM.pgeyCara([pgeyFilas[pgeyFi][pgeyKk] for pgeyFi, pgeyKk, _ in pgeyEsquinas], pgeyUv, "socks_band" if pgeyBanda else "socks_leg")
+        for pgeyFi in (0, 1):
+            for pgeyV in pgeyFilas[pgeyFi]:
+                pgeyM.pgeyPeso("doble", pgeyV, 1.0)
+        pgeyDatos["bordes"][pgeyLado] = pgeyFilas[0]
+    return pgeyM, pgeyDatos

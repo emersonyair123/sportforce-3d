@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.sportforce3d.component.SfButton?>
+<?import com.sportforce3d.component.PpqhSfButton?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
@@ -8,46 +8,46 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox fx:id="root" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.sportforce3d.view.DesignerController" styleClass="sf-page">
+<HBox fx:id="pgeyRoot" id="root" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.sportforce3d.view.PgeyDesignerController" styleClass="sf-page">
 
-    <StackPane fx:id="stage" HBox.hgrow="ALWAYS" styleClass="sf-designer-stage">
-        <HBox fx:id="toolbar" styleClass="sf-designer-toolbar" StackPane.alignment="TOP_CENTER"
+    <StackPane fx:id="pgeyStage" id="stage" HBox.hgrow="ALWAYS" styleClass="sf-designer-stage">
+        <HBox fx:id="pgeyToolbar" id="toolbar" styleClass="sf-designer-toolbar" StackPane.alignment="TOP_CENTER"
               maxWidth="-Infinity" maxHeight="-Infinity">
             <StackPane.margin><Insets top="16"/></StackPane.margin>
         </HBox>
-        <HBox fx:id="draftBanner" styleClass="sf-draft-banner" StackPane.alignment="TOP_CENTER" spacing="12"
+        <HBox fx:id="pgeyDraftBanner" id="draftBanner" styleClass="sf-draft-banner" StackPane.alignment="TOP_CENTER" spacing="12"
               maxWidth="-Infinity" maxHeight="-Infinity" visible="false" managed="false">
             <StackPane.margin><Insets top="72"/></StackPane.margin>
         </HBox>
-        <Label fx:id="hint" styleClass="sf-designer-hint" StackPane.alignment="BOTTOM_LEFT" wrapText="true"
+        <Label fx:id="pgeyHint" id="hint" styleClass="sf-designer-hint" StackPane.alignment="BOTTOM_LEFT" wrapText="true"
                text="Arrastra para girar · rueda para acercar · arrastra un nombre, número o emblema para moverlo · Ctrl+Z / Ctrl+Y">
             <StackPane.margin><Insets left="20" right="20" bottom="16"/></StackPane.margin>
         </Label>
-        <VBox fx:id="loadingBox" styleClass="sf-designer-loading" alignment="CENTER" spacing="8"
+        <VBox fx:id="pgeyLoadingBox" id="loadingBox" styleClass="sf-designer-loading" alignment="CENTER" spacing="8"
               maxWidth="-Infinity" maxHeight="-Infinity">
-            <Label fx:id="loadingLabel" text="Generando maniquí 3D…" styleClass="body-s, ink-muted"/>
+            <Label fx:id="pgeyLoadingLabel" id="loadingLabel" text="Generando maniquí 3D…" styleClass="body-s, ink-muted"/>
         </VBox>
     </StackPane>
 
     <VBox minWidth="360" prefWidth="360" maxWidth="360" styleClass="sf-band, sf-designer-side">
         <VBox spacing="4" styleClass="sf-designer-head">
             <Label text="DISEÑADOR" styleClass="display-l, ink"/>
-            <Label fx:id="nameLabel" styleClass="body-s, ink-muted" wrapText="true" minHeight="-Infinity"/>
+            <Label fx:id="pgeyNameLabel" id="nameLabel" styleClass="body-s, ink-muted" wrapText="true" minHeight="-Infinity"/>
         </VBox>
         <VBox styleClass="sf-designer-tabs" spacing="10">
-            <HBox fx:id="viewTabs" styleClass="sf-seg" spacing="4"/>
-            <HBox fx:id="tabs" styleClass="sf-seg" spacing="4"/>
+            <HBox fx:id="pgeyViewTabs" id="viewTabs" styleClass="sf-seg" spacing="4"/>
+            <HBox fx:id="pgeyTabs" id="tabs" styleClass="sf-seg" spacing="4"/>
         </VBox>
-        <ScrollPane fx:id="scroll" fitToWidth="true" hbarPolicy="NEVER" VBox.vgrow="ALWAYS" styleClass="sf-band">
-            <VBox fx:id="panel" spacing="24" styleClass="sf-designer-panel">
+        <ScrollPane fx:id="pgeyScroll" id="scroll" fitToWidth="true" hbarPolicy="NEVER" VBox.vgrow="ALWAYS" styleClass="sf-band">
+            <VBox fx:id="pgeyPanel" id="panel" spacing="24" styleClass="sf-designer-panel">
                 <padding><Insets top="20" right="24" bottom="24" left="24"/></padding>
             </VBox>
         </ScrollPane>
         <VBox spacing="10" styleClass="sf-designer-footer">
-            <VBox fx:id="priceBox" spacing="4"/>
-            <SfButton fx:id="saveButton" text="Guardar diseño" variant="ACCENT" size="MD" maxWidth="Infinity"/>
-            <SfButton fx:id="cartButton" text="Agregar al carrito" variant="PRIMARY" size="MD" maxWidth="Infinity"/>
+            <VBox fx:id="pgeyPriceBox" id="priceBox" spacing="4"/>
+            <PpqhSfButton fx:id="pgeySaveButton" id="saveButton" text="Guardar diseño" variant="ACCENT" size="MD" maxWidth="Infinity"/>
+            <PpqhSfButton fx:id="pgeyCartButton" id="cartButton" text="Agregar al carrito" variant="PRIMARY" size="MD" maxWidth="Infinity"/>
         </VBox>
     </VBox>
 </HBox>

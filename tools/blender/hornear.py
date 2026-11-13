@@ -1,71 +1,71 @@
 import bpy
 
 
-def _imagen(nombre, lado):
-    img = bpy.data.images.get(nombre)
-    if img is not None:
-        bpy.data.images.remove(img)
-    img = bpy.data.images.new(nombre, lado, lado, alpha=False, float_buffer=False)
-    img.colorspace_settings.name = 'Non-Color'
-    return img
+def _pgeyImagen(pgeyNombre, pgeyLado):
+    pgeyImg = bpy.data.images.get(pgeyNombre)
+    if pgeyImg is not None:
+        bpy.data.images.remove(pgeyImg)
+    pgeyImg = bpy.data.images.new(pgeyNombre, pgeyLado, pgeyLado, alpha=False, float_buffer=False)
+    pgeyImg.colorspace_settings.name = 'Non-Color'
+    return pgeyImg
 
 
-def _destino(obj, img):
-    for mat in obj.data.materials:
-        mat.use_nodes = True
-        nodos = mat.node_tree.nodes
-        nodo = nodos.get("Horneado") or nodos.new('ShaderNodeTexImage')
-        nodo.name = "Horneado"
-        nodo.image = img
-        nodos.active = nodo
+def _pgeyDestino(pgeyObj, pgeyImg):
+    for pgeyMat in pgeyObj.data.materials:
+        pgeyMat.use_nodes = True
+        pgeyNodos = pgeyMat.node_tree.nodes
+        pgeyNodo = pgeyNodos.get("Horneado") or pgeyNodos.new('ShaderNodeTexImage')
+        pgeyNodo.name = "Horneado"
+        pgeyNodo.image = pgeyImg
+        pgeyNodos.active = pgeyNodo
 
 
-def _seleccionar(activo, otros=()):
-    for o in bpy.context.selected_objects:
-        o.select_set(False)
-    for o in otros:
-        o.select_set(True)
-    activo.select_set(True)
-    bpy.context.view_layer.objects.active = activo
+def _pgeySeleccionar(pgeyActivo, pgeyOtros=()):
+    for pgeyO in bpy.context.selected_objects:
+        pgeyO.select_set(False)
+    for pgeyO in pgeyOtros:
+        pgeyO.select_set(True)
+    pgeyActivo.select_set(True)
+    bpy.context.view_layer.objects.active = pgeyActivo
 
 
-def preparar(muestras=96, distancia_ao=0.12):
-    sc = bpy.context.scene
-    sc.render.engine = 'CYCLES'
-    sc.cycles.device = 'CPU'
-    sc.cycles.samples = muestras
-    if sc.world is None:
-        sc.world = bpy.data.worlds.new("Mundo")
-    sc.world.light_settings.distance = distancia_ao
-    sc.render.bake.margin = 8
+def pgeyPreparar(pgeyMuestras=96, pgeyDistanciaAo=0.12):
+    pgeySc = bpy.context.scene
+    pgeySc.render.engine = 'CYCLES'
+    pgeySc.cycles.device = 'CPU'
+    pgeySc.cycles.samples = pgeyMuestras
+    if pgeySc.world is None:
+        pgeySc.world = bpy.data.worlds.new("Mundo")
+    pgeySc.world.light_settings.distance = pgeyDistanciaAo
+    pgeySc.render.bake.margin = 8
 
 
-def oclusion(baja, ocultar, ruta, lado=1024):
-    img = _imagen("ao_" + baja.name, lado)
-    _destino(baja, img)
-    previos = [(o, o.hide_render) for o in ocultar]
-    for o in ocultar:
-        o.hide_render = True
-    _seleccionar(baja)
+def pgeyOclusion(pgeyBaja, pgeyOcultar, pgeyRuta, pgeyLado=1024):
+    pgeyImg = _pgeyImagen("ao_" + pgeyBaja.name, pgeyLado)
+    _pgeyDestino(pgeyBaja, pgeyImg)
+    pgeyPrevios = [(pgeyO, pgeyO.hide_render) for pgeyO in pgeyOcultar]
+    for pgeyO in pgeyOcultar:
+        pgeyO.hide_render = True
+    _pgeySeleccionar(pgeyBaja)
     bpy.ops.object.bake(type='AO', margin=8, use_clear=True)
-    for o, h in previos:
-        o.hide_render = h
-    img.filepath_raw = str(ruta)
-    img.file_format = 'PNG'
-    img.save()
-    return img
+    for pgeyO, pgeyH in pgeyPrevios:
+        pgeyO.hide_render = pgeyH
+    pgeyImg.filepath_raw = str(pgeyRuta)
+    pgeyImg.file_format = 'PNG'
+    pgeyImg.save()
+    return pgeyImg
 
 
-def normales(baja, alta, ruta, lado=1024):
+def pgeyNormales(pgeyBaja, pgeyAlta, pgeyRuta, pgeyLado=1024):
 
-    img = _imagen("normal_" + baja.name, lado)
-    _destino(baja, img)
-    alta.hide_render = False
-    _seleccionar(baja, [alta])
+    pgeyImg = _pgeyImagen("normal_" + pgeyBaja.name, pgeyLado)
+    _pgeyDestino(pgeyBaja, pgeyImg)
+    pgeyAlta.hide_render = False
+    _pgeySeleccionar(pgeyBaja, [pgeyAlta])
     bpy.ops.object.bake(type='NORMAL', normal_space='TANGENT', normal_r='POS_X', normal_g='NEG_Y',
                         normal_b='POS_Z', use_selected_to_active=True, cage_extrusion=0.004,
                         max_ray_distance=0.012, margin=8, use_clear=True)
-    img.filepath_raw = str(ruta)
-    img.file_format = 'PNG'
-    img.save()
-    return img
+    pgeyImg.filepath_raw = str(pgeyRuta)
+    pgeyImg.file_format = 'PNG'
+    pgeyImg.save()
+    return pgeyImg

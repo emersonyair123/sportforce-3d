@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.sportforce3d.component.SfButton?>
+<?import com.sportforce3d.component.PpqhSfButton?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.sportforce3d.view.AdminReportsController"
+            fx:controller="com.sportforce3d.view.PpqhAdminReportsController"
             fitToWidth="true" styleClass="sf-page">
     <VBox spacing="24" maxWidth="1180">
         <padding><Insets top="32" right="24" bottom="64" left="24"/></padding>
@@ -26,21 +26,21 @@
             <HBox spacing="16" alignment="BOTTOM_LEFT">
                 <VBox spacing="6">
                     <Label text="DESDE" styleClass="label-text, ink-muted"/>
-                    <DatePicker fx:id="fromPicker" prefWidth="180"/>
+                    <DatePicker fx:id="ppqhFromPicker" id="fromPicker" prefWidth="180"/>
                 </VBox>
                 <VBox spacing="6">
                     <Label text="HASTA" styleClass="label-text, ink-muted"/>
-                    <DatePicker fx:id="toPicker" prefWidth="180"/>
+                    <DatePicker fx:id="ppqhToPicker" id="toPicker" prefWidth="180"/>
                 </VBox>
-                <SfButton fx:id="generateButton" text="Generar reporte" variant="PRIMARY" size="MD"/>
+                <PpqhSfButton fx:id="ppqhGenerateButton" id="generateButton" text="Generar reporte" variant="PRIMARY" size="MD"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <SfButton fx:id="pdfButton" text="Exportar PDF" variant="GHOST" size="MD"/>
-                <SfButton fx:id="excelButton" text="Exportar Excel" variant="GHOST" size="MD"/>
+                <PpqhSfButton fx:id="ppqhPdfButton" id="pdfButton" text="Exportar PDF" variant="GHOST" size="MD"/>
+                <PpqhSfButton fx:id="ppqhExcelButton" id="excelButton" text="Exportar Excel" variant="GHOST" size="MD"/>
             </HBox>
-            <FlowPane fx:id="presets" hgap="6" vgap="6"/>
-            <Label fx:id="rangeError" styleClass="sf-field-error" wrapText="true"/>
+            <FlowPane fx:id="ppqhPresets" id="presets" hgap="6" vgap="6"/>
+            <Label fx:id="ppqhRangeError" id="rangeError" styleClass="sf-field-error" wrapText="true"/>
         </VBox>
 
-        <VBox fx:id="content" spacing="24"/>
+        <VBox fx:id="ppqhContent" id="content" spacing="24"/>
     </VBox>
 </ScrollPane>

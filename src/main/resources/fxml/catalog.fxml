@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.sportforce3d.component.SfButton?>
+<?import com.sportforce3d.component.PpqhSfButton?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
@@ -14,7 +14,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <HBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.sportforce3d.view.CatalogController" styleClass="sf-page">
+      fx:controller="com.sportforce3d.view.HepyCatalogController" styleClass="sf-page">
 
     <ScrollPane fitToWidth="true" minWidth="272" prefWidth="272" maxWidth="272" hbarPolicy="NEVER" styleClass="sf-band">
         <VBox fx:id="filters" spacing="24" styleClass="sf-filters">
@@ -22,55 +22,55 @@
             <HBox alignment="CENTER_LEFT">
                 <Label text="Filtros" styleClass="title-s, ink"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <SfButton fx:id="clearButton" text="Limpiar" variant="GHOST" size="SM"/>
+                <PpqhSfButton fx:id="hepyClearButton" id="clearButton" text="Limpiar" variant="GHOST" size="SM"/>
             </HBox>
 
             <VBox spacing="8">
                 <Label text="CATEGORÍA" styleClass="label-text, ink-muted"/>
-                <FlowPane fx:id="categoryChips" hgap="6" vgap="6"/>
+                <FlowPane fx:id="hepyCategoryChips" id="categoryChips" hgap="6" vgap="6"/>
             </VBox>
             <VBox spacing="8">
                 <Label text="DEPORTE" styleClass="label-text, ink-muted"/>
-                <FlowPane fx:id="sportChips" hgap="6" vgap="6"/>
+                <FlowPane fx:id="hepySportChips" id="sportChips" hgap="6" vgap="6"/>
             </VBox>
             <VBox spacing="8">
                 <Label text="TALLA" styleClass="label-text, ink-muted"/>
-                <VBox fx:id="sizeGroups" spacing="10"/>
+                <VBox fx:id="hepySizeGroups" id="sizeGroups" spacing="10"/>
             </VBox>
             <VBox spacing="8">
                 <Label text="PRECIO (S/)" styleClass="label-text, ink-muted"/>
                 <HBox spacing="8" alignment="CENTER_LEFT">
-                    <TextField fx:id="minPriceField" promptText="Mín." prefWidth="84" styleClass="sf-input-sm"/>
+                    <TextField fx:id="hepyMinPriceField" id="minPriceField" promptText="Mín." prefWidth="84" styleClass="sf-input-sm"/>
                     <Label text="–" styleClass="ink-muted"/>
-                    <TextField fx:id="maxPriceField" promptText="Máx." prefWidth="84" styleClass="sf-input-sm"/>
-                    <SfButton fx:id="applyPriceButton" text="OK" variant="GHOST" size="SM"/>
+                    <TextField fx:id="hepyMaxPriceField" id="maxPriceField" promptText="Máx." prefWidth="84" styleClass="sf-input-sm"/>
+                    <PpqhSfButton fx:id="hepyApplyPriceButton" id="applyPriceButton" text="OK" variant="GHOST" size="SM"/>
                 </HBox>
-                <Label fx:id="priceError" styleClass="sf-field-error" wrapText="true"/>
+                <Label fx:id="hepyPriceError" id="priceError" styleClass="sf-field-error" wrapText="true"/>
             </VBox>
             <VBox spacing="10">
-                <CheckBox fx:id="inStockCheck" text="Solo con stock"/>
-                <CheckBox fx:id="customizableCheck" text="Personalizables en 3D"/>
+                <CheckBox fx:id="hepyInStockCheck" id="inStockCheck" text="Solo con stock"/>
+                <CheckBox fx:id="hepyCustomizableCheck" id="customizableCheck" text="Personalizables en 3D"/>
             </VBox>
         </VBox>
     </ScrollPane>
 
-    <ScrollPane fx:id="resultsScroll" fitToWidth="true" HBox.hgrow="ALWAYS" styleClass="sf-page">
+    <ScrollPane fx:id="hepyResultsScroll" id="resultsScroll" fitToWidth="true" HBox.hgrow="ALWAYS" styleClass="sf-page">
         <VBox spacing="24">
             <padding><Insets top="32" right="24" bottom="48" left="24"/></padding>
-            <Label fx:id="title" text="CATÁLOGO" styleClass="display-l, ink" wrapText="true"/>
+            <Label fx:id="hepyTitle" id="title" text="CATÁLOGO" styleClass="display-l, ink" wrapText="true"/>
             <HBox spacing="12" alignment="CENTER_LEFT">
-                <HBox fx:id="searchBox" styleClass="sf-search" prefWidth="360" HBox.hgrow="SOMETIMES">
-                    <TextField fx:id="searchField" promptText="Buscar en el catálogo" HBox.hgrow="ALWAYS"/>
+                <HBox fx:id="hepySearchBox" id="searchBox" styleClass="sf-search" prefWidth="360" HBox.hgrow="SOMETIMES">
+                    <TextField fx:id="hepySearchField" id="searchField" promptText="Buscar en el catálogo" HBox.hgrow="ALWAYS"/>
                 </HBox>
-                <Label fx:id="countLabel" styleClass="body-s, ink-muted" minWidth="-Infinity"/>
+                <Label fx:id="hepyCountLabel" id="countLabel" styleClass="body-s, ink-muted" minWidth="-Infinity"/>
                 <Region HBox.hgrow="ALWAYS"/>
                 <Label text="Ordenar por" styleClass="body-s, ink-muted" minWidth="-Infinity"/>
-                <ComboBox fx:id="sortBox" prefWidth="210" minWidth="-Infinity"/>
+                <ComboBox fx:id="hepySortBox" id="sortBox" prefWidth="210" minWidth="-Infinity"/>
             </HBox>
             <StackPane>
-                <FlowPane fx:id="grid" hgap="24" vgap="24"/>
+                <FlowPane fx:id="hepyGrid" id="grid" hgap="24" vgap="24"/>
             </StackPane>
-            <StackPane fx:id="pagerSlot"/>
+            <StackPane fx:id="hepyPagerSlot" id="pagerSlot"/>
         </VBox>
     </ScrollPane>
 </HBox>

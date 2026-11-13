@@ -6,384 +6,384 @@ from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 
 
-def a_blender(p):
-    return Vector((p[0], -p[2], p[1]))
+def pgeyABlender(pgeyP):
+    return Vector((pgeyP[0], -pgeyP[2], pgeyP[1]))
 
 
-def a_modelo(v):
-    return np.array((v[0], v[2], -v[1]))
+def pgeyAModelo(pgeyV):
+    return np.array((pgeyV[0], pgeyV[2], -pgeyV[1]))
 
 
-def importar(ruta_obj):
-    antes = set(bpy.data.objects)
-    bpy.ops.wm.obj_import(filepath=str(ruta_obj), forward_axis='NEGATIVE_Z', up_axis='Y')
-    nuevos = [o for o in bpy.data.objects if o not in antes]
-    for o in nuevos:
-        bpy.context.view_layer.objects.active = o
-        o.select_set(True)
+def pgeyImportar(pgeyRutaObj):
+    pgeyAntes = set(bpy.data.objects)
+    bpy.ops.wm.obj_import(filepath=str(pgeyRutaObj), forward_axis='NEGATIVE_Z', up_axis='Y')
+    pgeyNuevos = [pgeyO for pgeyO in bpy.data.objects if pgeyO not in pgeyAntes]
+    for pgeyO in pgeyNuevos:
+        bpy.context.view_layer.objects.active = pgeyO
+        pgeyO.select_set(True)
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-    obj = nuevos[0]
+    pgeyObj = pgeyNuevos[0]
     bpy.ops.object.select_all(action='DESELECT')
-    obj.select_set(True)
-    bpy.context.view_layer.objects.active = obj
+    pgeyObj.select_set(True)
+    bpy.context.view_layer.objects.active = pgeyObj
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.separate(type='MATERIAL')
     bpy.ops.object.mode_set(mode='OBJECT')
-    partes = [o for o in bpy.data.objects if o.type == 'MESH' and o not in antes]
-    piel = max(partes, key=lambda o: len(o.data.polygons))
-    piel.name = "persona_piel"
-    otros = [o for o in partes if o is not piel]
-    for i, o in enumerate(otros):
-        o.name = "persona_" + (o.active_material.name if o.active_material else str(i))
-    return piel, otros
+    pgeyPartes = [pgeyO for pgeyO in bpy.data.objects if pgeyO.type == 'MESH' and pgeyO not in pgeyAntes]
+    pgeyPiel = max(pgeyPartes, key=lambda pgeyO: len(pgeyO.data.polygons))
+    pgeyPiel.name = "persona_piel"
+    pgeyOtros = [pgeyO for pgeyO in pgeyPartes if pgeyO is not pgeyPiel]
+    for pgeyI, pgeyO in enumerate(pgeyOtros):
+        pgeyO.name = "persona_" + (pgeyO.active_material.name if pgeyO.active_material else str(pgeyI))
+    return pgeyPiel, pgeyOtros
 
 
-class Cuerpo:
+class PgeyCuerpo:
 
-    def __init__(self, piel):
-        me = piel.data
-        self.v = np.array([a_modelo(x.co) for x in me.vertices])
-        tris = []
-        for p in me.polygons:
-            vs = list(p.vertices)
-            for k in range(1, len(vs) - 1):
-                tris.append((vs[0], vs[k], vs[k + 1]))
-        self.t = np.array(tris, dtype=np.int64)
-        self.bvh = BVHTree.FromPolygons([Vector(x) for x in self.v], [tuple(t) for t in self.t])
-        self.suelo = float(self.v[:, 1].min())
-        self.alto = float(self.v[:, 1].max()) - self.suelo
-        self._medir()
+    def __init__(self, pgeyPiel):
+        pgeyMe = pgeyPiel.data
+        self.pgeyV = np.array([pgeyAModelo(pgeyX.co) for pgeyX in pgeyMe.vertices])
+        pgeyTris = []
+        for pgeyP in pgeyMe.polygons:
+            pgeyVs = list(pgeyP.vertices)
+            for pgeyK in range(1, len(pgeyVs) - 1):
+                pgeyTris.append((pgeyVs[0], pgeyVs[pgeyK], pgeyVs[pgeyK + 1]))
+        self.pgeyT = np.array(pgeyTris, dtype=np.int64)
+        self.pgeyBvh = BVHTree.FromPolygons([Vector(pgeyX) for pgeyX in self.pgeyV], [tuple(pgeyT) for pgeyT in self.pgeyT])
+        self.pgeySuelo = float(self.pgeyV[:, 1].min())
+        self.pgeyAlto = float(self.pgeyV[:, 1].max()) - self.pgeySuelo
+        self._pgeyMedir()
 
-    def rayo(self, origen, direccion, dist=2.0):
-        d = Vector(direccion).normalized()
-        loc, nrm, _, dist_hit = self.bvh.ray_cast(Vector(origen), d, dist)
-        if loc is None:
+    def pgeyRayo(self, pgeyOrigen, pgeyDireccion, pgeyDist=2.0):
+        pgeyD = Vector(pgeyDireccion).normalized()
+        pgeyLoc, pgeyNrm, _, pgeyDistHit = self.pgeyBvh.ray_cast(Vector(pgeyOrigen), pgeyD, pgeyDist)
+        if pgeyLoc is None:
             return None
-        return np.array(loc), np.array(nrm), dist_hit
+        return np.array(pgeyLoc), np.array(pgeyNrm), pgeyDistHit
 
-    def cercano(self, p):
-        loc, nrm, _, d = self.bvh.find_nearest(Vector(p))
-        return np.array(loc), np.array(nrm), d
+    def pgeyCercano(self, pgeyP):
+        pgeyLoc, pgeyNrm, _, pgeyD = self.pgeyBvh.find_nearest(Vector(pgeyP))
+        return np.array(pgeyLoc), np.array(pgeyNrm), pgeyD
 
-    def corte(self, y):
-        v = self.v
-        a, b, c = v[self.t[:, 0]], v[self.t[:, 1]], v[self.t[:, 2]]
-        pts = []
-        for p, q in ((a, b), (b, c), (c, a)):
-            ya, yb = p[:, 1], q[:, 1]
-            m = (ya - y) * (yb - y) < 0
-            k = (y - ya[m]) / (yb[m] - ya[m])
-            pts.append(p[m][:, [0, 2]] + (q[m][:, [0, 2]] - p[m][:, [0, 2]]) * k[:, None])
-        return np.concatenate(pts) if pts else np.zeros((0, 2))
+    def pgeyCorte(self, pgeyY):
+        pgeyV = self.pgeyV
+        pgeyA, pgeyB, pgeyC = pgeyV[self.pgeyT[:, 0]], pgeyV[self.pgeyT[:, 1]], pgeyV[self.pgeyT[:, 2]]
+        pgeyPts = []
+        for pgeyP, pgeyQ in ((pgeyA, pgeyB), (pgeyB, pgeyC), (pgeyC, pgeyA)):
+            pgeyYa, pgeyYb = pgeyP[:, 1], pgeyQ[:, 1]
+            pgeyM = (pgeyYa - pgeyY) * (pgeyYb - pgeyY) < 0
+            pgeyK = (pgeyY - pgeyYa[pgeyM]) / (pgeyYb[pgeyM] - pgeyYa[pgeyM])
+            pgeyPts.append(pgeyP[pgeyM][:, [0, 2]] + (pgeyQ[pgeyM][:, [0, 2]] - pgeyP[pgeyM][:, [0, 2]]) * pgeyK[:, None])
+        return np.concatenate(pgeyPts) if pgeyPts else np.zeros((0, 2))
 
-    def segmentos(self, y):
-        v = self.v
-        a, b, c = v[self.t[:, 0]], v[self.t[:, 1]], v[self.t[:, 2]]
-        lados = []
-        for p, q in ((a, b), (b, c), (c, a)):
-            ya, yb = p[:, 1], q[:, 1]
-            m = (ya - y) * (yb - y) < 0
-            k = np.where(m, (y - ya) / np.where(m, yb - ya, 1.0), 0.0)
-            pt = p[:, [0, 2]] + (q[:, [0, 2]] - p[:, [0, 2]]) * k[:, None]
-            lados.append((m, pt))
-        segs = []
-        for i in range(3):
-            for j in range(i + 1, 3):
-                m = lados[i][0] & lados[j][0]
-                segs.append(np.stack((lados[i][1][m], lados[j][1][m]), axis=1))
-        return np.concatenate(segs) if segs else np.zeros((0, 2, 2))
+    def pgeySegmentos(self, pgeyY):
+        pgeyV = self.pgeyV
+        pgeyA, pgeyB, pgeyC = pgeyV[self.pgeyT[:, 0]], pgeyV[self.pgeyT[:, 1]], pgeyV[self.pgeyT[:, 2]]
+        pgeyLados = []
+        for pgeyP, pgeyQ in ((pgeyA, pgeyB), (pgeyB, pgeyC), (pgeyC, pgeyA)):
+            pgeyYa, pgeyYb = pgeyP[:, 1], pgeyQ[:, 1]
+            pgeyM = (pgeyYa - pgeyY) * (pgeyYb - pgeyY) < 0
+            pgeyK = np.where(pgeyM, (pgeyY - pgeyYa) / np.where(pgeyM, pgeyYb - pgeyYa, 1.0), 0.0)
+            pgeyPt = pgeyP[:, [0, 2]] + (pgeyQ[:, [0, 2]] - pgeyP[:, [0, 2]]) * pgeyK[:, None]
+            pgeyLados.append((pgeyM, pgeyPt))
+        pgeySegs = []
+        for pgeyI in range(3):
+            for pgeyJ in range(pgeyI + 1, 3):
+                pgeyM = pgeyLados[pgeyI][0] & pgeyLados[pgeyJ][0]
+                pgeySegs.append(np.stack((pgeyLados[pgeyI][1][pgeyM], pgeyLados[pgeyJ][1][pgeyM]), axis=1))
+        return np.concatenate(pgeySegs) if pgeySegs else np.zeros((0, 2, 2))
 
-    def tramos_x(self, y, hueco=0.008):
+    def pgeyTramosX(self, pgeyY, pgeyHueco=0.008):
 
-        segs = self.segmentos(y)
-        if len(segs) == 0:
+        pgeySegs = self.pgeySegmentos(pgeyY)
+        if len(pgeySegs) == 0:
             return []
-        iv = np.stack((segs[:, :, 0].min(axis=1), segs[:, :, 0].max(axis=1)), axis=1)
-        iv = iv[np.argsort(iv[:, 0])]
-        tramos = [[iv[0, 0], iv[0, 1]]]
-        for x0, x1 in iv[1:]:
-            if x0 - tramos[-1][1] > hueco:
-                tramos.append([x0, x1])
+        pgeyIv = np.stack((pgeySegs[:, :, 0].min(axis=1), pgeySegs[:, :, 0].max(axis=1)), axis=1)
+        pgeyIv = pgeyIv[np.argsort(pgeyIv[:, 0])]
+        pgeyTramos = [[pgeyIv[0, 0], pgeyIv[0, 1]]]
+        for pgeyX0, pgeyX1 in pgeyIv[1:]:
+            if pgeyX0 - pgeyTramos[-1][1] > pgeyHueco:
+                pgeyTramos.append([pgeyX0, pgeyX1])
             else:
-                tramos[-1][1] = max(tramos[-1][1], x1)
-        return tramos
+                pgeyTramos[-1][1] = max(pgeyTramos[-1][1], pgeyX1)
+        return pgeyTramos
 
-    def torso_corte(self, y):
-        pts = self.corte(y)
-        for t in self.tramos_x(y):
-            if t[0] <= 0.0 <= t[1]:
-                m = (pts[:, 0] >= t[0] - 1e-6) & (pts[:, 0] <= t[1] + 1e-6)
-                return pts[m]
+    def pgeyTorsoCorte(self, pgeyY):
+        pgeyPts = self.pgeyCorte(pgeyY)
+        for pgeyT in self.pgeyTramosX(pgeyY):
+            if pgeyT[0] <= 0.0 <= pgeyT[1]:
+                pgeyM = (pgeyPts[:, 0] >= pgeyT[0] - 1e-6) & (pgeyPts[:, 0] <= pgeyT[1] + 1e-6)
+                return pgeyPts[pgeyM]
         return np.zeros((0, 2))
 
-    def pierna_corte(self, y, signo):
-        pts = self.corte(y)
-        if len(pts) == 0:
-            return pts
-        pts = pts[pts[:, 0] * signo > 0]
-        tramos = [t for t in self.tramos_x(y) if (t[0] + t[1]) / 2 * signo > 0]
-        if not tramos:
+    def pgeyPiernaCorte(self, pgeyY, pgeySigno):
+        pgeyPts = self.pgeyCorte(pgeyY)
+        if len(pgeyPts) == 0:
+            return pgeyPts
+        pgeyPts = pgeyPts[pgeyPts[:, 0] * pgeySigno > 0]
+        pgeyTramos = [pgeyT for pgeyT in self.pgeyTramosX(pgeyY) if (pgeyT[0] + pgeyT[1]) / 2 * pgeySigno > 0]
+        if not pgeyTramos:
             return np.zeros((0, 2))
-        t = min(tramos, key=lambda t: abs((t[0] + t[1]) / 2))
-        m = (pts[:, 0] >= t[0] - 1e-6) & (pts[:, 0] <= t[1] + 1e-6)
-        return pts[m]
+        pgeyT = min(pgeyTramos, key=lambda pgeyT: abs((pgeyT[0] + pgeyT[1]) / 2))
+        pgeyM = (pgeyPts[:, 0] >= pgeyT[0] - 1e-6) & (pgeyPts[:, 0] <= pgeyT[1] + 1e-6)
+        return pgeyPts[pgeyM]
 
-    def _medir(self):
-        s, h = self.suelo, self.alto
-        ys = np.arange(s + 0.30 * h, s + 0.70 * h, 0.002)
-        self.entrepierna = None
-        for y in ys:
-            if any(t[0] <= 0.0 <= t[1] for t in self.tramos_x(y)):
-                self.entrepierna = float(y)
+    def _pgeyMedir(self):
+        pgeyS, pgeyH = self.pgeySuelo, self.pgeyAlto
+        pgeyYs = np.arange(pgeyS + 0.30 * pgeyH, pgeyS + 0.70 * pgeyH, 0.002)
+        self.pgeyEntrepierna = None
+        for pgeyY in pgeyYs:
+            if any(pgeyT[0] <= 0.0 <= pgeyT[1] for pgeyT in self.pgeyTramosX(pgeyY)):
+                self.pgeyEntrepierna = float(pgeyY)
                 break
-        self.axila = None
-        for y in np.arange(s + 0.84 * h, s + 0.66 * h, -0.002):
-            tr = self.tramos_x(y)
-            centro = [t for t in tr if t[0] <= 0.0 <= t[1]]
-            if centro and sum(1 for t in tr if t[0] > centro[0][1]) and sum(1 for t in tr if t[1] < centro[0][0]):
-                self.axila = float(y)
+        self.pgeyAxila = None
+        for pgeyY in np.arange(pgeyS + 0.84 * pgeyH, pgeyS + 0.66 * pgeyH, -0.002):
+            pgeyTr = self.pgeyTramosX(pgeyY)
+            pgeyCentro = [pgeyT for pgeyT in pgeyTr if pgeyT[0] <= 0.0 <= pgeyT[1]]
+            if pgeyCentro and sum(1 for pgeyT in pgeyTr if pgeyT[0] > pgeyCentro[0][1]) and sum(1 for pgeyT in pgeyTr if pgeyT[1] < pgeyCentro[0][0]):
+                self.pgeyAxila = float(pgeyY)
                 break
-        def ancho(y):
-            p = self.torso_corte(y)
-            return (p[:, 0].max() - p[:, 0].min()) / 2 if len(p) else 0.0
-        y_cuello = None
-        anchos = [(float(y), ancho(y)) for y in np.arange(self.axila, s + 0.92 * h, 0.002)]
-        minimo = min(a for y, a in anchos if y > self.axila + 0.08 * h)
-        for y, a in anchos:
-            if a < minimo * 1.35:
-                y_cuello = y
+        def pgeyAncho(pgeyY):
+            pgeyP = self.pgeyTorsoCorte(pgeyY)
+            return (pgeyP[:, 0].max() - pgeyP[:, 0].min()) / 2 if len(pgeyP) else 0.0
+        pgeyYCuello = None
+        pgeyAnchos = [(float(pgeyY), pgeyAncho(pgeyY)) for pgeyY in np.arange(self.pgeyAxila, pgeyS + 0.92 * pgeyH, 0.002)]
+        pgeyMinimo = min(pgeyA for pgeyY, pgeyA in pgeyAnchos if pgeyY > self.pgeyAxila + 0.08 * pgeyH)
+        for pgeyY, pgeyA in pgeyAnchos:
+            if pgeyA < pgeyMinimo * 1.35:
+                pgeyYCuello = pgeyY
                 break
-        self.base_cuello = y_cuello
-        p = self.torso_corte(y_cuello + 0.02 * h)
-        self.cuello_centro = np.array([0.0, (p[:, 1].max() + p[:, 1].min()) / 2])
-        self.cuello_radio = np.array([(p[:, 0].max() - p[:, 0].min()) / 2, (p[:, 1].max() - p[:, 1].min()) / 2])
-        self.hombro = {}
-        for signo in (1, -1):
-            perfil = []
-            for x in np.arange(0.0, 0.30, 0.004):
-                hit = self.rayo((x * signo, s + h + 0.1, self.cuello_centro[1]), (0, -1, 0), 1.0)
-                if hit is not None and hit[0][1] > self.axila:
-                    perfil.append((float(x), float(hit[0][1])))
-            perfil = [q for q in perfil if q[1] <= self.base_cuello + 0.005]
-            acromion = perfil[-1]
-            for (x0, y0), (x1, y1) in zip(perfil, perfil[1:]):
-                if x0 > self.cuello_radio[0] * 1.6 and (y0 - y1) / (x1 - x0) > math.tan(math.radians(35)):
-                    acromion = (x0, y0)
+        self.pgeyBaseCuello = pgeyYCuello
+        pgeyP = self.pgeyTorsoCorte(pgeyYCuello + 0.02 * pgeyH)
+        self.pgeyCuelloCentro = np.array([0.0, (pgeyP[:, 1].max() + pgeyP[:, 1].min()) / 2])
+        self.pgeyCuelloRadio = np.array([(pgeyP[:, 0].max() - pgeyP[:, 0].min()) / 2, (pgeyP[:, 1].max() - pgeyP[:, 1].min()) / 2])
+        self.pgeyHombro = {}
+        for pgeySigno in (1, -1):
+            pgeyPerfil = []
+            for pgeyX in np.arange(0.0, 0.30, 0.004):
+                pgeyHit = self.pgeyRayo((pgeyX * pgeySigno, pgeyS + pgeyH + 0.1, self.pgeyCuelloCentro[1]), (0, -1, 0), 1.0)
+                if pgeyHit is not None and pgeyHit[0][1] > self.pgeyAxila:
+                    pgeyPerfil.append((float(pgeyX), float(pgeyHit[0][1])))
+            pgeyPerfil = [pgeyQ for pgeyQ in pgeyPerfil if pgeyQ[1] <= self.pgeyBaseCuello + 0.005]
+            pgeyAcromion = pgeyPerfil[-1]
+            for (pgeyX0, pgeyY0), (pgeyX1, pgeyY1) in zip(pgeyPerfil, pgeyPerfil[1:]):
+                if pgeyX0 > self.pgeyCuelloRadio[0] * 1.6 and (pgeyY0 - pgeyY1) / (pgeyX1 - pgeyX0) > math.tan(math.radians(35)):
+                    pgeyAcromion = (pgeyX0, pgeyY0)
                     break
-            self.hombro[signo] = np.array(acromion)
-        self._brazos()
-        self._torso_eje()
+            self.pgeyHombro[pgeySigno] = np.array(pgeyAcromion)
+        self._pgeyBrazos()
+        self._pgeyTorsoEje()
 
-    def _brazos(self):
-        s, h = self.suelo, self.alto
-        self.brazo = {}
-        for signo in (1, -1):
-            centros = []
-            for y in np.arange(self.axila - 0.005, self.axila - 0.14 * h, -0.004):
-                tr = self.tramos_x(y)
-                centro = [t for t in tr if t[0] <= 0.0 <= t[1]]
-                if not centro:
+    def _pgeyBrazos(self):
+        pgeyS, pgeyH = self.pgeySuelo, self.pgeyAlto
+        self.pgeyBrazo = {}
+        for pgeySigno in (1, -1):
+            pgeyCentros = []
+            for pgeyY in np.arange(self.pgeyAxila - 0.005, self.pgeyAxila - 0.14 * pgeyH, -0.004):
+                pgeyTr = self.pgeyTramosX(pgeyY)
+                pgeyCentro = [pgeyT for pgeyT in pgeyTr if pgeyT[0] <= 0.0 <= pgeyT[1]]
+                if not pgeyCentro:
                     continue
-                lado = [t for t in tr if (t[0] > centro[0][1] if signo > 0 else t[1] < centro[0][0])]
-                if not lado:
+                pgeyLado = [pgeyT for pgeyT in pgeyTr if (pgeyT[0] > pgeyCentro[0][1] if pgeySigno > 0 else pgeyT[1] < pgeyCentro[0][0])]
+                if not pgeyLado:
                     continue
-                t = min(lado, key=lambda t: abs((t[0] + t[1]) / 2))
-                pts = self.corte(y)
-                m = (pts[:, 0] >= t[0]) & (pts[:, 0] <= t[1])
-                if m.sum() < 6:
+                pgeyT = min(pgeyLado, key=lambda pgeyT: abs((pgeyT[0] + pgeyT[1]) / 2))
+                pgeyPts = self.pgeyCorte(pgeyY)
+                pgeyM = (pgeyPts[:, 0] >= pgeyT[0]) & (pgeyPts[:, 0] <= pgeyT[1])
+                if pgeyM.sum() < 6:
                     continue
-                c = pts[m].mean(axis=0)
-                centros.append((c[0], y, c[1]))
-            c = np.array(centros)
-            media = c.mean(axis=0)
-            _, _, vt = np.linalg.svd(c - media)
-            d = vt[0]
-            if d[1] > 0:
-                d = -d
-            self.brazo[signo] = (media, d / np.linalg.norm(d))
+                pgeyC = pgeyPts[pgeyM].mean(axis=0)
+                pgeyCentros.append((pgeyC[0], pgeyY, pgeyC[1]))
+            pgeyC = np.array(pgeyCentros)
+            pgeyMedia = pgeyC.mean(axis=0)
+            _, _, pgeyVt = np.linalg.svd(pgeyC - pgeyMedia)
+            pgeyD = pgeyVt[0]
+            if pgeyD[1] > 0:
+                pgeyD = -pgeyD
+            self.pgeyBrazo[pgeySigno] = (pgeyMedia, pgeyD / np.linalg.norm(pgeyD))
 
-    def brazo_punto(self, signo, s):
-        media, d = self.brazo[signo]
-        y = self.hombro[signo][1]
-        a = np.array((self.hombro[signo][0] * signo, y, self.torso_z(y)))
-        s0 = float(np.dot(a - media, d))
-        return media + d * (s0 + s)
+    def pgeyBrazoPunto(self, pgeySigno, pgeyS):
+        pgeyMedia, pgeyD = self.pgeyBrazo[pgeySigno]
+        pgeyY = self.pgeyHombro[pgeySigno][1]
+        pgeyA = np.array((self.pgeyHombro[pgeySigno][0] * pgeySigno, pgeyY, self.pgeyTorsoZ(pgeyY)))
+        pgeyS0 = float(np.dot(pgeyA - pgeyMedia, pgeyD))
+        return pgeyMedia + pgeyD * (pgeyS0 + pgeyS)
 
-    def rodilla(self):
-        s, h = self.suelo, self.alto
-        mejor = None
-        for y in np.arange(s + 0.22 * h, s + 0.34 * h, 0.003):
-            p = self.pierna_corte(y, 1)
-            if len(p) < 3:
+    def pgeyRodilla(self):
+        pgeyS, pgeyH = self.pgeySuelo, self.pgeyAlto
+        pgeyMejor = None
+        for pgeyY in np.arange(pgeyS + 0.22 * pgeyH, pgeyS + 0.34 * pgeyH, 0.003):
+            pgeyP = self.pgeyPiernaCorte(pgeyY, 1)
+            if len(pgeyP) < 3:
                 continue
-            a = float(p[:, 0].max() - p[:, 0].min())
-            if mejor is None or a < mejor[1]:
-                mejor = (float(y), a)
-        return mejor[0]
+            pgeyA = float(pgeyP[:, 0].max() - pgeyP[:, 0].min())
+            if pgeyMejor is None or pgeyA < pgeyMejor[1]:
+                pgeyMejor = (float(pgeyY), pgeyA)
+        return pgeyMejor[0]
 
-    def brazo_eje(self, signo, s_max):
-        media, d = self.brazo[signo]
-        a0 = self.brazo_punto(signo, 0.0)
-        muestras = []
-        for y in np.arange(self.axila - 0.005, self.suelo + 0.25 * self.alto, -0.003):
-            tr = self.tramos_x(y)
-            centro = [t for t in tr if t[0] <= 0.0 <= t[1]]
-            if not centro:
+    def pgeyBrazoEje(self, pgeySigno, pgeySMax):
+        pgeyMedia, pgeyD = self.pgeyBrazo[pgeySigno]
+        pgeyA0 = self.pgeyBrazoPunto(pgeySigno, 0.0)
+        pgeyMuestras = []
+        for pgeyY in np.arange(self.pgeyAxila - 0.005, self.pgeySuelo + 0.25 * self.pgeyAlto, -0.003):
+            pgeyTr = self.pgeyTramosX(pgeyY)
+            pgeyCentro = [pgeyT for pgeyT in pgeyTr if pgeyT[0] <= 0.0 <= pgeyT[1]]
+            if not pgeyCentro:
                 continue
-            lado = [t for t in tr if (t[0] > centro[0][1] if signo > 0 else t[1] < centro[0][0])]
-            if not lado:
+            pgeyLado = [pgeyT for pgeyT in pgeyTr if (pgeyT[0] > pgeyCentro[0][1] if pgeySigno > 0 else pgeyT[1] < pgeyCentro[0][0])]
+            if not pgeyLado:
                 continue
-            t = min(lado, key=lambda t: abs((t[0] + t[1]) / 2))
-            pts = self.corte(y)
-            m = (pts[:, 0] >= t[0]) & (pts[:, 0] <= t[1])
-            if m.sum() < 6:
+            pgeyT = min(pgeyLado, key=lambda pgeyT: abs((pgeyT[0] + pgeyT[1]) / 2))
+            pgeyPts = self.pgeyCorte(pgeyY)
+            pgeyM = (pgeyPts[:, 0] >= pgeyT[0]) & (pgeyPts[:, 0] <= pgeyT[1])
+            if pgeyM.sum() < 6:
                 continue
-            c = pts[m].mean(axis=0)
-            p = np.array((c[0], y, c[1]))
-            s = float(np.dot(p - a0, d))
-            if s > s_max + 0.03:
+            pgeyC = pgeyPts[pgeyM].mean(axis=0)
+            pgeyP = np.array((pgeyC[0], pgeyY, pgeyC[1]))
+            pgeyS = float(np.dot(pgeyP - pgeyA0, pgeyD))
+            if pgeyS > pgeySMax + 0.03:
                 break
-            muestras.append((s, p))
-        muestras.sort(key=lambda q: q[0])
-        ss = np.array([q[0] for q in muestras])
-        ps = np.array([q[1] for q in muestras])
-        grilla = np.arange(0.0, s_max + 0.0101, 0.01)
-        medidos = np.stack([np.interp(grilla, ss, ps[:, i]) for i in range(3)], axis=1)
-        suave = np.array([medidos[max(0, i - 2):i + 3].mean(axis=0) for i in range(len(grilla))])
-        recta = a0 + np.outer(grilla, d)
-        w = np.clip((grilla - 0.10) / 0.08, 0.0, 1.0)
-        w = (w * w * (3 - 2 * w))[:, None]
-        eje = recta * (1 - w) + suave * w
+            pgeyMuestras.append((pgeyS, pgeyP))
+        pgeyMuestras.sort(key=lambda pgeyQ: pgeyQ[0])
+        pgeySs = np.array([pgeyQ[0] for pgeyQ in pgeyMuestras])
+        pgeyPs = np.array([pgeyQ[1] for pgeyQ in pgeyMuestras])
+        pgeyGrilla = np.arange(0.0, pgeySMax + 0.0101, 0.01)
+        pgeyMedidos = np.stack([np.interp(pgeyGrilla, pgeySs, pgeyPs[:, pgeyI]) for pgeyI in range(3)], axis=1)
+        pgeySuave = np.array([pgeyMedidos[max(0, pgeyI - 2):pgeyI + 3].mean(axis=0) for pgeyI in range(len(pgeyGrilla))])
+        pgeyRecta = pgeyA0 + np.outer(pgeyGrilla, pgeyD)
+        pgeyW = np.clip((pgeyGrilla - 0.10) / 0.08, 0.0, 1.0)
+        pgeyW = (pgeyW * pgeyW * (3 - 2 * pgeyW))[:, None]
+        pgeyEje = pgeyRecta * (1 - pgeyW) + pgeySuave * pgeyW
 
-        def en(s):
-            s = min(max(s, 0.0), grilla[-1])
-            p = np.array([np.interp(s, grilla, eje[:, i]) for i in range(3)])
-            a = np.array([np.interp(max(s - 0.02, 0.0), grilla, eje[:, i]) for i in range(3)])
-            b = np.array([np.interp(min(s + 0.02, grilla[-1]), grilla, eje[:, i]) for i in range(3)])
-            t = b - a
-            return p, t / np.linalg.norm(t)
-        return en
+        def pgeyEn(pgeyS):
+            pgeyS = min(max(pgeyS, 0.0), pgeyGrilla[-1])
+            pgeyP = np.array([np.interp(pgeyS, pgeyGrilla, pgeyEje[:, pgeyI]) for pgeyI in range(3)])
+            pgeyA = np.array([np.interp(max(pgeyS - 0.02, 0.0), pgeyGrilla, pgeyEje[:, pgeyI]) for pgeyI in range(3)])
+            pgeyB = np.array([np.interp(min(pgeyS + 0.02, pgeyGrilla[-1]), pgeyGrilla, pgeyEje[:, pgeyI]) for pgeyI in range(3)])
+            pgeyT = pgeyB - pgeyA
+            return pgeyP, pgeyT / np.linalg.norm(pgeyT)
+        return pgeyEn
 
-    def brazo_radio(self, signo, s, direccion):
-        c = self.brazo_punto(signo, s)
-        hit = self.rayo(c, direccion, 0.2)
-        return hit[2] if hit else 0.05
+    def pgeyBrazoRadio(self, pgeySigno, pgeyS, pgeyDireccion):
+        pgeyC = self.pgeyBrazoPunto(pgeySigno, pgeyS)
+        pgeyHit = self.pgeyRayo(pgeyC, pgeyDireccion, 0.2)
+        return pgeyHit[2] if pgeyHit else 0.05
 
-    def _torso_eje(self):
-        self._ejes = []
-        for y in np.arange(self.entrepierna + 0.005, self.base_cuello + 0.05, 0.005):
-            p = self.torso_corte(y)
-            if len(p):
-                self._ejes.append((float(y), (p[:, 1].max() + p[:, 1].min()) / 2))
-        self._ejes = np.array(self._ejes)
+    def _pgeyTorsoEje(self):
+        self._pgeyEjes = []
+        for pgeyY in np.arange(self.pgeyEntrepierna + 0.005, self.pgeyBaseCuello + 0.05, 0.005):
+            pgeyP = self.pgeyTorsoCorte(pgeyY)
+            if len(pgeyP):
+                self._pgeyEjes.append((float(pgeyY), (pgeyP[:, 1].max() + pgeyP[:, 1].min()) / 2))
+        self._pgeyEjes = np.array(self._pgeyEjes)
 
-    def torso_z(self, y):
-        return float(np.interp(y, self._ejes[:, 0], self._ejes[:, 1]))
+    def pgeyTorsoZ(self, pgeyY):
+        return float(np.interp(pgeyY, self._pgeyEjes[:, 0], self._pgeyEjes[:, 1]))
 
-    def pierna_centro(self, y, signo):
-        p = self.pierna_corte(y, signo)
-        if len(p) == 0:
+    def pgeyPiernaCentro(self, pgeyY, pgeySigno):
+        pgeyP = self.pgeyPiernaCorte(pgeyY, pgeySigno)
+        if len(pgeyP) == 0:
             return None
-        return np.array(((p[:, 0].max() + p[:, 0].min()) / 2, (p[:, 1].max() + p[:, 1].min()) / 2))
+        return np.array(((pgeyP[:, 0].max() + pgeyP[:, 0].min()) / 2, (pgeyP[:, 1].max() + pgeyP[:, 1].min()) / 2))
 
-    def resumen(self):
+    def pgeyResumen(self):
         return {
-            "suelo": round(self.suelo, 4), "alto": round(self.alto, 4),
-            "entrepierna": round(self.entrepierna, 4), "axila": round(self.axila, 4),
-            "base_cuello": round(self.base_cuello, 4),
-            "cuello_centro_z": round(float(self.cuello_centro[1]), 4),
-            "cuello_radio": [round(float(r), 4) for r in self.cuello_radio],
-            "hombro_izq": [round(float(r), 4) for r in self.hombro[1]],
-            "hombro_der": [round(float(r), 4) for r in self.hombro[-1]],
-            "brazo_izq_dir": [round(float(r), 3) for r in self.brazo[1][1]],
-            "brazo_der_dir": [round(float(r), 3) for r in self.brazo[-1][1]],
+            "suelo": round(self.pgeySuelo, 4), "alto": round(self.pgeyAlto, 4),
+            "entrepierna": round(self.pgeyEntrepierna, 4), "axila": round(self.pgeyAxila, 4),
+            "base_cuello": round(self.pgeyBaseCuello, 4),
+            "cuello_centro_z": round(float(self.pgeyCuelloCentro[1]), 4),
+            "cuello_radio": [round(float(pgeyR), 4) for pgeyR in self.pgeyCuelloRadio],
+            "hombro_izq": [round(float(pgeyR), 4) for pgeyR in self.pgeyHombro[1]],
+            "hombro_der": [round(float(pgeyR), 4) for pgeyR in self.pgeyHombro[-1]],
+            "brazo_izq_dir": [round(float(pgeyR), 3) for pgeyR in self.pgeyBrazo[1][1]],
+            "brazo_der_dir": [round(float(pgeyR), 3) for pgeyR in self.pgeyBrazo[-1][1]],
         }
 
 
-def hull2d(pts):
-    p = sorted(set(map(tuple, np.round(pts, 6))))
-    if len(p) <= 2:
-        return np.array(p)
+def pgeyHull2d(pgeyPts):
+    pgeyP = sorted(set(map(tuple, np.round(pgeyPts, 6))))
+    if len(pgeyP) <= 2:
+        return np.array(pgeyP)
 
-    def cross(o, a, b):
-        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+    def pgeyCross(pgeyO, pgeyA, pgeyB):
+        return (pgeyA[0] - pgeyO[0]) * (pgeyB[1] - pgeyO[1]) - (pgeyA[1] - pgeyO[1]) * (pgeyB[0] - pgeyO[0])
 
-    lower, upper = [], []
-    for q in p:
-        while len(lower) >= 2 and cross(lower[-2], lower[-1], q) <= 0:
-            lower.pop()
-        lower.append(q)
-    for q in reversed(p):
-        while len(upper) >= 2 and cross(upper[-2], upper[-1], q) <= 0:
-            upper.pop()
-        upper.append(q)
-    return np.array(lower[:-1] + upper[:-1])
-
-
-def radio_polar(hull, centro, angulos):
-    a = np.asarray(angulos, dtype=float)
-    dx, dz = np.sin(a), np.cos(a)
-    out = np.zeros(len(a))
-    n = len(hull)
-    for k in range(n):
-        p = hull[k] - centro
-        e = hull[(k + 1) % n] - hull[k]
-        den = dx * (-e[1]) - dz * (-e[0])
-        ok = np.abs(den) > 1e-12
-        den = np.where(ok, den, 1.0)
-        t = (p[0] * (-e[1]) - p[1] * (-e[0])) / den
-        u = (dx * p[1] - dz * p[0]) / den
-        m = ok & (t > 0) & (u >= -1e-9) & (u <= 1 + 1e-9)
-        out = np.where(m, np.maximum(out, t), out)
-    return out
+    pgeyLower, pgeyUpper = [], []
+    for pgeyQ in pgeyP:
+        while len(pgeyLower) >= 2 and pgeyCross(pgeyLower[-2], pgeyLower[-1], pgeyQ) <= 0:
+            pgeyLower.pop()
+        pgeyLower.append(pgeyQ)
+    for pgeyQ in reversed(pgeyP):
+        while len(pgeyUpper) >= 2 and pgeyCross(pgeyUpper[-2], pgeyUpper[-1], pgeyQ) <= 0:
+            pgeyUpper.pop()
+        pgeyUpper.append(pgeyQ)
+    return np.array(pgeyLower[:-1] + pgeyUpper[:-1])
 
 
-class TablaPolar:
+def pgeyRadioPolar(pgeyHull, pgeyCentro, pgeyAngulos):
+    pgeyA = np.asarray(pgeyAngulos, dtype=float)
+    pgeyDx, pgeyDz = np.sin(pgeyA), np.cos(pgeyA)
+    pgeyOut = np.zeros(len(pgeyA))
+    pgeyN = len(pgeyHull)
+    for pgeyK in range(pgeyN):
+        pgeyP = pgeyHull[pgeyK] - pgeyCentro
+        pgeyE = pgeyHull[(pgeyK + 1) % pgeyN] - pgeyHull[pgeyK]
+        pgeyDen = pgeyDx * (-pgeyE[1]) - pgeyDz * (-pgeyE[0])
+        pgeyOk = np.abs(pgeyDen) > 1e-12
+        pgeyDen = np.where(pgeyOk, pgeyDen, 1.0)
+        pgeyT = (pgeyP[0] * (-pgeyE[1]) - pgeyP[1] * (-pgeyE[0])) / pgeyDen
+        pgeyU = (pgeyDx * pgeyP[1] - pgeyDz * pgeyP[0]) / pgeyDen
+        pgeyM = pgeyOk & (pgeyT > 0) & (pgeyU >= -1e-9) & (pgeyU <= 1 + 1e-9)
+        pgeyOut = np.where(pgeyM, np.maximum(pgeyOut, pgeyT), pgeyOut)
+    return pgeyOut
 
-    def __init__(self, cuerpo, y0, y1, paso=0.004, recorte=None, n_ang=720):
-        self.y0, self.paso = y0, paso
-        self.ys = np.arange(y0, y1 + paso, paso)
-        self.ang = np.linspace(0.0, 2 * math.pi, n_ang, endpoint=False)
-        self.zc = np.array([cuerpo.torso_z(y) for y in self.ys])
-        filas = []
-        for y, zc in zip(self.ys, self.zc):
-            p = cuerpo.torso_corte(y)
-            xmax = recorte(y) if callable(recorte) else recorte
-            if xmax is not None and len(p):
-                p = p[np.abs(p[:, 0]) <= xmax]
-            filas.append(radio_polar(hull2d(p), np.array((0.0, zc)), self.ang) if len(p) >= 3 else np.zeros(n_ang))
-        self.R = np.array(filas)
 
-    def _iy(self, y):
-        f = np.clip((np.asarray(y) - self.y0) / self.paso, 0, len(self.ys) - 1.001)
-        i = np.floor(f).astype(int)
-        return i, f - i
+class PgeyTablaPolar:
 
-    def centro_z(self, y):
-        i, f = self._iy(y)
-        return self.zc[i] * (1 - f) + self.zc[i + 1] * f
+    def __init__(self, pgeyCuerpo, pgeyY0, pgeyY1, pgeyPaso=0.004, pgeyRecorte=None, pgeyNAng=720):
+        self.pgeyY0, self.pgeyPaso = pgeyY0, pgeyPaso
+        self.pgeyYs = np.arange(pgeyY0, pgeyY1 + pgeyPaso, pgeyPaso)
+        self.pgeyAng = np.linspace(0.0, 2 * math.pi, pgeyNAng, endpoint=False)
+        self.pgeyZc = np.array([pgeyCuerpo.pgeyTorsoZ(pgeyY) for pgeyY in self.pgeyYs])
+        pgeyFilas = []
+        for pgeyY, pgeyZc in zip(self.pgeyYs, self.pgeyZc):
+            pgeyP = pgeyCuerpo.pgeyTorsoCorte(pgeyY)
+            pgeyXmax = pgeyRecorte(pgeyY) if callable(pgeyRecorte) else pgeyRecorte
+            if pgeyXmax is not None and len(pgeyP):
+                pgeyP = pgeyP[np.abs(pgeyP[:, 0]) <= pgeyXmax]
+            pgeyFilas.append(pgeyRadioPolar(pgeyHull2d(pgeyP), np.array((0.0, pgeyZc)), self.pgeyAng) if len(pgeyP) >= 3 else np.zeros(pgeyNAng))
+        self.pgeyR = np.array(pgeyFilas)
 
-    def radio(self, y, th):
-        i, f = self._iy(y)
-        a = (np.asarray(th) % (2 * math.pi)) / (2 * math.pi) * len(self.ang)
-        j = np.floor(a).astype(int) % len(self.ang)
-        g = a - np.floor(a)
-        j2 = (j + 1) % len(self.ang)
-        r0 = self.R[i, j] * (1 - g) + self.R[i, j2] * g
-        r1 = self.R[i + 1, j] * (1 - g) + self.R[i + 1, j2] * g
-        return r0 * (1 - f) + r1 * f
+    def _pgeyIy(self, pgeyY):
+        pgeyF = np.clip((np.asarray(pgeyY) - self.pgeyY0) / self.pgeyPaso, 0, len(self.pgeyYs) - 1.001)
+        pgeyI = np.floor(pgeyF).astype(int)
+        return pgeyI, pgeyF - pgeyI
 
-    def dentro(self, q):
-        q = np.atleast_2d(q)
-        zc = self.centro_z(q[:, 1])
-        th = np.arctan2(q[:, 0], q[:, 2] - zc)
-        return np.hypot(q[:, 0], q[:, 2] - zc) < self.radio(q[:, 1], th)
+    def pgeyCentroZ(self, pgeyY):
+        pgeyI, pgeyF = self._pgeyIy(pgeyY)
+        return self.pgeyZc[pgeyI] * (1 - pgeyF) + self.pgeyZc[pgeyI + 1] * pgeyF
 
-    def salida(self, origen, direccion, largo=0.5, paso=0.001):
-        t = np.arange(paso, largo, paso)
-        q = origen[None, :] + direccion[None, :] * t[:, None]
-        fuera = ~self.dentro(q)
-        k = int(np.argmax(fuera))
-        if not fuera[k]:
+    def pgeyRadio(self, pgeyY, pgeyTh):
+        pgeyI, pgeyF = self._pgeyIy(pgeyY)
+        pgeyA = (np.asarray(pgeyTh) % (2 * math.pi)) / (2 * math.pi) * len(self.pgeyAng)
+        pgeyJ = np.floor(pgeyA).astype(int) % len(self.pgeyAng)
+        pgeyG = pgeyA - np.floor(pgeyA)
+        pgeyJ2 = (pgeyJ + 1) % len(self.pgeyAng)
+        pgeyR0 = self.pgeyR[pgeyI, pgeyJ] * (1 - pgeyG) + self.pgeyR[pgeyI, pgeyJ2] * pgeyG
+        pgeyR1 = self.pgeyR[pgeyI + 1, pgeyJ] * (1 - pgeyG) + self.pgeyR[pgeyI + 1, pgeyJ2] * pgeyG
+        return pgeyR0 * (1 - pgeyF) + pgeyR1 * pgeyF
+
+    def pgeyDentro(self, pgeyQ):
+        pgeyQ = np.atleast_2d(pgeyQ)
+        pgeyZc = self.pgeyCentroZ(pgeyQ[:, 1])
+        pgeyTh = np.arctan2(pgeyQ[:, 0], pgeyQ[:, 2] - pgeyZc)
+        return np.hypot(pgeyQ[:, 0], pgeyQ[:, 2] - pgeyZc) < self.pgeyRadio(pgeyQ[:, 1], pgeyTh)
+
+    def pgeySalida(self, pgeyOrigen, pgeyDireccion, pgeyLargo=0.5, pgeyPaso=0.001):
+        pgeyT = np.arange(pgeyPaso, pgeyLargo, pgeyPaso)
+        pgeyQ = pgeyOrigen[None, :] + pgeyDireccion[None, :] * pgeyT[:, None]
+        pgeyFuera = ~self.pgeyDentro(pgeyQ)
+        pgeyK = int(np.argmax(pgeyFuera))
+        if not pgeyFuera[pgeyK]:
             return None
-        return origen + direccion * (t[k] - paso / 2)
+        return pgeyOrigen + pgeyDireccion * (pgeyT[pgeyK] - pgeyPaso / 2)

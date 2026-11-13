@@ -1,8 +1,8 @@
 package com.sportforce3d.service;
 
 import com.sportforce3d.db.TestDatabases;
-import com.sportforce3d.model.User;
-import com.sportforce3d.repository.UserRepository;
+import com.sportforce3d.model.PpqhUser;
+import com.sportforce3d.repository.HepyUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -18,52 +18,52 @@ class AccountServiceTest {
     @TempDir
     Path tempDir;
 
-    private Session session;
-    private AuthService auth;
-    private AccountService account;
+    private PpqhSession session;
+    private PpqhAuthService auth;
+    private PpqhAccountService account;
 
     @BeforeEach
     void setUp() {
-        UserRepository users = new UserRepository(TestDatabases.migrated(tempDir));
-        PasswordHasher hasher = new PasswordHasher(4);
-        session = new Session();
-        auth = new AuthService(users, hasher, session, new LoginThrottle(Clock.systemUTC()), Clock.systemUTC());
-        account = new AccountService(users, hasher, session);
+        HepyUserRepository users = new HepyUserRepository(TestDatabases.migrated(tempDir));
+        PpqhPasswordHasher hasher = new PpqhPasswordHasher(4);
+        session = new PpqhSession();
+        auth = new PpqhAuthService(users, hasher, session, new PpqhLoginThrottle(Clock.systemUTC()), Clock.systemUTC());
+        account = new PpqhAccountService(users, hasher, session);
     }
 
     @Test
     void requiresSession() {
-        assertThatThrownBy(() -> account.updateProfile("Alguien", null)).isInstanceOf(AuthenticationException.class);
+        assertThatThrownBy(() -> account.ppqhUpdateProfile("Alguien", null)).isInstanceOf(PpqhAuthenticationException.class);
     }
 
     @Test
     void updatesProfileAndRefreshesSession() {
-        auth.login("cliente@sportforce3d.pe", "Cliente123!".toCharArray());
+        auth.ppqhLogin("cliente@sportforce3d.pe", "Cliente123!".toCharArray());
 
-        User updated = account.updateProfile("  Lucía Quispe Mamani ", "");
+        PpqhUser updated = account.ppqhUpdateProfile("  Lucía Quispe Mamani ", "");
 
-        assertThat(updated.fullName()).isEqualTo("Lucía Quispe Mamani");
-        assertThat(updated.phone()).isNull();
-        assertThat(session.current().orElseThrow().fullName()).isEqualTo("Lucía Quispe Mamani");
+        assertThat(updated.ppqhFullName()).isEqualTo("Lucía Quispe Mamani");
+        assertThat(updated.ppqhPhone()).isNull();
+        assertThat(session.ppqhCurrent().orElseThrow().ppqhFullName()).isEqualTo("Lucía Quispe Mamani");
     }
 
     @Test
     void changesPasswordOnlyWithCurrentPassword() {
-        auth.login("cliente@sportforce3d.pe", "Cliente123!".toCharArray());
+        auth.ppqhLogin("cliente@sportforce3d.pe", "Cliente123!".toCharArray());
 
-        assertThatThrownBy(() -> account.changePassword("mal".toCharArray(), "Nueva2026".toCharArray(), "Nueva2026".toCharArray()))
-                .isInstanceOfSatisfying(ValidationException.class,
-                        e -> assertThat(e.fieldErrors()).containsKey("current"));
-        assertThatThrownBy(() -> account.changePassword("Cliente123!".toCharArray(), "nueva".toCharArray(), "nueva".toCharArray()))
-                .isInstanceOfSatisfying(ValidationException.class,
-                        e -> assertThat(e.fieldErrors()).containsKey("next"));
+        assertThatThrownBy(() -> account.ppqhChangePassword("mal".toCharArray(), "Nueva2026".toCharArray(), "Nueva2026".toCharArray()))
+                .isInstanceOfSatisfying(PpqhValidationException.class,
+                        e -> assertThat(e.ppqhFieldErrors()).containsKey("current"));
+        assertThatThrownBy(() -> account.ppqhChangePassword("Cliente123!".toCharArray(), "nueva".toCharArray(), "nueva".toCharArray()))
+                .isInstanceOfSatisfying(PpqhValidationException.class,
+                        e -> assertThat(e.ppqhFieldErrors()).containsKey("next"));
 
-        account.changePassword("Cliente123!".toCharArray(), "Nueva2026".toCharArray(), "Nueva2026".toCharArray());
-        auth.logout();
+        account.ppqhChangePassword("Cliente123!".toCharArray(), "Nueva2026".toCharArray(), "Nueva2026".toCharArray());
+        auth.ppqhLogout();
 
-        assertThatThrownBy(() -> auth.login("cliente@sportforce3d.pe", "Cliente123!".toCharArray()))
-                .isInstanceOf(AuthenticationException.class);
-        assertThat(auth.login("cliente@sportforce3d.pe", "Nueva2026".toCharArray()).email())
+        assertThatThrownBy(() -> auth.ppqhLogin("cliente@sportforce3d.pe", "Cliente123!".toCharArray()))
+                .isInstanceOf(PpqhAuthenticationException.class);
+        assertThat(auth.ppqhLogin("cliente@sportforce3d.pe", "Nueva2026".toCharArray()).ppqhEmail())
                 .isEqualTo("cliente@sportforce3d.pe");
     }
 }

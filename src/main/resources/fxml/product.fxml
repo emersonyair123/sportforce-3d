@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import com.sportforce3d.component.SfLink?>
+<?import com.sportforce3d.component.PpqhSfLink?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.FlowPane?>
@@ -8,13 +8,13 @@
 <?import javafx.scene.layout.VBox?>
 
 <ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.sportforce3d.view.ProductController"
+            fx:controller="com.sportforce3d.view.HepyProductController"
             fitToWidth="true" styleClass="sf-page">
     <VBox spacing="24" maxWidth="1280">
         <padding><Insets top="24" right="24" bottom="64" left="24"/></padding>
-        <SfLink fx:id="backLink" text="Volver"/>
-        <StackPane fx:id="body">
-            <FlowPane fx:id="layout" hgap="40" vgap="32"/>
+        <PpqhSfLink fx:id="hepyBackLink" id="backLink" text="Volver"/>
+        <StackPane fx:id="hepyBody" id="body">
+            <FlowPane fx:id="hepyLayout" id="layout" hgap="40" vgap="32"/>
         </StackPane>
     </VBox>
 </ScrollPane>

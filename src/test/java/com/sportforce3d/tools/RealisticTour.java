@@ -1,20 +1,20 @@
 package com.sportforce3d.tools;
 
-import com.sportforce3d.app.AppContext;
-import com.sportforce3d.app.Fonts;
-import com.sportforce3d.app.Routes;
-import com.sportforce3d.app.SportForceApp;
-import com.sportforce3d.app.UiSettings;
-import com.sportforce3d.component.SfButton;
-import com.sportforce3d.component.SfTextField;
-import com.sportforce3d.config.AppConfig;
-import com.sportforce3d.db.Database;
-import com.sportforce3d.design.DesignDocument;
-import com.sportforce3d.design.RealisticSpec;
-import com.sportforce3d.design.SampleDesigns;
-import com.sportforce3d.model.PaymentMethod;
-import com.sportforce3d.three.Png;
-import com.sportforce3d.viewmodel.DesignerViewModel;
+import com.sportforce3d.app.PpqhAppContext;
+import com.sportforce3d.app.PpqhFonts;
+import com.sportforce3d.app.PpqhRoutes;
+import com.sportforce3d.app.PpqhSportForceApp;
+import com.sportforce3d.app.PpqhUiSettings;
+import com.sportforce3d.component.PpqhSfButton;
+import com.sportforce3d.component.PpqhSfTextField;
+import com.sportforce3d.config.PpqhAppConfig;
+import com.sportforce3d.db.HepyDatabase;
+import com.sportforce3d.design.PgeyDesignDocument;
+import com.sportforce3d.design.PgeyRealisticSpec;
+import com.sportforce3d.design.PgeySampleDesigns;
+import com.sportforce3d.model.PpqhPaymentMethod;
+import com.sportforce3d.three.PgeyPng;
+import com.sportforce3d.viewmodel.PgeyDesignerViewModel;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -43,7 +43,7 @@ public final class RealisticTour {
     private static final int H = 900;
 
     private final Path out;
-    private AppContext context;
+    private PpqhAppContext context;
     private Stage stage;
     private int count;
 
@@ -67,15 +67,15 @@ public final class RealisticTour {
     private void run(String part) throws Exception {
         Files.createDirectories(out);
         Path data = Files.createTempDirectory("sf-etapa7");
-        Database.deleteFiles(data.resolve("tour.db"));
+        HepyDatabase.hepyDeleteFiles(data.resolve("tour.db"));
         fx(() -> {
-            Fonts.loadAll();
-            UiSettings settings = new UiSettings(Preferences.userRoot().node("com/sportforce3d-tour"));
+            PpqhFonts.ppqhLoadAll();
+            PpqhUiSettings settings = new PpqhUiSettings(Preferences.userRoot().node("com/sportforce3d-tour"));
             settings.reduceMotionProperty().set(true);
-            context = new AppContext(new AppConfig(data.resolve("tour.db")), settings);
-            context.database().migrate();
+            context = new PpqhAppContext(new PpqhAppConfig(data.resolve("tour.db")), settings);
+            context.ppqhDatabase().hepyMigrate();
             stage = new Stage();
-            SportForceApp.openMainWindow(stage, context);
+            PpqhSportForceApp.ppqhOpenMainWindow(stage, context);
             stage.setWidth(W);
             stage.setHeight(H);
             stage.show();
@@ -115,14 +115,14 @@ public final class RealisticTour {
 
     private void catalog(String name, String text, String category) throws Exception {
         Long categoryId = category == null ? null : categoryId(category);
-        go(Routes.CATALOG, new Routes.CatalogParams(text, categoryId));
+        go(PpqhRoutes.PPQH_CATALOG, new PpqhRoutes.PpqhCatalogParams(text, categoryId));
         pause(2200);
         shot(name);
         resultsShot(name + "-completo");
     }
 
     private void designerTour() throws Exception {
-        go(Routes.DESIGNER, null);
+        go(PpqhRoutes.PPQH_DESIGNER, null);
         pause(2500);
         shot("disenador-realista-inicial");
 
@@ -156,7 +156,7 @@ public final class RealisticTour {
             return null;
         });
 
-        go(Routes.DESIGNER, new Routes.DesignerParams(null, null, productId("SF-009")));
+        go(PpqhRoutes.PPQH_DESIGNER, new PpqhRoutes.PpqhDesignerParams(null, null, productId("SF-009")));
         pause(3000);
         shot("disenador-desde-producto-rayas");
 
@@ -172,29 +172,29 @@ public final class RealisticTour {
             return null;
         });
         pause(3500);
-        go(Routes.DESIGNS, null);
+        go(PpqhRoutes.PPQH_DESIGNS, null);
         pause(1500);
         shot("mis-disenos-capturas-realistas");
     }
 
     private void adminTour() throws Exception {
-        long address = context.addressService().list().get(0).id();
+        long address = context.ppqhAddressService().ppqhList().get(0).ppqhId();
         long saved = number("SELECT max(id) FROM designs");
-        context.cartService().addDesign(saved, number("SELECT id FROM product_variants WHERE sku = 'SF-001-M'"), 2);
-        long realOrder = context.orderService().placeOrder(address, PaymentMethod.YAPE, null).id();
+        context.ppqhCartService().hepyAddDesign(saved, number("SELECT id FROM product_variants WHERE sku = 'SF-001-M'"), 2);
+        long realOrder = context.ppqhOrderService().ppqhPlaceOrder(address, PpqhPaymentMethod.YAPE, null).ppqhId();
 
-        DesignDocument old = SampleDesigns.halcones().withRealistic(null);
-        long oldDesign = context.designService().save(null, "Halcones (diseño anterior)", old,
-                existing("docs/capturas/etapa4/frente.png"), existing("docs/capturas/etapa4/espalda.png")).id();
-        context.cartService().addDesign(oldDesign, number("SELECT id FROM product_variants WHERE sku = 'SF-UFU-001-M'"), 1);
-        long oldOrder = context.orderService().placeOrder(address, PaymentMethod.PLIN, null).id();
+        PgeyDesignDocument old = PgeySampleDesigns.pgeyHalcones().pgeyWithRealistic(null);
+        long oldDesign = context.ppqhDesignService().pgeySave(null, "Halcones (diseño anterior)", old,
+                existing("docs/capturas/etapa4/frente.png"), existing("docs/capturas/etapa4/espalda.png")).pgeyId();
+        context.ppqhCartService().hepyAddDesign(oldDesign, number("SELECT id FROM product_variants WHERE sku = 'SF-UFU-001-M'"), 1);
+        long oldOrder = context.ppqhOrderService().ppqhPlaceOrder(address, PpqhPaymentMethod.PLIN, null).ppqhId();
 
         fx(() -> {
-            context.navigator().logout();
+            context.ppqhNavigator().ppqhLogout();
             return null;
         });
         login("admin@sportforce3d.pe", "Admin123!");
-        go(Routes.ADMIN_DESIGN, designItem(realOrder));
+        go(PpqhRoutes.PPQH_ADMIN_DESIGN, designItem(realOrder));
         pause(4500);
         shot("admin-uniforme-vista-realista");
         panelShot("admin-uniforme-ficha-tecnica-completa");
@@ -204,14 +204,14 @@ public final class RealisticTour {
         });
         pause(1500);
         shot("admin-uniforme-vista-3d");
-        go(Routes.ADMIN_DESIGN, designItem(oldOrder));
+        go(PpqhRoutes.PPQH_ADMIN_DESIGN, designItem(oldOrder));
         pause(4500);
         shot("admin-uniforme-diseno-anterior-solo-3d");
     }
 
     private long designItem(long orderId) {
-        return context.adminOrderService().order(orderId).items().stream()
-                .filter(i -> i.hasDesign()).findFirst().orElseThrow().id();
+        return context.ppqhAdminOrderService().ppqhOrder(orderId).ppqhItems().stream()
+                .filter(i -> i.ppqhHasDesign()).findFirst().orElseThrow().ppqhId();
     }
 
     private void panelShot(String name) throws Exception {
@@ -237,10 +237,10 @@ public final class RealisticTour {
     private void look(String name, String model, Map<String, String> colors, String pattern, String patternColor,
                       String text, Integer number) throws Exception {
         fx(() -> {
-            DesignerViewModel vm = viewModel();
-            vm.editRealistic("Captura", s -> new RealisticSpec(model, merged(s.zoneColors(), colors), pattern,
+            PgeyDesignerViewModel vm = viewModel();
+            vm.pgeyEditRealistic("Captura", s -> new PgeyRealisticSpec(model, merged(s.pgeyZoneColors(), colors), pattern,
                     patternColor, text, number), null);
-            vm.seal();
+            vm.pgeySeal();
             return null;
         });
         pause(1800);
@@ -253,16 +253,16 @@ public final class RealisticTour {
         return m;
     }
 
-    private DesignerViewModel viewModel() {
+    private PgeyDesignerViewModel viewModel() {
         Node n = withProperty(stage.getScene().getRoot());
         if (n == null) {
             throw new IllegalStateException("No está abierto el diseñador");
         }
-        return (DesignerViewModel) n.getProperties().get(DesignerViewModel.class);
+        return (PgeyDesignerViewModel) n.getProperties().get(PgeyDesignerViewModel.class);
     }
 
     private static Node withProperty(Node node) {
-        if (node.getProperties().containsKey(DesignerViewModel.class)) {
+        if (node.getProperties().containsKey(PgeyDesignerViewModel.class)) {
             return node;
         }
         if (node instanceof Parent p) {
@@ -294,7 +294,7 @@ public final class RealisticTour {
     }
 
     private long number(String sql) {
-        return context.database().withConnection(c -> {
+        return context.ppqhDatabase().hepyWithConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
                     throw new IllegalStateException("Sin resultado: " + sql);
@@ -305,7 +305,7 @@ public final class RealisticTour {
     }
 
     private long id(String sql, String value) {
-        return context.database().withConnection(c -> {
+        return context.ppqhDatabase().hepyWithConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement(sql)) {
                 ps.setString(1, value);
                 try (ResultSet rs = ps.executeQuery()) {
@@ -320,8 +320,8 @@ public final class RealisticTour {
 
     private void login(String email, String password) throws Exception {
         fx(() -> {
-            if (!context.session().isAuthenticated()) {
-                context.navigator().showLogin();
+            if (!context.ppqhSession().ppqhIsAuthenticated()) {
+                context.ppqhNavigator().ppqhShowLogin();
             }
             return null;
         });
@@ -337,7 +337,7 @@ public final class RealisticTour {
 
     private void go(String route, Object param) throws Exception {
         fx(() -> {
-            context.router().go(route, param);
+            context.ppqhRouter().ppqhGo(route, param);
             return null;
         });
         pause(1300);
@@ -366,13 +366,13 @@ public final class RealisticTour {
     private void save(WritableImage img, String name) throws Exception {
         count++;
         Path file = out.resolve(String.format("%02d-%s.png", count, name));
-        Png.write(img, file);
+        PgeyPng.pgeyWrite(img, file);
         System.out.println("Captura: " + file);
     }
 
-    private SfTextField field(String label) {
+    private PpqhSfTextField field(String label) {
         for (Node n : stage.getScene().getRoot().lookupAll(".sf-field")) {
-            if (n instanceof SfTextField f && f.lookupAll(".sf-field-label").stream()
+            if (n instanceof PpqhSfTextField f && f.lookupAll(".sf-field-label").stream()
                     .anyMatch(l -> l instanceof Labeled ll && ll.getText().equalsIgnoreCase(label))) {
                 return f;
             }
@@ -380,21 +380,21 @@ public final class RealisticTour {
         throw new IllegalStateException("No hay campo " + label);
     }
 
-    private SfButton button(String text) {
-        SfButton found = find(stage.getScene().getRoot(), text);
+    private PpqhSfButton button(String text) {
+        PpqhSfButton found = find(stage.getScene().getRoot(), text);
         if (found == null) {
             throw new IllegalStateException("No hay botón " + text);
         }
         return found;
     }
 
-    private static SfButton find(Node node, String text) {
-        if (node instanceof SfButton b && text.equalsIgnoreCase(b.getText())) {
+    private static PpqhSfButton find(Node node, String text) {
+        if (node instanceof PpqhSfButton b && text.equalsIgnoreCase(b.getText())) {
             return b;
         }
         if (node instanceof Parent p) {
             for (Node child : p.getChildrenUnmodifiable()) {
-                SfButton f = find(child, text);
+                PpqhSfButton f = find(child, text);
                 if (f != null) {
                     return f;
                 }

@@ -1,6 +1,6 @@
 package com.sportforce3d.three;
 
-import com.sportforce3d.design.EmblemCatalog;
+import com.sportforce3d.design.PgeyEmblemCatalog;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -14,12 +14,12 @@ class SvgLoaderTest {
 
     @Test
     void everyLibraryEmblemParses() throws Exception {
-        for (String key : EmblemCatalog.EMBLEMS.keySet()) {
-            try (InputStream in = SvgLoaderTest.class.getResourceAsStream(EmblemCatalog.resource(key))) {
+        for (String key : PgeyEmblemCatalog.PGEY_EMBLEMS.keySet()) {
+            try (InputStream in = SvgLoaderTest.class.getResourceAsStream(PgeyEmblemCatalog.pgeyResource(key))) {
                 assertThat(in).as(key).isNotNull();
-                SvgLoader.SvgDoc doc = SvgLoader.parse(in);
-                assertThat(doc.width()).isEqualTo(120);
-                assertThat(doc.shapes()).as(key).isNotEmpty();
+                PgeySvgLoader.PgeySvgDoc doc = PgeySvgLoader.pgeyParse(in);
+                assertThat(doc.pgeyWidth()).isEqualTo(120);
+                assertThat(doc.pgeyShapes()).as(key).isNotEmpty();
             }
         }
     }
@@ -34,29 +34,29 @@ class SvgLoaderTest {
                   </g>
                   <polygon points="0,0 10,0 5,8"/>
                 </svg>""";
-        SvgLoader.SvgDoc doc = SvgLoader.parse(stream(svg));
-        assertThat(doc.shapes()).hasSize(3);
-        assertThat(doc.shapes().get(0).fill()).isEqualTo("#1f5fff");
-        assertThat(doc.shapes().get(0).opacity()).isEqualTo(0.5);
-        assertThat(doc.shapes().get(1).fill()).isEqualTo("#39ff88");
-        assertThat(doc.shapes().get(1).strokeWidth()).isEqualTo(2);
-        assertThat(doc.shapes().get(2).fill()).as("SVG pinta negro por defecto").isEqualTo("#000000");
+        PgeySvgLoader.PgeySvgDoc doc = PgeySvgLoader.pgeyParse(stream(svg));
+        assertThat(doc.pgeyShapes()).hasSize(3);
+        assertThat(doc.pgeyShapes().get(0).pgeyFill()).isEqualTo("#1f5fff");
+        assertThat(doc.pgeyShapes().get(0).pgeyOpacity()).isEqualTo(0.5);
+        assertThat(doc.pgeyShapes().get(1).pgeyFill()).isEqualTo("#39ff88");
+        assertThat(doc.pgeyShapes().get(1).pgeyStrokeWidth()).isEqualTo(2);
+        assertThat(doc.pgeyShapes().get(2).pgeyFill()).as("SVG pinta negro por defecto").isEqualTo("#000000");
     }
 
     @Test
     void rejectsDoctypesAndNonSvg() {
         String xxe = "<?xml version=\"1.0\"?><!DOCTYPE svg [<!ENTITY x SYSTEM \"file:///etc/passwd\">]>"
                 + "<svg xmlns=\"http://www.w3.org/2000/svg\"><text>&x;</text></svg>";
-        assertThatThrownBy(() -> SvgLoader.parse(stream(xxe))).isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> SvgLoader.parse(stream("<html/>"))).hasMessageContaining("no es un SVG");
-        assertThatThrownBy(() -> SvgLoader.parse(stream("<svg xmlns=\"http://www.w3.org/2000/svg\"/>")))
+        assertThatThrownBy(() -> PgeySvgLoader.pgeyParse(stream(xxe))).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> PgeySvgLoader.pgeyParse(stream("<html/>"))).hasMessageContaining("no es un SVG");
+        assertThatThrownBy(() -> PgeySvgLoader.pgeyParse(stream("<svg xmlns=\"http://www.w3.org/2000/svg\"/>")))
                 .hasMessageContaining("PNG");
     }
 
     @Test
     void recolorReplacesExactColors() {
-        assertThat(SvgLoader.paint("#1f5fff", java.util.Map.of("#1F5FFF", "#D7192A")).toString()).isEqualTo("0xd7192aff");
-        assertThat(SvgLoader.paint("none", java.util.Map.of())).isNull();
+        assertThat(PgeySvgLoader.pgeyPaint("#1f5fff", java.util.Map.of("#1F5FFF", "#D7192A")).toString()).isEqualTo("0xd7192aff");
+        assertThat(PgeySvgLoader.pgeyPaint("none", java.util.Map.of())).isNull();
     }
 
     private static InputStream stream(String s) {

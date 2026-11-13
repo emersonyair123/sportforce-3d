@@ -4,27 +4,27 @@ import bpy
 from mathutils import Vector
 
 
-def camara(nombre, objetivo, distancia, azimut, elevacion=5.0, lente=50):
-    cam = bpy.data.objects.get(nombre)
-    if cam is None:
-        cam = bpy.data.objects.new(nombre, bpy.data.cameras.new(nombre))
-        bpy.context.scene.collection.objects.link(cam)
-    cam.data.lens = lente
-    a, e = math.radians(azimut), math.radians(elevacion)
-    pos = Vector(objetivo) + Vector((math.sin(a) * math.cos(e), -math.cos(a) * math.cos(e), math.sin(e))) * distancia
-    cam.location = pos
-    cam.rotation_euler = (Vector(objetivo) - pos).to_track_quat('-Z', 'Y').to_euler()
-    return cam
+def pgeyCamara(pgeyNombre, pgeyObjetivo, pgeyDistancia, pgeyAzimut, pgeyElevacion=5.0, pgeyLente=50):
+    pgeyCam = bpy.data.objects.get(pgeyNombre)
+    if pgeyCam is None:
+        pgeyCam = bpy.data.objects.new(pgeyNombre, bpy.data.cameras.new(pgeyNombre))
+        bpy.context.scene.collection.objects.link(pgeyCam)
+    pgeyCam.data.lens = pgeyLente
+    pgeyA, pgeyE = math.radians(pgeyAzimut), math.radians(pgeyElevacion)
+    pgeyPos = Vector(pgeyObjetivo) + Vector((math.sin(pgeyA) * math.cos(pgeyE), -math.cos(pgeyA) * math.cos(pgeyE), math.sin(pgeyE))) * pgeyDistancia
+    pgeyCam.location = pgeyPos
+    pgeyCam.rotation_euler = (Vector(pgeyObjetivo) - pgeyPos).to_track_quat('-Z', 'Y').to_euler()
+    return pgeyCam
 
 
-def render_workbench(ruta, cam, ancho=900, alto=1200):
-    sc = bpy.context.scene
-    sc.render.engine = 'BLENDER_WORKBENCH'
-    sc.display.shading.light = 'STUDIO'
-    sc.display.shading.color_type = 'MATERIAL'
-    sc.display.shading.show_cavity = False
-    sc.render.resolution_x, sc.render.resolution_y = ancho, alto
-    sc.render.film_transparent = False
-    sc.camera = cam
-    sc.render.filepath = str(ruta)
+def pgeyRenderWorkbench(pgeyRuta, pgeyCam, pgeyAncho=900, pgeyAlto=1200):
+    pgeySc = bpy.context.scene
+    pgeySc.render.engine = 'BLENDER_WORKBENCH'
+    pgeySc.display.shading.light = 'STUDIO'
+    pgeySc.display.shading.color_type = 'MATERIAL'
+    pgeySc.display.shading.show_cavity = False
+    pgeySc.render.resolution_x, pgeySc.render.resolution_y = pgeyAncho, pgeyAlto
+    pgeySc.render.film_transparent = False
+    pgeySc.camera = pgeyCam
+    pgeySc.render.filepath = str(pgeyRuta)
     bpy.ops.render.render(write_still=True)

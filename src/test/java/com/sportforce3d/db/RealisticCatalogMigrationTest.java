@@ -1,12 +1,12 @@
 package com.sportforce3d.db;
 
-import com.sportforce3d.model.ProductQuery;
-import com.sportforce3d.model.ProductSort;
-import com.sportforce3d.model.ProductSummary;
-import com.sportforce3d.render.RealisticModel;
-import com.sportforce3d.render.RealisticModelRepository;
-import com.sportforce3d.render.RecolorRequest;
-import com.sportforce3d.repository.ProductRepository;
+import com.sportforce3d.model.HepyProductQuery;
+import com.sportforce3d.model.HepyProductSort;
+import com.sportforce3d.model.HepyProductSummary;
+import com.sportforce3d.render.PgeyRealisticModel;
+import com.sportforce3d.render.PgeyRealisticModelRepository;
+import com.sportforce3d.render.PgeyRecolorRequest;
+import com.sportforce3d.repository.HepyProductRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -28,8 +28,8 @@ class RealisticCatalogMigrationTest {
 
     @Test
     void oldProductsGetARealisticPhotoAndTheDuplicateIsHidden() throws SQLException {
-        Database db = TestDatabases.migrated(tempDir);
-        try (Connection c = db.getConnection(); Statement st = c.createStatement()) {
+        HepyDatabase db = TestDatabases.migrated(tempDir);
+        try (Connection c = db.hepyGetConnection(); Statement st = c.createStatement()) {
             assertThat(text(st, "SELECT model_key FROM products WHERE sku = 'SF-UFU-002'")).isEqualTo("futbol_hombre_frente");
             assertThat(text(st, "SELECT pattern || ' ' || pattern_color FROM products WHERE sku = 'SF-UFU-002'"))
                     .isEqualTo("rayas #f2f5f8");
@@ -40,8 +40,8 @@ class RealisticCatalogMigrationTest {
 
     @Test
     void newModelsReplaceTheDrawingsAndTheProvisionalPhotos() throws SQLException {
-        Database db = TestDatabases.migrated(tempDir);
-        try (Connection c = db.getConnection(); Statement st = c.createStatement()) {
+        HepyDatabase db = TestDatabases.migrated(tempDir);
+        try (Connection c = db.hepyGetConnection(); Statement st = c.createStatement()) {
             assertThat(count(st, "SELECT count(*) FROM products WHERE deleted_at IS NULL AND model_key IS NULL"))
                     .as("ninguno con dibujo").isZero();
             for (String[] row : new String[][]{
@@ -64,8 +64,8 @@ class RealisticCatalogMigrationTest {
 
     @Test
     void loadsTheWholeCatalogWithValidModelsAndStock() throws SQLException {
-        Database db = TestDatabases.migrated(tempDir);
-        try (Connection c = db.getConnection(); Statement st = c.createStatement()) {
+        HepyDatabase db = TestDatabases.migrated(tempDir);
+        try (Connection c = db.hepyGetConnection(); Statement st = c.createStatement()) {
             assertThat(count(st, "SELECT count(*) FROM products WHERE model_key IS NOT NULL")).as("44 de V6 + 20 de V8 + 4 de V9").isEqualTo(68);
             assertThat(count(st, "SELECT count(*) FROM products WHERE sku GLOB 'SF-0[0-9][0-9]'")).as("insertados").isEqualTo(42);
             for (String name : List.of("Uniformes de vóley", "Uniformes de básquet", "Shorts", "Niños")) {
@@ -88,20 +88,20 @@ class RealisticCatalogMigrationTest {
             assertThat(text(st, "SELECT model_key FROM products WHERE sku = 'SF-ACC-001'")).isEqualTo("producto_canilleras");
         }
 
-        RealisticModelRepository models = new RealisticModelRepository();
-        ProductRepository products = new ProductRepository(db);
-        List<ProductSummary> all = new ArrayList<>();
+        PgeyRealisticModelRepository models = new PgeyRealisticModelRepository();
+        HepyProductRepository products = new HepyProductRepository(db);
+        List<HepyProductSummary> all = new ArrayList<>();
         for (int page = 1; page <= 2; page++) {
-            all.addAll(products.search(new ProductQuery(null, null, null, Set.of(), null, null, false, false,
-                    ProductSort.NAME, page, 60)).items());
+            all.addAll(products.hepySearch(new HepyProductQuery(null, null, null, Set.of(), null, null, false, false,
+                    HepyProductSort.NAME, page, 60)).hepyItems());
         }
         assertThat(all).as("68 - SF-BUZ-001 (V8)").hasSize(67);
-        List<ProductSummary> realistic = all.stream().filter(p -> p.look() != null).toList();
+        List<HepyProductSummary> realistic = all.stream().filter(p -> p.hepyLook() != null).toList();
         assertThat(realistic).as("todos: 44 de V6 + 20 de V8 + 4 de V9 − SF-BUZ-001 oculto").hasSize(67);
-        for (ProductSummary p : realistic) {
-            RecolorRequest req = RecolorRequest.of(p.look());
-            RealisticModel model = models.require(req.modelKey());
-            assertThat(model.zones()).as(p.name()).containsAnyElementsOf(req.zoneColors().keySet());
+        for (HepyProductSummary p : realistic) {
+            PgeyRecolorRequest req = PgeyRecolorRequest.pgeyOf(p.hepyLook());
+            PgeyRealisticModel model = models.pgeyRequire(req.pgeyModelKey());
+            assertThat(model.pgeyZones()).as(p.hepyName()).containsAnyElementsOf(req.pgeyZoneColors().keySet());
         }
     }
 

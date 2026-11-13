@@ -1,8 +1,8 @@
 package com.sportforce3d.tools;
 
-import com.sportforce3d.app.Fonts;
-import com.sportforce3d.component.Logo;
-import com.sportforce3d.three.Png;
+import com.sportforce3d.app.PpqhFonts;
+import com.sportforce3d.component.PpqhLogo;
+import com.sportforce3d.three.PgeyPng;
 import javafx.application.Platform;
 import javafx.scene.image.Image;
 
@@ -35,11 +35,11 @@ public final class IconTool {
             for (int size : SIZES) {
                 CompletableFuture<Image> img = new CompletableFuture<>();
                 Platform.runLater(() -> {
-                    Fonts.loadAll();
-                    img.complete(Logo.monogram(size));
+                    PpqhFonts.ppqhLoadAll();
+                    img.complete(PpqhLogo.ppqhMonogram(size));
                 });
                 Path png = tmp.resolve(size + ".png");
-                Png.write(img.get(), png);
+                PgeyPng.pgeyWrite(img.get(), png);
                 pngs.add(Files.readAllBytes(png));
                 if (size == 256) {
                     Files.createDirectories(out);

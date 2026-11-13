@@ -7,11 +7,11 @@
 <?import javafx.scene.layout.VBox?>
 
 <ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.sportforce3d.view.CartController"
+            fx:controller="com.sportforce3d.view.HepyCartController"
             fitToWidth="true" styleClass="sf-page">
     <VBox spacing="24" maxWidth="1280">
         <padding><Insets top="32" right="24" bottom="64" left="24"/></padding>
         <Label text="TU CARRITO" styleClass="display-l, ink"/>
-        <FlowPane fx:id="layout" hgap="24" vgap="24"/>
+        <FlowPane fx:id="hepyLayout" id="layout" hgap="24" vgap="24"/>
     </VBox>
 </ScrollPane>

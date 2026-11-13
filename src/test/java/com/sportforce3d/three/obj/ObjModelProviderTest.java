@@ -1,8 +1,8 @@
 package com.sportforce3d.three.obj;
 
-import com.sportforce3d.three.model.BodyType;
-import com.sportforce3d.three.model.ModelData;
-import com.sportforce3d.three.model.Zone;
+import com.sportforce3d.three.model.PgeyBodyType;
+import com.sportforce3d.three.model.PgeyModelData;
+import com.sportforce3d.three.model.PgeyZone;
 import org.junit.jupiter.api.Test;
 
 import java.io.StringReader;
@@ -46,31 +46,31 @@ class ObjModelProviderTest {
 
     @Test
     void mapsObjectsToZonesAndTriangulatesPolygons() throws Exception {
-        ModelData model = ObjModelProvider.parse(new StringReader(OBJ), BodyType.ADULTO_HOMBRE);
+        PgeyModelData model = PgeyObjModelProvider.pgeyParse(new StringReader(OBJ), PgeyBodyType.ADULTO_HOMBRE);
 
-        assertThat(model.mannequin()).singleElement().satisfies(p -> {
-            assertThat(p.name()).isEqualTo("mannequin_body");
-            assertThat(p.mesh().faceCount()).as("cuadrilátero → 2 triángulos").isEqualTo(2);
-            assertThat(p.mesh().points()[1 + 3 * 2]).isEqualTo(-1.8f);
-            assertThat(p.mesh().texCoords()[1]).isEqualTo(1f);
+        assertThat(model.pgeyMannequin()).singleElement().satisfies(p -> {
+            assertThat(p.pgeyName()).isEqualTo("mannequin_body");
+            assertThat(p.pgeyMesh().pgeyFaceCount()).as("cuadrilátero → 2 triángulos").isEqualTo(2);
+            assertThat(p.pgeyMesh().pgeyPoints()[1 + 3 * 2]).isEqualTo(-1.8f);
+            assertThat(p.pgeyMesh().pgeyTexCoords()[1]).isEqualTo(1f);
         });
-        assertThat(model.zones()).containsOnlyKeys(Zone.JERSEY_BODY, Zone.SHOE_SOLE);
-        float[] n = model.zones().get(Zone.JERSEY_BODY).get(0).mesh().normals();
+        assertThat(model.pgeyZones()).containsOnlyKeys(PgeyZone.JERSEY_BODY, PgeyZone.SHOE_SOLE);
+        float[] n = model.pgeyZones().get(PgeyZone.JERSEY_BODY).get(0).pgeyMesh().pgeyNormals();
         assertThat(Math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2])).isCloseTo(1.0, org.assertj.core.api.Assertions.within(1e-6));
-        assertThat(model.height()).isEqualTo(1.8);
-        assertThat(model.focus()).isNotEmpty();
+        assertThat(model.pgeyHeight()).isEqualTo(1.8);
+        assertThat(model.pgeyFocus()).isNotEmpty();
     }
 
     @Test
     void reportsBrokenIndices() {
-        assertThatThrownBy(() -> ObjModelProvider.parse(new StringReader("o jersey_body\nv 0 0 0\nf 1 2 3\n"),
-                BodyType.ADULTO_HOMBRE))
+        assertThatThrownBy(() -> PgeyObjModelProvider.pgeyParse(new StringReader("o jersey_body\nv 0 0 0\nf 1 2 3\n"),
+                PgeyBodyType.ADULTO_HOMBRE))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("línea 3");
     }
 
     @Test
     void proceduralIsUsedWhenNoObjIsPackaged() {
-        assertThat(ObjModelProvider.available(BodyType.ADULTO_HOMBRE)).isFalse();
+        assertThat(PgeyObjModelProvider.pgeyAvailable(PgeyBodyType.ADULTO_HOMBRE)).isFalse();
     }
 }
