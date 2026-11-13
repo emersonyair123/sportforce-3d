@@ -1006,6 +1006,202 @@ public final class ManualSteps extends ManualTour {
         failures.forEach(System.out::println);
     }
 
+    private static final String[][] JUGADORES = {{"1", "QUISPE", "L"}, {"2", "MAMANI", "M"}, {"3", "CONDORI", "M"},
+            {"4", "HUAMAN", "L"}, {"5", "FLORES", "S"}, {"6", "CHOQUE", "M"}, {"7", "RAMOS", "S"}, {"8", "APAZA", "M"},
+            {"9", "TICONA", "L"}, {"10", "COAQUIRA", "M"}, {"11", "PARI", "XL"}};
+
+    void casos(Path proof) throws Exception {
+        String cliente = "cliente@sportforce3d.pe";
+        long shoes = sql("SELECT id FROM products WHERE sku = 'SF-ZAP-001'");
+        long uniform = sql("SELECT id FROM products WHERE sku = 'SF-UFU-001'");
+        login(cliente, "Cliente123!");
+
+        section("y");
+        go(PpqhRoutes.PPQH_PRODUCT, shoes);
+        step("zap-ficha", "Ficha de las Zapatillas Fútbol FG Strike", null, () -> m(text("Zapatillas Fútbol FG Strike")));
+        step("zap-talla", "Talla 42 elegida con su stock", () -> click(text("42")), () -> m(text("42"), textEnding(" disponibles")));
+        step("zap-agregar", "Zapatillas agregadas al carrito", () -> click(text("Agregar al carrito")), () -> m(css("#cartSlot")), 1800);
+        step("zap-carrito", "Carrito con las zapatillas", () -> click(css("#cartSlot .sf-btn")), () -> m(text("Resumen")), 2000);
+        step("zap-checkout", "Finalizar compra con la dirección guardada", () -> click(text("Continuar al pago")),
+                () -> m(text("1. Dirección de envío")), 2000);
+        step("zap-yape", "Método de pago Yape", () -> click(text("Yape")), () -> m(text("Yape").getParent()));
+        step("zap-confirmar", "Confirmar pedido", () -> reveal(text("Confirmar pedido")), () -> m(text("Confirmar pedido")));
+        step("zap-pedido", "Pedido creado: pendiente de pago con el número de Yape", () -> click(text("Confirmar pedido")), null, 3000);
+        step("zap-instrucciones", "Monto y número de Yape de la tienda", () -> reveal(textStarting("Monto a pagar")),
+                () -> m(textStarting("Monto a pagar"), textStarting("Yapea")));
+        step("zap-codigo", "Código de operación y comprobante", () -> {
+            field("Código de operación").setText("73015524");
+            @SuppressWarnings("unchecked")
+            var hook = (java.util.function.Consumer<java.io.File>) css("#send-payment").getProperties().get("proof");
+            hook.accept(proof.toFile());
+        }, () -> m(field("Código de operación"), text("Elegir comprobante").getParent()));
+        step("zap-enviado", "Comprobante enviado: pago en verificación", () -> click(text("Enviar comprobante")), null, 3000);
+        step("zap-estado", "Línea de tiempo en Pago en verificación", () -> top(), () -> m(css(".sf-timeline")), 1200);
+        long zapOrder = sql("SELECT id FROM orders ORDER BY id DESC LIMIT 1");
+        logout();
+
+        section("z");
+        login("admin@sportforce3d.pe", "Admin123!");
+        step("dash-antes", "Dashboard con un pago por verificar", () -> click(sidebar("Dashboard")), () -> m(text("Pagos por verificar")), 2500);
+        step("pagos", "Pagos: el pago de Yape de las zapatillas", () -> click(sidebar("Pagos")), () -> m(textStarting("Operación")), 2000);
+        step("aprobar", "Aprobar: confirmación con monto y operación", () -> click(text("Aprobar", 0)), null, 1200);
+        step("aprobado", "Pago aprobado: el pedido pasa a Pagado", () -> {
+            List<Node> inputs = all(x -> x instanceof TextInputControl && !isIn(x, "sf-topbar"));
+            ((TextInputControl) inputs.get(inputs.size() - 1)).setText("Visto en Yape 73015524");
+            click(lastButton("Aprobar pago"));
+        }, null, 2500);
+        go(PpqhRoutes.PPQH_ADMIN_ORDER, zapOrder);
+        step("pedido-pagado", "Pedido Pagado listo para producir", null, () -> m(text("Recorrido")));
+        String[][] pasos = {{"En producción", "Preparando el despacho en almacén"}, {"Enviado", "Olva Courier, guía 784512"},
+                {"Entregado", "Recibido por Lucía Quispe"}};
+        for (String[] p : pasos) {
+            step("estado-" + slug(p[0]), "Nuevo estado " + p[0] + " con nota", () -> {
+                @SuppressWarnings("unchecked")
+                ComboBox<Object> c = nth(ComboBox.class, 0);
+                for (Object o : c.getItems()) {
+                    String t = slug(o.toString());
+                    if (t.equals(slug(p[0])) || t.replace('_', '-').equals(slug(p[0]))) {
+                        c.getSelectionModel().select(o);
+                    }
+                }
+                field("Nota para el historial").setText(p[1]);
+                reveal(c);
+            }, () -> m(nth(ComboBox.class, 0), field("Nota para el historial"), text("Cambiar estado")));
+            step("cambiado-" + slug(p[0]), "Pedido en estado " + p[0], () -> click(text("Cambiar estado")), () -> m(text("Recorrido")), 2500);
+        }
+        step("entregado-historial", "Historial completo hasta Entregado", () -> reveal(text("Historial")), () -> m(text("Historial")));
+
+        section("q2");
+        step("dashboard", "Dashboard con la venta aprobada de hoy", () -> click(sidebar("Dashboard")), null, 2500);
+        step("dash-tarjetas", "Tarjetas de ventas, pagos por verificar y por producir", null,
+                () -> m(text("Ventas de hoy"), text("Ventas del mes"), text("Pagos por verificar"), text("Por producir")));
+        step("dash-grafico", "Gráfico de ventas de 30 días y pedidos por estado", () -> reveal(text("Ventas de los últimos 30 días")),
+                () -> m(text("Ventas de los últimos 30 días")));
+        step("dash-vendidos", "Más vendidos", () -> reveal(text("Más vendidos")), () -> m(text("Más vendidos")));
+        step("reportes", "Reportes: pantalla inicial", () -> click(sidebar("Reportes")), null, 2000);
+        step("reportes-generado", "Reporte generado con la venta", () -> {
+            click(text("Últimos 30 días"));
+            click(text("Generar reporte"));
+        }, () -> m(text("Ventas totales")), 2500);
+        step("reportes-detalle", "Detalle por día y categoría", () -> {
+            ScrollPane sp = (ScrollPane) all(x -> x instanceof ScrollPane).get(0);
+            sp.setVvalue(0.55);
+        }, null, 1200);
+        step("reportes-detalle-2", "Detalle por producto y por método de pago", () -> {
+            ScrollPane sp = (ScrollPane) all(x -> x instanceof ScrollPane).get(0);
+            sp.setVvalue(1);
+        }, null, 1200);
+        java.time.LocalDate today = context.ppqhReportService().ppqhToday();
+        var report = context.ppqhReportService().ppqhSales(today.minusDays(29), today);
+        Path pdf = context.ppqhReportService().ppqhExportPdf(report, out.resolve("reporte-ventas.pdf"));
+        Path xlsx = context.ppqhReportService().ppqhExportExcel(report, out.resolve("reporte-ventas.xlsx"));
+        System.out.println("Reportes: " + pdf + " · " + xlsx);
+        logout();
+
+        login(cliente, "Cliente123!");
+        section("y2");
+        go(PpqhRoutes.PPQH_ORDER, zapOrder);
+        step("cliente-entregado", "El cliente ve su pedido Entregado", null, () -> m(css(".sf-timeline")), 1500);
+
+        section("w2");
+        go(PpqhRoutes.PPQH_PRODUCT, uniform);
+        quiet(() -> click(text("Personalizar en 3D")), 3500);
+        step("base", "Diseño base del equipo en la Vista realista", null, () -> m(toggle("Vista realista")));
+        String[][] colores = {{"Camiseta", "Rojo"}, {"Short", "Blanco"}, {"Paneles", "Negro"}, {"Medias", "Rojo"}};
+        for (String[] c : colores) {
+            step("base-" + slug(c[0]), c[0] + " en " + c[1].toLowerCase(), () -> {
+                reveal(toggle(c[0]));
+                click(toggle(c[0]));
+                click(accStarts(c[1], 0));
+            }, () -> m(toggle(c[0]), accStarts(c[1], 0)), 1500);
+        }
+        step("base-diseno", "Diseño Franjas horizontales", () -> {
+            reveal(text("Franjas horizontales"));
+            click(text("Franjas horizontales"));
+        }, () -> m(text("Franjas horizontales")), 1800);
+        step("base-guardar", "Guardar el diseño base del equipo", () -> click(text("Guardar diseño")),
+                () -> m(field("Nombre del diseño")), 1200);
+        quiet(() -> {
+            field("Nombre del diseño").setText("Halcones FC base");
+            click(text("Guardar"));
+        }, 4000);
+        boolean primero = true;
+        for (String[] j : JUGADORES) {
+            String nombre = String.format("Halcones FC %s %s", j[0], j[1]);
+            go(PpqhRoutes.PPQH_DESIGNS, null);
+            if (primero) {
+                step("duplicar", "Mis diseños: Duplicar el diseño base para un jugador", null,
+                        () -> m(cardButton("Halcones FC base", "Duplicar")));
+            }
+            quiet(() -> click(cardButton("Halcones FC base", "Duplicar")), 2500);
+            if (primero) {
+                step("copia", "Copia creada: se abre con Abrir", null, () -> m(cardButton("Copia de Halcones FC base", "Abrir")));
+            }
+            quiet(() -> click(cardButton("Copia de Halcones FC base", "Abrir")), 4000);
+            step("jugador-" + j[0], "Jugador " + j[0] + ": " + j[1] + " con el número " + j[0], () -> {
+                reveal(field("Nombre (espalda)"));
+                field("Nombre (espalda)").setText(j[1]);
+                field("Número (0–99)").setText(j[0]);
+            }, () -> m(field("Nombre (espalda)"), field("Número (0–99)"), text("Espalda")), 2200);
+            if (primero) {
+                step("guardar-version", "Agregar al carrito: se guarda como nueva versión con el nombre del jugador",
+                        () -> click(text("Agregar al carrito")), () -> m(field("Nombre del diseño")), 1500);
+            } else {
+                quiet(() -> click(text("Agregar al carrito")), 1500);
+            }
+            quiet(() -> {
+                field("Nombre del diseño").setText(nombre);
+                click(text("Guardar"));
+            }, 4500);
+            if (primero) {
+                step("talla", "Talla y cantidad del jugador", () -> click(text(j[2])), () -> m(text(j[2])), 1500);
+                step("agregado", "Camiseta del jugador agregada al carrito", () -> click(text("Agregar al carrito", 1)),
+                        () -> m(css("#cartSlot")), 2500);
+            } else {
+                quiet(() -> {
+                    click(text(j[2]));
+                    click(text("Agregar al carrito", 1));
+                }, 2500);
+            }
+            primero = false;
+        }
+        step("mis-disenos", "Mis diseños con un diseño por jugador", () -> click(sidebar("Mis diseños")), null, 2500);
+        step("carrito", "Carrito con las 11 camisetas del equipo", () -> click(css("#cartSlot .sf-btn")), null, 2500);
+        step("carrito-resumen", "Resumen del pedido del equipo: envío gratis", () -> reveal(text("Resumen")), () -> m(text("Resumen")), 1200);
+        step("carrito-final", "Últimas líneas del carrito del equipo", () -> {
+            ScrollPane sp = (ScrollPane) all(x -> x instanceof ScrollPane).get(0);
+            sp.setVvalue(1);
+        }, null, 1200);
+        Files.write(out.resolve("fallos-casos.txt"), failures);
+        System.out.println("FALLOS: " + failures.size());
+        failures.forEach(System.out::println);
+    }
+
+    private Node cardButton(String name, String button) {
+        for (Node b : all(n -> n instanceof javafx.scene.control.ButtonBase bb && "Abrir".equals(bb.getText()))) {
+            for (Node card = b.getParent(); card != null; card = card.getParent()) {
+                List<Node> labels = new ArrayList<>();
+                collectLabels(card, labels);
+                List<Node> targets = new ArrayList<>();
+                if (button.equals("Abrir")) {
+                    targets.add(b);
+                } else {
+                    collectAcc(card, button, targets);
+                }
+                List<String> texts = labels.stream().filter(l -> !(l instanceof javafx.scene.control.ButtonBase))
+                        .map(l -> ((javafx.scene.control.Labeled) l).getText()).filter(t -> t != null && !t.isBlank()).toList();
+                if (!targets.isEmpty() && !texts.isEmpty()) {
+                    boolean match = texts.stream().anyMatch(t -> t.equals(name) || (name.startsWith("(") && t.contains(name)));
+                    if (match) {
+                        return targets.get(0);
+                    }
+                    break;
+                }
+            }
+        }
+        throw new IllegalStateException("No hay tarjeta " + name);
+    }
+
     private Node buttonNear(Node anchor, String text) {
         for (Node p = anchor.getParent(); p != null; p = p.getParent()) {
             List<Node> found = new ArrayList<>();

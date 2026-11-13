@@ -72,13 +72,17 @@ public class ManualTour {
             ManualTour tour = mode.equals("survey") ? new ManualTour(out) : new ManualSteps(out);
             tour.open(db);
             try {
-                if (mode.equals("continuar")) {
+                if (mode.equals("casos")) {
+                    Path proof = Files.createTempFile("comprobante-yape", ".png");
+                    writeProof(proof);
+                    ((ManualSteps) tour).casos(proof);
+                } else if (mode.equals("continuar")) {
                     ((ManualSteps) tour).continuar();
                 } else {
                     tour.run();
                 }
             } finally {
-                Files.write(out.resolve(mode.equals("continuar") ? "manifest-continuacion.tsv" : "manifest.tsv"),
+                Files.write(out.resolve(mode.equals("continuar") ? "manifest-continuacion.tsv" : mode.equals("casos") ? "manifest-casos.tsv" : "manifest.tsv"),
                         tour.manifest, StandardCharsets.UTF_8);
             }
             tour.fx(() -> {
