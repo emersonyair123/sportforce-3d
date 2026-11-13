@@ -1,25 +1,11 @@
 package com.sportforce3d.three.geom;
 
-/**
- * Superficie paramétrica en rejilla (filas × columnas), cerrada o abierta en la dirección de las columnas.
- * Cada punto lleva una "pista" de dirección hacia afuera; con ella se orientan las normales y el sentido de
- * cada triángulo, así que nunca quedan caras invertidas ni normales hacia adentro.
- *
- * <p>Normales: suaves, por diferencias centrales en la rejilla (envolviendo la costura si es cerrada).
- * En los polos (filas degeneradas) se toma la normal de la fila vecina.
- *
- * <p>UV: cada cuadrilátero pertenece a una "isla"; los puntos de una costura entre islas reciben una
- * coordenada de textura distinta por isla (las caras de JavaFX indexan texcoords por separado).
- */
 public final class GridSurface {
-
-    /** Coordenadas de textura para la fila {@code r}, columna {@code c} (puede ser {@code cols} si es cerrada) e isla. */
     @FunctionalInterface
     public interface Uv {
         void at(int r, int c, int island, float[] out);
     }
 
-    /** Isla del cuadrilátero que empieza en (r, c). */
     @FunctionalInterface
     public interface Island {
         int of(int r, int c);
@@ -70,7 +56,6 @@ public final class GridSurface {
         return new Vec3(h[i], h[i + 1], h[i + 2]);
     }
 
-    /** Una sola isla con UV = (columna, fila) normalizadas. */
     public MeshData build() {
         int colsT = closed ? cols : cols - 1;
         return build(1, (r, c) -> 0, (r, c, island, out) -> {
@@ -100,7 +85,6 @@ public final class GridSurface {
                 normals[r * cols + c] = nrm;
             }
         }
-        // Polos: promedio de las normales de la fila vecina (no degenerada).
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
                 if (!degenerate[r * cols + c]) {
@@ -121,7 +105,6 @@ public final class GridSurface {
         float[] points = new float[n * 3];
         float[] norms = new float[n * 3];
         for (int i = 0; i < n; i++) {
-            // Espacio del modelo (Y arriba, +Z frente) → JavaFX (Y abajo, frente hacia -Z): rotación de 180° en X.
             points[i * 3] = (float) p[i * 3];
             points[i * 3 + 1] = (float) -p[i * 3 + 1];
             points[i * 3 + 2] = (float) -p[i * 3 + 2];
@@ -168,11 +151,6 @@ public final class GridSurface {
         return new MeshData(points, norms, tex, faces);
     }
 
-    /**
-     * Agrega un triángulo con el sentido que hace coincidir su normal geométrica con las normales suaves.
-     * En JavaFX la cara frontal es la que se ve en sentido horario en pantalla; como la conversión de
-     * coordenadas es una rotación, basta con orientar en el espacio del modelo.
-     */
     private int triangle(int[] faces, int f, Vec3[] normals, int a, int ta, int b, int tb, int c, int tc) {
         Vec3 pa = point(a / cols, a % cols);
         Vec3 pb = point(b / cols, b % cols);
@@ -199,10 +177,6 @@ public final class GridSurface {
         return f;
     }
 
-    /**
-     * Convención verificada con capturas (docs/capturas): la normal geométrica cross(b − a, c − a) de cada
-     * triángulo apunta hacia afuera, igual que en un OBJ exportado por Blender (caras antihorarias).
-     */
     static final boolean FRONT_IS_CCW_IN_MODEL = true;
 
     private int colNext(int c) {

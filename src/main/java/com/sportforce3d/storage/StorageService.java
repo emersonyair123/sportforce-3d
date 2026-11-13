@@ -15,11 +15,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Archivos subidos en disco local: valida tipo (por contenido, no por extensión) y tamaño, y los guarda
- * con nombre aleatorio. Las rutas que devuelve son relativas a la carpeta raíz, para poder mover la carpeta
- * o cambiar a un almacenamiento compatible con S3 sin tocar la base de datos.
- */
 public class StorageService {
 
     private static final Logger log = LoggerFactory.getLogger(StorageService.class);
@@ -45,7 +40,6 @@ public class StorageService {
         }
     }
 
-    /** Archivo guardado: ruta relativa (p. ej. "products/3f…a1.png"), tipo y tamaño. */
     public record StoredFile(String path, Kind kind, long sizeBytes) {
     }
 
@@ -92,7 +86,6 @@ public class StorageService {
         }
     }
 
-    /** Ruta absoluta de un archivo guardado. Rechaza rutas que intenten salir de la carpeta raíz. */
     public Path resolve(String relativePath) {
         Path resolved = root.resolve(relativePath).normalize();
         if (!resolved.startsWith(root)) {
@@ -109,7 +102,6 @@ public class StorageService {
         }
     }
 
-    /** Reconoce el tipo por los primeros bytes del archivo. */
     static Kind detect(Path file) throws IOException {
         byte[] head = new byte[512];
         int read;

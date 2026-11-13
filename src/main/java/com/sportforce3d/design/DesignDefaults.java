@@ -9,7 +9,6 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
 
-/** Diseño inicial (el del probador de referencia) y elementos con su ubicación típica. */
 public final class DesignDefaults {
 
     private DesignDefaults() {
@@ -26,41 +25,31 @@ public final class DesignDefaults {
                 RealisticSpec.defaults(), GarmentCut.DEFAULT);
     }
 
-    /** Nombre en la espalda, encima del número. */
     public static DesignElement name(String text, String color, String outlineColor) {
         return new DesignElement(newId(), ElementType.NAME, Area.JERSEY_BACK, 0.5, 0.20, 1.0, 0, true, false,
                 0.060, text, DesignFonts.DEFAULT, color, outlineColor, 0, null, null, null);
     }
 
-    /** Número grande en la espalda. */
     public static DesignElement backNumber(String number, String color, String outlineColor) {
         return new DesignElement(newId(), ElementType.NUMBER, Area.JERSEY_BACK, 0.5, 0.47, 1.0, 0, true, false,
                 0.240, number, DesignFonts.DEFAULT, color, outlineColor, 0, null, null, null);
     }
 
-    /** Número pequeño en el pecho, al lado derecho del jugador. */
     public static DesignElement chestNumber(String number, String color, String outlineColor) {
         return new DesignElement(newId(), ElementType.NUMBER, Area.JERSEY_FRONT, 0.30, 0.28, 1.0, 0, true, false,
                 0.090, number, DesignFonts.DEFAULT, color, outlineColor, 0, null, null, null);
     }
 
-    /** Número del short con el largo medio. */
     public static DesignElement shortsNumber(String number, String color, String outlineColor) {
         return shortsNumber(number, color, outlineColor, GarmentCut.ShortsLength.MEDIO);
     }
 
-    /**
-     * Número pequeño en la pierna delantera izquierda del short, a media altura de lo que se ve del short (entre el
-     * ruedo de la camiseta y la basta) para ese largo ({@link GarmentCut.ShortsLength#numberV()}); hacia adentro
-     * caería en la entrepierna.
-     */
     public static DesignElement shortsNumber(String number, String color, String outlineColor,
                                              GarmentCut.ShortsLength length) {
         return new DesignElement(newId(), ElementType.NUMBER, Area.SHORTS_LEFT, length.numberU(), length.numberV(),
                 1.0, 0, true, false, 0.070, number, DesignFonts.DEFAULT, color, outlineColor, 0, null, null, null);
     }
 
-    /** Emblema en el pecho izquierdo del jugador (escudo). */
     public static DesignElement emblem(String key, String primary, String accent) {
         return new DesignElement(newId(), ElementType.EMBLEM, Area.JERSEY_FRONT, 0.70, 0.27, 1.0, 0, true, false,
                 0.085, null, null, primary, accent, 0, key, null, null);

@@ -8,7 +8,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import org.kordamp.ikonli.Ikon;
 
-/** Estado vacío: icono, título, mensaje y una acción opcional. */
 public class EmptyState extends VBox {
 
     public EmptyState(Ikon icon, String title, String message, Button action) {
@@ -25,7 +24,6 @@ public class EmptyState extends VBox {
         messageLabel.setWrapText(true);
         messageLabel.setTextAlignment(TextAlignment.CENTER);
         messageLabel.setMaxWidth(420);
-        // El VBox estira la etiqueta hasta 420 px: el texto de una línea también debe quedar centrado.
         messageLabel.setAlignment(Pos.CENTER);
 
         getChildren().addAll(Icons.of(icon, 48), titleLabel, messageLabel);
@@ -33,8 +31,6 @@ public class EmptyState extends VBox {
             getChildren().add(action);
         }
 
-        // En un FlowPane (grillas de productos, carrito, checkout) ocupa todo el ancho para quedar centrado en la
-        // página; si no, el FlowPane le daría solo su ancho preferido y quedaría pegado a la izquierda.
         parentProperty().addListener((obs, old, parent) -> {
             prefWidthProperty().unbind();
             if (parent instanceof FlowPane flow) {

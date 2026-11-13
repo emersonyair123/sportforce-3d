@@ -6,11 +6,6 @@ import com.sportforce3d.three.geom.Vec3;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Triángulos de un cuerpo en una rejilla uniforme, en espacio del modelo (metros, Y arriba, +Z frente). Responde
- * "¿a qué distancia sale este rayo de la piel?" y "¿cuál es el punto de piel más cercano?". Inmutable salvo
- * {@link Query}, que lleva sus marcas propias: usar una por hilo.
- */
 final class TriangleIndex {
 
     private final double[] v;
@@ -47,7 +42,6 @@ final class TriangleIndex {
         ny = (int) Math.ceil((hi[1] - minY) / cell) + 2;
         nz = (int) Math.ceil((hi[2] - minZ) / cell) + 2;
 
-        // Dos pasadas: contar triángulos por celda y luego llenar (sin listas por celda).
         int[] count = new int[nx * ny * nz + 1];
         for (int pass = 0; pass < 2; pass++) {
             int[] fill = pass == 1 ? Arrays.copyOf(count, count.length) : null;
@@ -89,10 +83,8 @@ final class TriangleIndex {
         cellTrisHolder = null;
     }
 
-    /** Solo durante la construcción. */
     private int[] cellTrisHolder;
 
-    /** Índice de las mallas indicadas (en coordenadas de JavaFX, como {@link MeshData}). */
     static TriangleIndex of(List<MeshData> meshes, double cell) {
         int points = 0;
         int faces = 0;
@@ -157,12 +149,10 @@ final class TriangleIndex {
         return v;
     }
 
-    /** Índices de vértice de cada triángulo (tres por triángulo). */
     int[] triangles() {
         return tri;
     }
 
-    /** Punto de piel más cercano y la normal de su cara (hacia afuera, por el sentido de los triángulos). */
     record Hit(Vec3 point, Vec3 normal, double distance) {
     }
 
@@ -170,15 +160,10 @@ final class TriangleIndex {
         return new Query();
     }
 
-    /** Consultas con marcas propias (para no probar dos veces el mismo triángulo). No es seguro entre hilos. */
     final class Query {
         private final int[] mark = new int[tri.length / 3];
         private int stamp;
 
-        /**
-         * Distancia a la que el rayo {@code origin + t·dir} (dir unitario) cruza la primera cara, hasta
-         * {@code maxDist}; {@code NaN} si no cruza ninguna.
-         */
         double ray(Vec3 origin, Vec3 dir, double maxDist) {
             next();
             double best = Double.NaN;
@@ -193,7 +178,6 @@ final class TriangleIndex {
                     continue;
                 }
                 lastCell = id;
-                // Las celdas vecinas cubren el paso diagonal entre muestras.
                 for (int n : neighbors(id)) {
                     for (int k = cellStart[n]; k < cellStart[n + 1]; k++) {
                         int t = cellTris[k];
@@ -211,7 +195,6 @@ final class TriangleIndex {
             return best;
         }
 
-        /** Punto de piel más cercano a {@code p} dentro de {@code radius}; null si no hay ninguno. */
         Hit nearest(Vec3 p, double radius) {
             next();
             int x0 = cx(p.x() - radius);
@@ -292,7 +275,6 @@ final class TriangleIndex {
         return (cx(x) * ny + cy(y)) * nz + cz(z);
     }
 
-    /** Möller–Trumbore: distancia a lo largo del rayo o -1. */
     private double intersect(int t, Vec3 o, Vec3 d) {
         int a = tri[t * 3] * 3;
         int b = tri[t * 3 + 1] * 3;
@@ -328,7 +310,6 @@ final class TriangleIndex {
         return (e2x * qx + e2y * qy + e2z * qz) * inv;
     }
 
-    /** Punto del triángulo más cercano a p (Ericson, Real-Time Collision Detection 5.1.5). */
     private void closest(int t, Vec3 p, double[] out) {
         int ia = tri[t * 3] * 3;
         int ib = tri[t * 3 + 1] * 3;

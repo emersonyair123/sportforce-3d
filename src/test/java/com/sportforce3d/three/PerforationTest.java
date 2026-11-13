@@ -7,7 +7,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Agujeros de la malla deportiva: solo dentro de las islas de las zonas con malla y con la rejilla del relieve. */
 class PerforationTest {
 
     @Test
@@ -31,7 +30,6 @@ class PerforationTest {
                 }
             }
         }
-        // Agujeros de ~0,5 celda de diámetro: entre el 10 % y el 30 % de la superficie.
         assertThat((double) holes / inside).isBetween(0.10, 0.30);
     }
 

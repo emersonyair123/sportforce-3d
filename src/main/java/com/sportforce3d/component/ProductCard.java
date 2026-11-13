@@ -21,11 +21,6 @@ import org.kordamp.ikonli.feather.Feather;
 
 import java.util.function.Consumer;
 
-/**
- * Tarjeta de producto: imagen 4:5 (foto subida, foto realista recoloreada o la ilustración de la prenda), categoría, nombre,
- * precio (tachado y % si hay descuento), badges y "Agregar al carrito" o "Agotado".
- * Clic o Enter sobre la tarjeta abre la ficha ({@link #setOnOpen}).
- */
 public class ProductCard extends VBox {
 
     public static final double WIDTH = 260;
@@ -48,7 +43,6 @@ public class ProductCard extends VBox {
         media.setMinSize(WIDTH, MEDIA_HEIGHT);
         media.setPrefSize(WIDTH, MEDIA_HEIGHT);
         media.setMaxSize(WIDTH, MEDIA_HEIGHT);
-        // Más alto que el recuadro: solo se redondean las esquinas superiores.
         Rectangle clip = new Rectangle(WIDTH, MEDIA_HEIGHT + 20);
         clip.setArcWidth(30);
         clip.setArcHeight(30);
@@ -58,7 +52,6 @@ public class ProductCard extends VBox {
         } else if (product.look() == null) {
             media.getChildren().add(art());
         }
-        // Con vista realista y sin foto, el recuadro queda vacío hasta que llega la imagen recoloreada (setImage).
 
         HBox badges = new HBox(4);
         badges.setPickOnBounds(false);
@@ -128,10 +121,6 @@ public class ProductCard extends VBox {
         return product;
     }
 
-    /**
-     * Muestra una imagen que llegó después de crear la tarjeta (la foto realista se recolorea en segundo plano).
-     * Con null vuelve a la ilustración de la prenda.
-     */
     public void setImage(Image image) {
         media.getChildren().removeIf(n -> n instanceof ImageView || n instanceof GarmentArt);
         Node node = image != null ? imageView(image) : art();
@@ -141,7 +130,6 @@ public class ProductCard extends VBox {
         }
     }
 
-    /** ¿Ya muestra una foto (subida o realista)? */
     public boolean hasImage() {
         return media.getChildren().stream().anyMatch(n -> n instanceof ImageView);
     }
@@ -150,7 +138,6 @@ public class ProductCard extends VBox {
         return new GarmentArt(product.garment(), product.colorHex(), 190);
     }
 
-    /** "Cover": la imagen llena el recuadro 4:5 y se recorta lo que sobra. */
     private static ImageView imageView(Image image) {
         ImageView view = new ImageView(image);
         view.setPreserveRatio(true);
@@ -174,18 +161,15 @@ public class ProductCard extends VBox {
         return view;
     }
 
-    /** Acción del botón: agregar directo (una sola variante) o elegir talla. Sin acción queda "Próximamente". */
     public void setOnAddToCart(Consumer<ProductSummary> handler) {
         if (addButton == null) {
             return;
         }
-        // Los tooltips no aparecen en botones deshabilitados: el aviso va en texto visible.
         addButton.setDisable(handler == null);
         addButton.setOnAction(handler == null ? null : e -> handler.accept(product));
         comingSoonNote.setVisible(handler == null);
     }
 
-    /** Clic o Enter sobre la tarjeta abre la ficha del producto. */
     public void setOnOpen(Consumer<ProductSummary> handler) {
         setFocusTraversable(handler != null);
         setCursor(handler == null ? Cursor.DEFAULT : Cursor.HAND);

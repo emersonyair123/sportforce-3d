@@ -13,10 +13,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Aplica un {@link DesignDocument} al visor: texturas compuestas por prenda y materiales (relieve y brillo).
- * Sabe qué prendas cambiaron entre dos documentos para redibujar solo esas.
- */
 public final class DesignRenderer {
 
     private final Viewer3D viewer;
@@ -31,7 +27,6 @@ public final class DesignRenderer {
         return composer;
     }
 
-    /** Todo: texturas de las cuatro prendas y materiales. */
     public void applyAll(DesignDocument doc, Map<String, Material> materials) {
         for (Garment g : TextureComposer.garments()) {
             viewer.setGarmentTexture(g, composer.compose(g, doc));
@@ -54,7 +49,6 @@ public final class DesignRenderer {
         }
     }
 
-    /** Prendas cuya textura cambia entre dos documentos. */
     public static Set<Garment> changedGarments(DesignDocument before, DesignDocument after) {
         Set<Garment> out = EnumSet.noneOf(Garment.class);
         for (Garment g : TextureComposer.garments()) {

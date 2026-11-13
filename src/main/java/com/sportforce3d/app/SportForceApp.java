@@ -15,13 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-/**
- * Aplicación JavaFX. Argumentos:
- * <ul>
- *     <li>{@code --reset-db}: borra data/sportforce3d.db y lo recrea con los datos de prueba.</li>
- *     <li>{@code --gallery}: abre también la galería de componentes.</li>
- * </ul>
- */
 public class SportForceApp extends Application {
 
     private static final Logger log = LoggerFactory.getLogger(SportForceApp.class);
@@ -68,10 +61,6 @@ public class SportForceApp extends Application {
         }
     }
 
-    /**
-     * Prepara la ventana principal con la pantalla de inicio de sesión (sin mostrarla). La usan {@link #start} y
-     * las pruebas de interfaz, que le pasan un contexto con una base de datos temporal.
-     */
     public static Navigator openMainWindow(Stage stage, AppContext context) {
         AppRoot root = new AppRoot();
         Scene scene = new Scene(root, 1280, 720);

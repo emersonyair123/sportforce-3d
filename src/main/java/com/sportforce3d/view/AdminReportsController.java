@@ -54,10 +54,6 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.function.Function;
 
-/**
- * Administración → Reportes: rango de fechas (con atajos), KPIs, ventas por día o mes, por categoría, por producto y
- * por método de pago, y exportación a PDF y Excel. Los services vuelven a exigir el rol ADMIN.
- */
 public class AdminReportsController {
 
     private static final DateTimeFormatter INPUT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -135,8 +131,6 @@ public class AdminReportsController {
         return chip;
     }
 
-    // ------------------------------------------------------------------ Generar
-
     private void generate() {
         LocalDate from;
         LocalDate to;
@@ -165,11 +159,10 @@ public class AdminReportsController {
         });
     }
 
-    /** Lee lo escrito aunque la persona no haya pulsado Enter (el DatePicker solo confirma al salir del campo). */
     private static LocalDate readDate(DatePicker picker) {
         String text = picker.getEditor().getText();
         if (text == null || text.isBlank()) {
-            return picker.getValue(); // antes de mostrarse, el editor aún no refleja el valor
+            return picker.getValue();
         }
         LocalDate value = LocalDate.parse(text.trim(), INPUT);
         picker.setValue(value);
@@ -210,7 +203,6 @@ public class AdminReportsController {
         VBox box = new VBox(6, t, v, d);
         box.getStyleClass().addAll("sf-card", "sf-kpi");
         box.setPadding(new Insets(20));
-        // Las cuatro tarjetas comparten la fila y se ajustan al ancho de la ventana.
         box.setPrefWidth(0);
         box.setMinWidth(170);
         box.setMaxWidth(Double.MAX_VALUE);
@@ -234,8 +226,6 @@ public class AdminReportsController {
         return card;
     }
 
-    // ------------------------------------------------------------------ Gráfico y tablas
-
     private Node periodChart(SalesReport r) {
         boolean daily = r.grouping() == SalesReport.Grouping.DAY;
         CategoryAxis x = new CategoryAxis();
@@ -258,7 +248,6 @@ public class AdminReportsController {
         int step = Math.max(1, (int) Math.ceil(r.periods().size() / 16.0));
         for (int i = 0; i < r.periods().size(); i++) {
             PeriodRow p = r.periods().get(i);
-            // Las categorías deben ser únicas: los días sin etiqueta llevan espacios invisibles distintos.
             String label = i % step == 0 ? (daily ? SHORT : MONTH).format(p.start()) : "​".repeat(i + 1);
             XYChart.Data<String, Number> d = new XYChart.Data<>(label, p.totalCents() / 100.0);
             d.setExtraValue(ReportText.period(r, p.start()) + ": " + Money.format(p.totalCents()) + " · "
@@ -316,7 +305,6 @@ public class AdminReportsController {
         t.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         t.setFixedCellSize(ROW);
         t.getStyleClass().add("sf-report-table");
-        // Toda la tabla a la vista: la página ya tiene su propio desplazamiento.
         double h = ROW * rows.size() + 44;
         t.setPrefHeight(h);
         t.setMinHeight(h);
@@ -362,8 +350,6 @@ public class AdminReportsController {
         box.setAlignment(Pos.CENTER_RIGHT);
         return box;
     }
-
-    // ------------------------------------------------------------------ Exportar
 
     private void export(String extension, String description, String pattern) {
         SalesReport r = report.get();

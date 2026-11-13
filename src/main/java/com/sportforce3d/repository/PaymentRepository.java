@@ -15,10 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Pagos y comprobantes. Los cambios de estado son condicionales ({@code WHERE status = …}) para que dos
- * administradores no aprueben o rechacen el mismo pago a la vez.
- */
 public class PaymentRepository {
 
     private static final String SELECT = """
@@ -35,8 +31,6 @@ public class PaymentRepository {
     public PaymentRepository(Database db) {
         this.db = db;
     }
-
-    // ------------------------------------------------------------------ Lectura
 
     public static List<Payment> forOrder(Connection c, long orderId) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement(SELECT + " WHERE p.order_id = ? ORDER BY p.id")) {
@@ -57,7 +51,6 @@ public class PaymentRepository {
         }
     }
 
-    /** Cola del ADMIN: en verificación del más antiguo al más nuevo; los demás estados, los más recientes primero. */
     public List<Payment> findByStatus(PaymentStatus status, int limit) {
         String order = status == PaymentStatus.EN_VERIFICACION ? "p.updated_at, p.id" : "p.updated_at DESC, p.id DESC";
         return db.withConnection(c -> {
@@ -81,7 +74,6 @@ public class PaymentRepository {
         });
     }
 
-    /** ¿Ya hay un pago vigente (en verificación o aprobado) con ese código y método? */
     public boolean operationCodeInUse(Connection c, PaymentMethod method, String code) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement("""
                 SELECT 1 FROM payments WHERE method = ? AND operation_code = ? AND status IN ('EN_VERIFICACION', 'APROBADO')
@@ -98,9 +90,6 @@ public class PaymentRepository {
         return db.withConnection(SettingsRepository::paymentInstructions);
     }
 
-    // ------------------------------------------------------------------ Escritura (dentro de transacción)
-
-    /** El cliente registró el pago: PENDIENTE → EN_VERIFICACION con su código. */
     public boolean submit(Connection c, long paymentId, String operationCode, String now) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement("""
                 UPDATE payments SET status = 'EN_VERIFICACION', operation_code = ?, updated_at = ?
@@ -143,8 +132,6 @@ public class PaymentRepository {
         }
     }
 
-    // ------------------------------------------------------------------ Mapeo
-
     private static List<Payment> list(Connection c, PreparedStatement ps) throws SQLException {
         List<Payment> out = new ArrayList<>();
         try (ResultSet rs = ps.executeQuery()) {
@@ -158,7 +145,6 @@ public class PaymentRepository {
                         rs.getString("updated_at"), List.of()));
             }
         }
-        // Comprobantes en una segunda consulta (pocos por pago).
         List<Payment> withProofs = new ArrayList<>(out.size());
         for (Payment p : out) {
             withProofs.add(new Payment(p.id(), p.orderId(), p.orderNumber(), p.customerName(), p.method(), p.status(),

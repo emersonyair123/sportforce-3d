@@ -28,10 +28,7 @@ import java.util.Deque;
 import java.util.Map;
 import java.util.Set;
 
-/** Marco de la tienda: barra superior, menú lateral, área de contenido y navegación entre vistas. */
 public class ShellController implements Router {
-
-    /** Vistas que no tienen ítem propio en el menú lateral: se resalta el ítem "padre". */
     private static final Map<String, String> SIDEBAR_PARENT = Map.of(
             Routes.PRODUCT, Routes.CATALOG,
             Routes.CHECKOUT, Routes.CART,
@@ -75,8 +72,6 @@ public class ShellController implements Router {
         go(Routes.HOME, null);
     }
 
-    // ------------------------------------------------------------------ Router
-
     @Override
     public void go(String route, Object param) {
         if (current != null) {
@@ -99,7 +94,6 @@ public class ShellController implements Router {
         if (!IMPLEMENTED.contains(entry.route())) {
             view = new EmptyState(Feather.CLOCK, "Próximamente", "Esta sección llegará en una próxima etapa.");
         } else if (Routes.ADMIN_ONLY.contains(entry.route()) && !viewModel.isAdmin()) {
-            // Solo comodidad: los services vuelven a exigir el rol ADMIN.
             SfButton home = new SfButton("Volver al inicio", SfButton.Variant.PRIMARY).withIcon(Feather.HOME);
             home.setOnAction(e -> go(Routes.HOME, null));
             view = new EmptyState(Feather.LOCK, "Sin acceso", "Esta sección es solo para administradores. Si "
@@ -119,8 +113,6 @@ public class ShellController implements Router {
 
         sidebar.select(SIDEBAR_PARENT.getOrDefault(entry.route(), entry.route()));
     }
-
-    // ------------------------------------------------------------------ Barra superior y menú
 
     private void buildTopBar() {
         searchBox.getChildren().add(0, Icons.of(Feather.SEARCH, Icons.SM));
@@ -183,7 +175,6 @@ public class ShellController implements Router {
         sidebar.addItem(Routes.DESIGNS, "Mis diseños", Feather.LAYERS, true);
         sidebar.addItem(Routes.ACCOUNT, "Mi cuenta", Feather.USER, true);
 
-        // Ocultar el menú es solo comodidad: los services vuelven a exigir el rol ADMIN.
         if (viewModel.isAdmin()) {
             sidebar.addSection("Administración");
             sidebar.addItem(Routes.ADMIN_DASHBOARD, "Dashboard", Feather.BAR_CHART_2, true);

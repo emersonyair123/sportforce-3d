@@ -16,7 +16,6 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Registro del pago por el cliente, verificación manual del ADMIN y descuento del stock reservado. */
 class PaymentServiceTest {
 
     private static final String SKU = "SF-CAM-001-M";
@@ -78,7 +77,6 @@ class PaymentServiceTest {
             assertThat(h.to()).isEqualTo(OrderStatus.PAGO_EN_VERIFICACION);
             assertThat(h.note()).contains("Yape", "12345678");
         });
-        // Registrar el pago no toca el stock: sigue reservado, sin descontar.
         assertThat(f.quantity(SKU)).isEqualTo(quantityBefore);
         assertThat(f.reserved(SKU)).isEqualTo(reservedBefore + 2);
         assertThat(f.queryLong("SELECT count(*) FROM payments WHERE status = 'APROBADO'")).isZero();
@@ -94,7 +92,6 @@ class PaymentServiceTest {
         assertThatThrownBy(() -> f.payments.register(order.id(), "12345678", txt)).isInstanceOf(ValidationException.class);
         assertThat(storedFiles("payments")).isZero();
 
-        // Otro cliente no puede registrar el pago de este pedido.
         f.loginNewClient("intruso@correo.pe");
         assertThatThrownBy(() -> register("12345678")).hasMessage("No encontramos ese pedido.");
 
@@ -131,7 +128,6 @@ class PaymentServiceTest {
             assertThat(h.to()).isEqualTo(OrderStatus.PAGADO);
             assertThat(h.note()).contains("Pago aprobado", "12345678", "Visto en la app de Yape");
         });
-        // Se descuentan las 2 unidades y se libera su reserva.
         assertThat(f.quantity(SKU)).isEqualTo(quantityBefore - 2);
         assertThat(f.reserved(SKU)).isEqualTo(reservedBefore);
         assertThat(f.payments.queue(PaymentStatus.EN_VERIFICACION)).isEmpty();
@@ -167,7 +163,6 @@ class PaymentServiceTest {
         assertThat(f.reserved(SKU)).isEqualTo(reservedBefore + 2);
         assertThat(f.quantity(SKU)).isEqualTo(quantityBefore);
 
-        // El cliente vuelve a registrar (el código rechazado se puede corregir y reutilizar).
         f.loginClient();
         assertThat(register("12345678").status()).isEqualTo(PaymentStatus.EN_VERIFICACION);
     }

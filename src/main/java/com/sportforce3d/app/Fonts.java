@@ -6,11 +6,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 
-/**
- * Carga las fuentes OFL incluidas en resources/fonts. JavaFX registra cada peso como una familia propia:
- * "Barlow", "Barlow Medium", "Barlow SemiBold", "Barlow Condensed SemiBold", "Barlow Condensed" (Bold),
- * "Barlow Condensed ExtraBold" y "JetBrains Mono Medium". Esos son los nombres que usa components.css.
- */
 public final class Fonts {
 
     private static final Logger log = LoggerFactory.getLogger(Fonts.class);
@@ -30,7 +25,6 @@ public final class Fonts {
     private Fonts() {
     }
 
-    /** Devuelve cuántas fuentes se cargaron. Si falta alguna, la interfaz usa la fuente del sistema. */
     public static synchronized int loadAll() {
         if (loaded) {
             return FILES.length;

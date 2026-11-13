@@ -8,7 +8,6 @@ import org.kordamp.ikonli.feather.Feather;
 
 import java.util.function.IntConsumer;
 
-/** Paginación: "Anterior · Página 2 de 5 · Siguiente". */
 public class PageNav extends HBox {
 
     private final SfButton previous = new SfButton("Anterior", SfButton.Variant.GHOST, SfButton.Size.SM);

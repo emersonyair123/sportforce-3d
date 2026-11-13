@@ -24,7 +24,6 @@ class DatabaseMigrationTest {
 
         assertThat(db.migrate()).isEqualTo(10);
         assertThat(Files.exists(db.file())).isTrue();
-        // Volver a migrar no repite nada.
         assertThat(db.migrate()).isZero();
     }
 
@@ -40,13 +39,10 @@ class DatabaseMigrationTest {
                     + "(SELECT 1 FROM product_variants v WHERE v.product_id = p.id)")).isZero();
             assertThat(count(st, "SELECT count(*) FROM product_variants v LEFT JOIN inventory i ON i.variant_id = v.id "
                     + "WHERE i.variant_id IS NULL")).isZero();
-            // Producto agotado para probar el estado "Agotado".
             assertThat(count(st, "SELECT sum(i.quantity) FROM inventory i JOIN product_variants v ON v.id = i.variant_id "
                     + "WHERE v.product_id = 18")).isZero();
-            // Recargos en céntimos tal como en design/prendas-y-materiales.md.
             assertThat(count(st, "SELECT surcharge_cents FROM materials WHERE code = 'JACQUARD'")).isEqualTo(1500);
             assertThat(count(st, "SELECT surcharge_cents FROM materials WHERE code = 'CUERO_SINTETICO'")).isEqualTo(2500);
-            // V7: telas del diseñador. Los recargos existentes no cambian; Poliéster liso entra sin recargo.
             assertThat(count(st, "SELECT surcharge_cents FROM materials WHERE code = 'MALLA'")).isEqualTo(500);
             assertThat(count(st, "SELECT surcharge_cents FROM materials WHERE code = 'POLIESTER_LISO'")).isZero();
             assertThat(count(st, "SELECT count(*) FROM products p WHERE p.customizable = 1 AND p.garment_type IN "
@@ -120,6 +116,24 @@ class DatabaseMigrationTest {
             }
         });
         assertThat(addresses).isEqualTo(1);
+    }
+
+    @Test
+    void repairsChecksumsOfDatabasesCreatedWithOlderScripts() throws SQLException {
+        Database db = TestDatabases.migrated(tempDir);
+        long original;
+        try (Connection c = db.getConnection(); Statement st = c.createStatement()) {
+            original = count(st, "SELECT checksum FROM flyway_schema_history WHERE version = '1'");
+            st.executeUpdate("UPDATE flyway_schema_history SET checksum = checksum + 1 WHERE version IN ('1', '6')");
+            st.executeUpdate("UPDATE users SET full_name = 'Nombre Conservado' WHERE id = 2");
+        }
+
+        assertThat(new Database(db.file()).migrate()).isZero();
+
+        try (Connection c = db.getConnection(); Statement st = c.createStatement()) {
+            assertThat(count(st, "SELECT checksum FROM flyway_schema_history WHERE version = '1'")).isEqualTo(original);
+            assertThat(count(st, "SELECT count(*) FROM users WHERE full_name = 'Nombre Conservado'")).isEqualTo(1);
+        }
     }
 
     private static long count(Statement st, String sql) throws SQLException {

@@ -10,19 +10,7 @@ import java.util.List;
 import static com.sportforce3d.three.geom.Curve.angularBell;
 import static com.sportforce3d.three.geom.Curve.bell;
 
-/**
- * Anatomía del maniquí en "espacio de diseño": metros de un hombre de 1.80 m, Y hacia arriba, +Z al frente,
- * +X al lado izquierdo del maniquí (a la derecha de la pantalla en vista frontal). Las prendas se generan
- * sobre estas mismas funciones, así que siempre calzan con el cuerpo. {@link #out(Vec3)} aplica la escala
- * del tipo de cuerpo (mujer, juvenil) al emitir los puntos.
- *
- * <p>Torso: en cada altura, una superelipse polar con semiejes distintos al frente y atrás, más "lóbulos"
- * gaussianos (pectorales, busto, omóplatos, glúteos, surco de la columna). Los perfiles se interpolan con
- * curvas monótonas para que hombros, cintura y cadera queden suaves y sin ondulaciones.
- */
 public final class BodyShape {
-
-    /** Lado del cuerpo: el izquierdo del maniquí es +X. */
     public enum Side {
         RIGHT(-1), LEFT(1);
 
@@ -121,7 +109,6 @@ public final class BodyShape {
                     new Vec3(s * 0.093, 0.720, 0.010),
                     new Vec3(s * 0.097, 0.510, 0.010),
                     new Vec3(s * 0.101, 0.300, -0.004),
-                    // La pierna termina dentro de la abertura de la zapatilla (no la atraviesa).
                     new Vec3(s * 0.104, 0.094, -0.012)),
                     Curve.of(0, .060 * thighK, .06, .086 * thighK, .14, .082 * thighK, .25, .074 * thighK,
                             .36, .062, .44, .052, .485, .048, .53, .050, .60, .053 * calfK, .68, .047 * calfK,
@@ -146,32 +133,24 @@ public final class BodyShape {
         return type;
     }
 
-    /** Altura total aproximada del maniquí ya escalado (m). */
     public double height() {
         return 1.812 * scale;
     }
 
-    // ---------------------------------------------------------------- Escala de salida
-
-    /** Diseño → modelo: aplica la escala del tipo de cuerpo. */
     public Vec3 out(Vec3 p) {
         return new Vec3(p.x() * scale * girth, p.y() * scale, p.z() * scale * girth);
     }
 
-    /** La cabeza escala distinto (los juveniles tienen la cabeza proporcionalmente más grande). */
     public Vec3 outHead(Vec3 p) {
         double pivot = 1.62;
         Vec3 local = new Vec3(p.x() * headScale, pivot + (p.y() - pivot) * headScale, p.z() * headScale);
         return new Vec3(local.x() * scale, local.y() * scale, local.z() * scale);
     }
 
-    // ---------------------------------------------------------------- Torso
-
     public double torsoCenterZ(double y) {
         return cz.at(y);
     }
 
-    /** Radio del torso en el ángulo polar {@code phi} (0 = frente, π/2 = izquierda +X) y altura {@code y}. */
     public double torsoRadius(double phi, double y) {
         double a = w.at(y);
         double front = df.at(y);
@@ -199,18 +178,14 @@ public final class BodyShape {
         return r;
     }
 
-    /** Punto del torso (espacio de diseño) con {@code extraRadius} radial. */
     public Vec3 torsoPoint(double phi, double y, double extraRadius) {
         double r = torsoRadius(phi, y) + extraRadius;
         return new Vec3(r * Math.sin(phi), y, cz.at(y) + r * Math.cos(phi));
     }
 
-    /** Eje del torso a la altura y (para las pistas de normal hacia afuera). */
     public Vec3 torsoAxis(double y) {
         return new Vec3(0, y, cz.at(y));
     }
-
-    // ---------------------------------------------------------------- Extremidades
 
     public Tube arm(Side side) {
         return arms[side.ordinal()];
@@ -224,7 +199,6 @@ public final class BodyShape {
         return neck;
     }
 
-    /** Fracción de la pierna a la altura de diseño {@code y} (búsqueda sobre la espina). */
     public double legFractionAt(Side side, double y) {
         Tube leg = leg(side);
         double lo = 0;
@@ -240,15 +214,11 @@ public final class BodyShape {
         return (lo + hi) / 2;
     }
 
-    /** Centro del tobillo (espacio de diseño), donde se apoya la zapatilla. */
     public Vec3 ankle(Side side) {
         Vec3 c = leg(side).spine(1.0);
         return new Vec3(c.x(), 0.085, c.z());
     }
 
-    // ---------------------------------------------------------------- Cabeza
-
-    /** Perfil de la cabeza (sin rostro, estilo maniquí): radios por altura. */
     public static final Curve HEAD_RX = Curve.of(1.600, .010, 1.615, .034, 1.640, .055, 1.670, .067, 1.705, .075,
             1.740, .077, 1.770, .071, 1.792, .057, 1.806, .035, 1.814, .004);
     public static final Curve HEAD_RZ_FRONT = Curve.of(1.600, .012, 1.615, .040, 1.640, .072, 1.670, .090,

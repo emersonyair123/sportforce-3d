@@ -35,7 +35,6 @@ class AuthServiceTest {
         users = new UserRepository(db);
         session = new Session();
         clock = new MutableClock(Instant.parse("2026-10-17T15:00:00Z"));
-        // Coste 4 para que las pruebas sean rápidas; los hashes del seed (coste 12) se verifican igual.
         auth = new AuthService(users, new PasswordHasher(4), session, new LoginThrottle(clock), clock);
     }
 
@@ -85,7 +84,6 @@ class AuthServiceTest {
             assertThatThrownBy(() -> auth.login("admin@sportforce3d.pe", "mala".toCharArray()))
                     .hasMessage("Correo o contraseña incorrectos.");
         }
-        // Bloqueado aunque ahora la contraseña sea correcta.
         assertThatThrownBy(() -> auth.login("admin@sportforce3d.pe", "Admin123!".toCharArray()))
                 .isInstanceOf(AuthenticationException.class)
                 .hasMessageContaining("Demasiados intentos");
@@ -103,7 +101,6 @@ class AuthServiceTest {
                     .hasMessage("Correo o contraseña incorrectos.");
         }
 
-        // "Reinicio": servicios nuevos sobre la misma base de datos.
         AuthService second = new AuthService(users, new PasswordHasher(4), new Session(), new LoginThrottle(clock, store), clock);
         assertThatThrownBy(() -> second.login("cliente@sportforce3d.pe", "Cliente123!".toCharArray()))
                 .isInstanceOf(AuthenticationException.class)

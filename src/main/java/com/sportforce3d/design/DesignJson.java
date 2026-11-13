@@ -6,11 +6,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-/**
- * Serialización JSON del diseño. El campo {@code schemaVersion} permite migrar diseños antiguos cuando cambie
- * el formato (los antiguos se convierten al leerlos); un diseño de una versión más nueva que esta aplicación se
- * rechaza con un mensaje claro.
- */
 public final class DesignJson {
 
     private static final ObjectMapper MAPPER = new ObjectMapper()
@@ -28,21 +23,12 @@ public final class DesignJson {
         }
     }
 
-    /**
-     * Versión 1, 2 o 3 → actual. La versión 1 no trae vista realista ({@code realistic} null) y las 1–2 no traen corte
-     * (manga corta, short medio y media larga, las prendas de siempre); hasta la 3 las vistas eran independientes.
-     */
     private static DesignDocument upgrade(DesignDocument old) {
         DesignDocument up = new DesignDocument(DesignDocument.SCHEMA_VERSION, old.bodyType(), old.productId(),
                 old.colors(), old.patterns(), old.materials(), old.elements(), old.realistic(), old.cut());
         return synced(up);
     }
 
-    /**
-     * Antes de la versión 4 las dos vistas eran independientes. Sin vista realista (diseños de la Etapa 4–6) queda
-     * así (solo 3D). Si la tiene, gana la vista con que se hicieron las fotos del pedido: la realista si se tocó y el
-     * diseño no tiene otro corte ni otra tela (esos se fotografiaban en 3D desde la Etapa 10D); si no, el 3D.
-     */
     static DesignDocument synced(DesignDocument up) {
         RealisticSpec r = up.realistic();
         if (r == null) {

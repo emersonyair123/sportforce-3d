@@ -8,21 +8,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Bloqueo temporal: tras {@value #MAX_FAILURES} fallos seguidos con el mismo correo, ese correo queda bloqueado
- * {@link #LOCK_TIME} aunque luego se escriba la contraseña correcta. Con {@link Store} en la base de datos el bloqueo
- * sobrevive a cerrar y abrir la aplicación.
- */
 public class LoginThrottle {
 
     public static final int MAX_FAILURES = 5;
     public static final Duration LOCK_TIME = Duration.ofMinutes(5);
 
-    /** Fallos seguidos y, si corresponde, hasta cuándo está bloqueado. */
     public record Attempts(int failures, Instant lockedUntil) {
     }
 
-    /** Dónde se guardan los intentos (la app usa la tabla login_attempts). */
     public interface Store {
         Optional<Attempts> find(String email);
 
@@ -34,7 +27,6 @@ public class LoginThrottle {
     private final Clock clock;
     private final Store store;
 
-    /** Solo en memoria (pruebas). */
     public LoginThrottle(Clock clock) {
         this(clock, new MemoryStore());
     }
@@ -44,7 +36,6 @@ public class LoginThrottle {
         this.store = store;
     }
 
-    /** Lanza AuthenticationException si el correo está bloqueado. */
     public synchronized void check(String email) {
         String key = key(email);
         Optional<Attempts> a = store.find(key);

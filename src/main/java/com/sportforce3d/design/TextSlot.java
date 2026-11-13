@@ -3,10 +3,6 @@ package com.sportforce3d.design;
 import com.sportforce3d.model.Garment;
 import com.sportforce3d.three.model.Zone;
 
-/**
- * Las cuatro opciones de texto del diseño (pestaña Texto del 3D): nombre y número en la espalda, número en el pecho
- * y número en el short. La Vista realista lee y escribe estas mismas opciones ({@link ViewSync}).
- */
 public enum TextSlot {
     BACK_NAME("Nombre en la espalda"),
     BACK_NUMBER("Número en la espalda"),
@@ -32,7 +28,6 @@ public enum TextSlot {
         };
     }
 
-    /** El primer elemento del documento que corresponde a esta opción (o null). */
     public DesignElement find(DesignDocument doc) {
         return doc.elements().stream().filter(this::matches).findFirst().orElse(null);
     }
@@ -46,12 +41,10 @@ public enum TextSlot {
         return null;
     }
 
-    /** Elemento nuevo de esta opción con los colores que contrastan con la prenda y contorno desde el inicio. */
     public DesignElement create(DesignDocument doc) {
         String fill = contrast(doc.color(Zone.JERSEY_BODY));
         String edge = fill.equals("#FFFFFF") ? "#0B0E13" : "#FFFFFF";
         String shortsFill = contrast(doc.color(Zone.SHORTS_BASE));
-        // Con contorno desde el inicio: sobre franjas o colores medios el texto sin borde se pierde.
         return switch (this) {
             case BACK_NAME -> DesignDefaults.name("TU NOMBRE", fill, edge).withOutline(0.004);
             case BACK_NUMBER -> DesignDefaults.backNumber("10", fill, edge).withOutline(0.006);
@@ -61,14 +54,12 @@ public enum TextSlot {
         };
     }
 
-    /** true si el elemento sigue en la posición, tamaño y giro con que se crea (la foto realista lo dibuja ahí). */
     public boolean atDefault(DesignElement e, DesignDocument doc) {
         DesignElement d = create(doc);
         return Math.abs(e.u() - d.u()) < 0.02 && Math.abs(e.v() - d.v()) < 0.02
                 && Math.abs(e.scale() - 1) < 0.05 && Math.abs(e.rotation()) < 2;
     }
 
-    /** Blanco o negro, lo que más contraste con el color de fondo. */
     public static String contrast(String hex) {
         int rgb;
         try {

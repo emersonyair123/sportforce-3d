@@ -44,18 +44,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
-/**
- * Capturas de la Etapa 10 (docs/capturas/etapa10) con la aplicación real sobre una base temporal:
- * <ul>
- *   <li>{@code A}: la cámara no se mueve al editar (antes y después de cambiar color, texto y prenda, con la
- *   cámara del cliente en la espalda) y la pestaña Texto con el editor dentro de cada tarjeta.</li>
- *   <li>{@code B}: las cuatro telas (pantalla y acercamiento al pecho).</li>
- *   <li>{@code C}: manga larga, short corto/largo y medias tobillera/media pierna en las cuatro personas con un
- *   diseño completo (patrón, nombre, números, escudo en el pecho y en la manga), la cámara al cambiar el corte y la
- *   ficha técnica del ADMIN con el corte.</li>
- * </ul>
- * Uso: {@code Etapa10Tour [carpeta] [A|B|C|ABC]}. Cada captura imprime también el estado de la cámara.
- */
 public final class Etapa10Tour {
 
     private static final int W = 1440;
@@ -126,10 +114,7 @@ public final class Etapa10Tour {
         });
     }
 
-    // ---------------------------------------------------------------- A: cámara fija y textos
-
     private void cameraAndTexts() throws Exception {
-        // El cliente gira a la espalda y acerca un poco.
         fx(() -> {
             button("Espalda").fire();
             viewer().zoomBy(0.82);
@@ -181,14 +166,10 @@ public final class Etapa10Tour {
         });
         pause(1200);
         shot("10a-06-numero-short-y-tarjetas-cerradas");
-        // Tras 5 s quieto la vista sigue donde la dejó el cliente (sin giro automático).
         pause(5000);
         shot("10a-07-cinco-segundos-despues-sin-giro");
     }
 
-    // ---------------------------------------------------------------- B: telas
-
-    /** Cada tela del uniforme: pantalla con la sección TELA y acercamiento al pecho y la manga (relieve y brillo). */
     private void fabrics() throws Exception {
         fx(() -> {
             tab("Diseño").fire();
@@ -225,14 +206,11 @@ public final class Etapa10Tour {
             pause(800);
             viewerShot(String.format("10b-%02d-tela-%s-cerca", i++, f[1]));
             if (f[0].equals("POLIESTER_LISO")) {
-                // A 1400 px, como la captura de la Etapa 10B donde se veían los bordes dentados del horneado.
                 WritableImage big = fx(() -> viewer().capture(1400));
                 save(big, "10b-10-tela-poliester-liso-cerca-1400px");
             }
         }
     }
-
-    // ---------------------------------------------------------------- C: mangas y largos
 
     private static final String[] MODELS = {"futbol_hombre_frente", "futbol_mujer_frente", "futbol_nino_frente",
             "futbol_nina_frente"};
@@ -248,7 +226,6 @@ public final class Etapa10Tour {
     private void cuts() throws Exception {
         GarmentCut largaCortoTob = new GarmentCut(Sleeve.LARGA, ShortsLength.CORTO, SocksLength.TOBILLERA);
         GarmentCut largaLargoMedia = new GarmentCut(Sleeve.LARGA, ShortsLength.LARGO, SocksLength.MEDIA);
-        // La cámara no se mueve al cambiar el corte (la persona se vuelve a vestir).
         fx(() -> {
             tab("Diseño").fire();
             vm().edit("Kit", d -> kit(0, GarmentCut.DEFAULT), null);
@@ -256,7 +233,6 @@ public final class Etapa10Tour {
             return null;
         });
         waitDressed();
-        // Referencia: el corte de siempre con el mismo encuadre que las variantes.
         fx(() -> {
             viewer().jumpTo(ViewPreset.FRONT, Garment.KIT);
             return null;
@@ -300,7 +276,6 @@ public final class Etapa10Tour {
                 }
             }
         }
-        // Etapa 10D: acercamiento a los hombros de la manga larga de la mujer.
         fx(() -> {
             vm().edit("Kit", d -> kit(1, largaLargoMedia), null);
             vm().seal();
@@ -321,7 +296,6 @@ public final class Etapa10Tour {
         });
         pause(800);
         viewerShot(String.format("10c-%02d-mujer-manga-larga-hombro-costado-cerca", n++));
-        // El panel con la sección CORTE.
         fx(() -> {
             scrollTo("CORTE");
             viewer().jumpTo(ViewPreset.FRONT, Garment.KIT);
@@ -331,11 +305,6 @@ public final class Etapa10Tour {
         shot(String.format("10c-%02d-panel-corte", n));
     }
 
-    /**
-     * Etapa 10D: el cliente guarda desde el diseñador (botón Guardar diseño) un uniforme de manga larga, short corto,
-     * tobilleras y malla; se compra; se copian las fotos que quedaron en el pedido y el ADMIN abre el uniforme (visor 3D
-     * con la persona vestida con ese corte, capturas del pedido y ficha técnica).
-     */
     private void orderPhotos() throws Exception {
         GarmentCut cut = new GarmentCut(Sleeve.LARGA, ShortsLength.CORTO, SocksLength.TOBILLERA);
         fx(() -> {
@@ -380,7 +349,6 @@ public final class Etapa10Tour {
         loginAs("admin@sportforce3d.pe", "Admin123!");
         var line = context.adminOrderService().order(order).items().stream().filter(i -> i.hasDesign())
                 .findFirst().orElseThrow();
-        // Las fotos que recibe el taller: la copia guardada en el pedido.
         Files.copy(context.storage().resolve(line.designFrontPath()), out.resolve("10d-02-foto-del-pedido-frente.png"),
                 java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         Files.copy(context.storage().resolve(line.designBackPath()), out.resolve("10d-03-foto-del-pedido-espalda.png"),
@@ -410,7 +378,6 @@ public final class Etapa10Tour {
         shot("10d-07-admin-ficha-telas");
     }
 
-    /** Desplaza el ScrollPane que contiene la etiqueta {@code title} para que quede arriba. */
     private void scrollTo(String title) {
         Node label = find(stage.getScene().getRoot(), x -> x instanceof Labeled l && title.equals(l.getText())
                 && x.isVisible());
@@ -435,7 +402,6 @@ public final class Etapa10Tour {
     }
 
     private void viewerShot(String name) throws Exception {
-        // A la resolución de la ventana: así se ve en la app (más grande, el relieve fino se exagera).
         WritableImage img = fx(() -> viewer().capture((int) viewer().getWidth()));
         save(img, name);
     }
@@ -454,8 +420,6 @@ public final class Etapa10Tour {
         }
         return null;
     }
-
-    // ---------------------------------------------------------------- Utilidades
 
     private Viewer3D viewer() {
         return (Viewer3D) stage.getScene().getRoot().lookup(".sf-viewer3d");

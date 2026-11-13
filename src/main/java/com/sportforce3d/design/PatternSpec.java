@@ -1,9 +1,5 @@
 package com.sportforce3d.design;
 
-/**
- * Patrón de una prenda: tipo, segundo color (HEX) y ancho de franja o cuadro en metros sobre la prenda
- * (de 0.01 a 0.15 m). El primer color es el de cada zona.
- */
 public record PatternSpec(PatternType type, String color, double width) {
 
     public static final double MIN_WIDTH = 0.01;

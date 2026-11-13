@@ -25,7 +25,6 @@
         </VBox>
 
         <FlowPane hgap="24" vgap="24">
-            <!-- Perfil -->
             <VBox styleClass="sf-card" spacing="16" prefWidth="440">
                 <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
                 <Label text="Perfil" styleClass="title-s, ink"/>
@@ -36,7 +35,6 @@
                 </HBox>
             </VBox>
 
-            <!-- Contraseña -->
             <VBox styleClass="sf-card" spacing="16" prefWidth="440">
                 <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
                 <Label text="Cambiar contraseña" styleClass="title-s, ink"/>
@@ -48,7 +46,6 @@
                 </HBox>
             </VBox>
 
-            <!-- Preferencias -->
             <VBox styleClass="sf-card" spacing="12" prefWidth="440">
                 <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
                 <Label text="Configuración" styleClass="title-s, ink"/>

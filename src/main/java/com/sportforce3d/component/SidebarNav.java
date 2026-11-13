@@ -22,10 +22,6 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Navegación lateral de 248 px (72 px colapsada, solo iconos). Los destinos que aún no existen
- * se agregan con {@code available=false}: quedan deshabilitados con la etiqueta "Próximamente".
- */
 public class SidebarNav extends VBox {
 
     public static final double EXPANDED_WIDTH = 248;
@@ -39,14 +35,12 @@ public class SidebarNav extends VBox {
     private final VBox itemsBox = new VBox(4);
     private java.util.function.Consumer<String> onNavigate;
 
-    /** Se llama en cada clic de un ítem, aunque ya estuviera seleccionado. */
     public void setOnNavigate(java.util.function.Consumer<String> handler) {
         this.onNavigate = handler;
     }
 
     public SidebarNav() {
         getStyleClass().add("sf-sidebar");
-        // Los ítems se desplazan si la ventana es baja; así el menú nunca empuja la barra superior.
         setMinHeight(0);
         ScrollPane scroll = new ScrollPane(itemsBox);
         scroll.setFitToWidth(true);
@@ -113,7 +107,6 @@ public class SidebarNav extends VBox {
         return button;
     }
 
-    /** Oculta o muestra un grupo de nodos (p. ej. la sección ADMIN). */
     public void setVisible(Node node, boolean visible) {
         node.setVisible(visible);
         node.setManaged(visible);

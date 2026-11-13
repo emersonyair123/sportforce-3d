@@ -16,7 +16,6 @@
 <HBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.sportforce3d.view.CatalogController" styleClass="sf-page">
 
-    <!-- Filtros -->
     <ScrollPane fitToWidth="true" minWidth="272" prefWidth="272" maxWidth="272" hbarPolicy="NEVER" styleClass="sf-band">
         <VBox fx:id="filters" spacing="24" styleClass="sf-filters">
             <padding><Insets top="24" right="20" bottom="24" left="20"/></padding>
@@ -55,7 +54,6 @@
         </VBox>
     </ScrollPane>
 
-    <!-- Resultados -->
     <ScrollPane fx:id="resultsScroll" fitToWidth="true" HBox.hgrow="ALWAYS" styleClass="sf-page">
         <VBox spacing="24">
             <padding><Insets top="32" right="24" bottom="48" left="24"/></padding>

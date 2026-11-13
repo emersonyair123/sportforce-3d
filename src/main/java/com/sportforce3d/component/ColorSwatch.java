@@ -9,7 +9,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
-/** Muestra de color de 32 px con borde line-strong; seleccionada lleva el anillo de foco. */
 public class ColorSwatch extends Button {
 
     private static final PseudoClass SELECTED = PseudoClass.getPseudoClass("selected");
@@ -25,7 +24,6 @@ public class ColorSwatch extends Button {
     public ColorSwatch(Color color, String name) {
         this.color = color;
         getStyleClass().setAll("sf-swatch");
-        // El color es dato del cliente, no un token: se pinta por código dentro del borde del CSS.
         Rectangle fill = new Rectangle(30, 30, color);
         fill.setArcWidth(10);
         fill.setArcHeight(10);

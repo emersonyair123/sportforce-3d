@@ -12,43 +12,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Lector propio de OBJ + MTL (sin librerías) para las personas de MakeHuman. Devuelve una malla por material
- * ({@code usemtl}) en coordenadas de JavaFX, sin objetos de JavaFX: se puede llamar en segundo plano.
- *
- * <ul>
- *   <li>OBJ: {@code v}, {@code vt}, {@code vn}, {@code f} (triángulos, cuadros y polígonos en abanico; formatos
- *       {@code v}, {@code v/vt}, {@code v//vn}, {@code v/vt/vn}; índices negativos), {@code usemtl} y
- *       {@code mtllib}. {@code o}, {@code g}, {@code s} y el resto se ignoran.</li>
- *   <li>Normales: si el OBJ no las trae (MakeHuman no las exporta) se calculan <b>suaves</b>: la suma de las
- *       normales de las caras que comparten el vértice, ponderadas por área.</li>
- *   <li>Coordenadas: metros, Y arriba, frente hacia +Z → JavaFX con la rotación de 180° en X {@code (x, -y, -z)};
- *       V de la textura se invierte (OBJ la tiene hacia arriba).</li>
- *   <li>MTL: {@code newmtl}, {@code Kd}, {@code Ks}, {@code Ns}, {@code map_Kd} y {@code map_D}. {@code d} y
- *       {@code Tr} se ignoran: MakeHuman escribe {@code d 0} (totalmente transparente) en todos sus materiales y
- *       la transparencia real va en el canal alfa de la textura.</li>
- *   <li>Rutas de textura: relativas a la carpeta del MTL; las absolutas o con {@code ..} se descartan.</li>
- * </ul>
- */
 public final class ObjMtlReader {
-
-    /** Material sin textura asignada en el OBJ. */
     public static final String DEFAULT_MATERIAL = "default";
 
-    /** Abre un archivo relativo a la carpeta del OBJ; null si no existe. */
     @FunctionalInterface
     public interface Opener {
         Reader open(String relativePath) throws IOException;
     }
 
-    /**
-     * @param name       nombre del material ({@code newmtl})
-     * @param diffuse    Kd (r, g, b en 0..1)
-     * @param specular   Ks (r, g, b en 0..1)
-     * @param shininess  Ns (0..1000)
-     * @param diffuseMap ruta relativa de map_Kd o null
-     * @param alphaMap   ruta relativa de map_D o null
-     */
     public record Material(String name, double[] diffuse, double[] specular, double shininess, String diffuseMap,
                            String alphaMap) {
 
@@ -62,16 +33,9 @@ public final class ObjMtlReader {
         }
     }
 
-    /** Malla de un material, en el orden en que aparece en el OBJ. */
     public record Group(String material, MeshData mesh) {
     }
 
-    /**
-     * @param groups    una malla por material
-     * @param materials materiales leídos de los MTL (puede faltar alguno de los usados)
-     * @param min       esquina mínima de la caja (espacio del modelo: Y arriba)
-     * @param max       esquina máxima de la caja
-     */
     public record Result(List<Group> groups, Map<String, Material> materials, double[] min, double[] max) {
 
         public double height() {
@@ -86,9 +50,6 @@ public final class ObjMtlReader {
     private ObjMtlReader() {
     }
 
-    // ---------------------------------------------------------------- OBJ
-
-    /** Caras de un material: (v, vt, vn) por esquina, base 0, -1 = ausente; 9 enteros por triángulo. */
     private static final class Faces {
         int[] data = new int[9 * 256];
         int size;
@@ -104,7 +65,6 @@ public final class ObjMtlReader {
         }
     }
 
-    /** Lista creciente de doubles (v, vt, vn). */
     private static final class Doubles {
         double[] data = new double[3 * 1024];
         int size;
@@ -183,7 +143,6 @@ public final class ObjMtlReader {
                     }
                 }
                 default -> {
-                    // o, g, s, l, p… no se usan.
                 }
             }
         }
@@ -206,7 +165,6 @@ public final class ObjMtlReader {
         int[] f = faces.data;
         int corners = faces.size / 3;
 
-        // Índices locales: solo los vértices y coordenadas de textura que usa este material.
         int[] pointOf = new int[v.count()];
         int[] texOf = new int[vt.count()];
         int[] normalOf = new int[vn.count()];
@@ -262,7 +220,6 @@ public final class ObjMtlReader {
             }
         }
 
-        // Normales suaves por vértice (ya en coordenadas de JavaFX) y, a continuación, las explícitas del OBJ.
         double[] smooth = new double[points * 3];
         for (int c = 0; c < corners; c += 3) {
             int a = pointOf[f[c * 3]];
@@ -274,7 +231,6 @@ public final class ObjMtlReader {
             double wx = pts[d * 3] - pts[a * 3];
             double wy = pts[d * 3 + 1] - pts[a * 3 + 1];
             double wz = pts[d * 3 + 2] - pts[a * 3 + 2];
-            // El producto cruz mide el doble del área: las caras grandes pesan más.
             double nx = uy * wz - uz * wy;
             double ny = uz * wx - ux * wz;
             double nz = ux * wy - uy * wx;
@@ -311,7 +267,7 @@ public final class ObjMtlReader {
         double len = Math.sqrt(x * x + y * y + z * z);
         if (len < 1e-12) {
             x = 0;
-            y = -1; // "arriba" en JavaFX
+            y = -1;
             z = 0;
             len = 1;
         }
@@ -328,7 +284,6 @@ public final class ObjMtlReader {
         return new int[]{vi, ti, ni};
     }
 
-    /** Índices OBJ: base 1; negativos cuentan desde el final de lo leído hasta esa línea. */
     private static int index(String s, int size, int lineNo) {
         int i;
         try {
@@ -343,9 +298,6 @@ public final class ObjMtlReader {
         return idx;
     }
 
-    // ---------------------------------------------------------------- MTL
-
-    /** Lee un MTL. Las rutas de textura quedan relativas a la carpeta del OBJ ({@code folder} + archivo). */
     public static Map<String, Material> readMtl(Reader reader, String folder) throws IOException {
         Map<String, Material> out = new LinkedHashMap<>();
         BufferedReader br = new BufferedReader(reader);
@@ -375,10 +327,9 @@ public final class ObjMtlReader {
                     need(t, 2, lineNo);
                     yield m.with(null, null, d(t[1], lineNo), null, null);
                 }
-                // La ruta es el último elemento: las opciones (-s, -o, -bm…) van antes.
                 case "map_Kd" -> m.with(null, null, null, texture(folder, t[t.length - 1]), null);
                 case "map_D", "map_d" -> m.with(null, null, null, null, texture(folder, t[t.length - 1]));
-                default -> m; // d, Tr, Ka, illum, map_Bump… no se usan
+                default -> m;
             };
             if (next != m) {
                 m = next;
@@ -393,10 +344,6 @@ public final class ObjMtlReader {
         return path == null ? null : folder + path;
     }
 
-    /**
-     * Ruta relativa segura con barras normales; null si es absoluta o sube de carpeta ({@code ..}), para que un
-     * MTL no pueda leer archivos fuera del modelo.
-     */
     static String safePath(String raw) {
         if (raw == null || raw.isBlank()) {
             return null;
@@ -421,12 +368,9 @@ public final class ObjMtlReader {
         return i < 0 ? "" : path.substring(0, i + 1);
     }
 
-    // ---------------------------------------------------------------- Ayudas
-
     private static double[] rgb(String[] t, int lineNo) {
         need(t, 2, lineNo);
         double r = d(t[1], lineNo);
-        // "Kd 0.5" vale como gris.
         double g = t.length > 2 ? d(t[2], lineNo) : r;
         double b = t.length > 3 ? d(t[3], lineNo) : r;
         return new double[]{clamp01(r), clamp01(g), clamp01(b)};

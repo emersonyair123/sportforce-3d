@@ -63,7 +63,6 @@ public class CheckoutViewModel {
                 .orElse(list.isEmpty() ? null : list.get(0).id()));
     }
 
-    /** Guarda (crea o edita) y la deja elegida. Los errores por campo van a {@code onFieldErrors}. */
     public void saveAddress(Address form, Runnable onSuccess, Consumer<Map<String, String>> onFieldErrors,
                             Consumer<String> onError) {
         Async.run(() -> {
@@ -109,7 +108,6 @@ public class CheckoutViewModel {
                 e -> {
                     placing.set(false);
                     onError.accept(ErrorMessages.of(e));
-                    // El carrito pudo cambiar (stock): se recarga el resumen.
                     Async.run(cartService::summary, summary::set, ignored -> { });
                 });
     }

@@ -16,7 +16,6 @@ import java.util.OptionalLong;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/** Datos de referencia del catálogo: categorías, deportes, tallas, materiales y configuración de la tienda. */
 public class CatalogRepository {
 
     private final Database db;
@@ -84,7 +83,6 @@ public class CatalogRepository {
         });
     }
 
-    /** Valor numérico de store_settings (p. ej. shipping_flat_cents). */
     public OptionalLong findLongSetting(String key) {
         return db.withConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement("SELECT value FROM store_settings WHERE key = ?")) {

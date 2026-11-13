@@ -32,12 +32,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
-/**
- * Capturas finales de todas las pantallas (docs/capturas/final). Crea una base temporal con datos de ejemplo
- * (pedidos en varios estados, un diseño y pagos aprobados) usando los services reales y recorre la aplicación.
- * Necesita pantalla y gráficos 3D (no corre en Monocle). Uso: configuración "Capturas finales" de IntelliJ o
- * {@code java -cp … com.sportforce3d.tools.ScreenTour [carpeta]}.
- */
 public final class ScreenTour {
 
     private static final int W = 1440;
@@ -83,7 +77,6 @@ public final class ScreenTour {
         });
         Seed seed = seed();
 
-        // ---------------------------------------------------------------- Acceso
         pause(800);
         shot("login");
         fx(() -> {
@@ -101,7 +94,6 @@ public final class ScreenTour {
         pause(1500);
         shot("registro");
 
-        // ---------------------------------------------------------------- Cliente
         login("cliente@sportforce3d.pe", "Cliente123!");
         shot("inicio");
         go(Routes.CATALOG, null);
@@ -130,7 +122,6 @@ public final class ScreenTour {
         go(Routes.ADMIN_SETTINGS, null);
         shot("cliente-sin-acceso-admin");
 
-        // ---------------------------------------------------------------- Carrito vacío (otra cuenta)
         fx(() -> {
             context.navigator().logout();
             return null;
@@ -141,7 +132,6 @@ public final class ScreenTour {
         go(Routes.ORDERS, null);
         shot("mis-pedidos-vacio");
 
-        // ---------------------------------------------------------------- ADMIN
         fx(() -> {
             context.navigator().logout();
             return null;
@@ -177,7 +167,7 @@ public final class ScreenTour {
         });
         pause(1500);
         shot("admin-configuracion-guardada");
-        pause(3000); // que se vaya el aviso antes de la siguiente captura
+        pause(3000);
         go(Routes.ADMIN_PRODUCTS, null);
         shot("admin-productos");
         go(Routes.ADMIN_PRODUCT_EDIT, seed.productId);
@@ -196,7 +186,6 @@ public final class ScreenTour {
         go(Routes.ADMIN_USERS, null);
         shot("admin-usuarios");
 
-        // Archivos de ejemplo de los reportes.
         Path pdf = context.reportService().exportPdf(seed.report, out.resolve("reporte-ventas-ejemplo.pdf"));
         Path xlsx = context.reportService().exportExcel(seed.report, out.resolve("reporte-ventas-ejemplo.xlsx"));
         System.out.println("Reportes: " + pdf.toAbsolutePath() + " · " + xlsx.toAbsolutePath());
@@ -216,13 +205,10 @@ public final class ScreenTour {
         System.out.println(count + " capturas en " + out.toAbsolutePath());
     }
 
-    // ------------------------------------------------------------------ Datos de ejemplo
-
     private record Seed(long productId, long pendingOrder, long productionOrder, long designId, long designItem,
                         SalesReport report) {
     }
 
-    /** Pedidos, pagos y un diseño, creados con los services (como lo haría la interfaz). */
     private Seed seed() throws Exception {
         var auth = context.authService();
         var cart = context.cartService();
@@ -240,25 +226,20 @@ public final class ScreenTour {
         auth.logout();
 
         auth.login("cliente@sportforce3d.pe", "Cliente123!".toCharArray());
-        // Como en el diseñador: las capturas guardadas son las fotos realistas de frente y espalda.
         DesignDocument halcones = SampleDesigns.halcones();
         DesignSummary design = context.designService().save(null, "Halcones 2026", halcones,
                 realisticShot(halcones, "futbol_hombre_frente"), realisticShot(halcones, "futbol_hombre_espalda"));
         long address = context.addressService().list().get(0).id();
 
-        // Pedido 1: uniforme con diseño, pagado y en producción.
         cart.addDesign(design.id(), variant, 2);
         OrderDetail production = orders.placeOrder(address, PaymentMethod.YAPE, "Entregar en el club, por la tarde.");
         payments.register(production.id(), "48213077", proof);
-        // Pedido 2: camisetas por transferencia, pagado.
         cart.add(shirt, 3);
         OrderDetail paid = orders.placeOrder(address, PaymentMethod.TRANSFERENCIA, null);
         payments.register(paid.id(), "OP-778812", proof);
-        // Pedido 3: en verificación (para la cola de Pagos).
         cart.add(shorts, 2);
         OrderDetail verifying = orders.placeOrder(address, PaymentMethod.PLIN, null);
         payments.register(verifying.id(), "55129034", proof);
-        // Pedido 4: pendiente de pago (formulario de pago) y carrito con algo para el checkout.
         cart.add(shirt, 1);
         OrderDetail pending = orders.placeOrder(address, PaymentMethod.YAPE, null);
         cart.add(shirt, 2);
@@ -291,7 +272,6 @@ public final class ScreenTour {
                 .orElse(context.adminProductService().get(productId).variants().get(0)).id();
     }
 
-    /** Comprobante de ejemplo (imagen PNG real) para que la cola de Pagos muestre la miniatura. */
     private static void writeProof(Path file) throws java.io.IOException {
         java.awt.image.BufferedImage img = new java.awt.image.BufferedImage(360, 640, java.awt.image.BufferedImage.TYPE_INT_RGB);
         java.awt.Graphics2D g = img.createGraphics();
@@ -321,8 +301,6 @@ public final class ScreenTour {
         Path p = Path.of(path);
         return Files.exists(p) ? p : null;
     }
-
-    // ------------------------------------------------------------------ Recorrido
 
     private void login(String email, String password) throws Exception {
         fx(() -> {
@@ -375,7 +353,6 @@ public final class ScreenTour {
         return found;
     }
 
-    /** SfButton quita la clase "button" de Modena: se recorre el árbol completo. */
     private static SfButton find(Node node, String text) {
         if (node instanceof SfButton b && text.equalsIgnoreCase(b.getText())) {
             return b;

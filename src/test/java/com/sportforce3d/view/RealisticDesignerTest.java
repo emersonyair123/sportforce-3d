@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Selectores de la vista realista: qué cortes hay por categoría y qué se recolorea. */
 class RealisticDesignerTest {
 
     private final RealisticModelRepository models = new RealisticModelRepository();
@@ -37,7 +36,6 @@ class RealisticDesignerTest {
 
     @Test
     void shirtsHaveFrontAndBackAndHoodiesOnlyFront() {
-        // Etapa 12B: arquero, compresión y casaca solo tienen foto de frente.
         java.util.Set<String> frontOnly = java.util.Set.of("buzo", "arquero", "compresion", "casaca");
         for (String audience : RealisticDesigner.CATEGORIES.keySet()) {
             for (String cut : cuts(audience)) {

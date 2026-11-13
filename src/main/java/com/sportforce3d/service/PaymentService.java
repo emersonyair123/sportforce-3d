@@ -22,20 +22,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-/**
- * Pagos con verificación manual (Yape, Plin, transferencia):
- * <ol>
- *     <li>el cliente registra el código de operación y sube el comprobante → pedido "Pago en verificación";</li>
- *     <li>un ADMIN lo compara con su app o estado de cuenta y lo <b>aprueba</b> (pedido "Pagado"; la reserva de stock
- *     se vuelve venta) o lo <b>rechaza</b> con motivo (pedido vuelve a "Pendiente de pago" y se abre un pago nuevo
- *     para que el cliente lo registre otra vez).</li>
- * </ol>
- * Nada aquí marca un pedido como pagado sin la aprobación de un ADMIN.
- */
 public class PaymentService {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
-    /** Letras, números y guiones: los códigos de Yape/Plin son numéricos; los bancarios pueden llevar letras. */
     private static final Pattern CODE = Pattern.compile("^[A-Za-z0-9-]{4,40}$");
     public static final int REASON_MIN = 5;
     public static final int REASON_MAX = 300;
@@ -62,9 +51,6 @@ public class PaymentService {
         return payments.instructions();
     }
 
-    // ------------------------------------------------------------------ Cliente
-
-    /** El dueño del pedido registra su pago: código de operación + comprobante (PNG, JPG o PDF, máx. 5 MB). */
     public OrderDetail register(long orderId, String operationCode, Path proof) {
         User me = session.requireUser();
         OrderDetail order = orders.findDetail(orderId)
@@ -109,8 +95,6 @@ public class PaymentService {
         return orders.findDetail(orderId).orElseThrow();
     }
 
-    // ------------------------------------------------------------------ ADMIN
-
     public List<Payment> queue(PaymentStatus status) {
         session.requireRole(Role.ADMIN);
         return payments.findByStatus(status == null ? PaymentStatus.EN_VERIFICACION : status, 200);
@@ -126,10 +110,6 @@ public class PaymentService {
         return payments.find(paymentId).orElseThrow(() -> new ServiceException("No encontramos ese pago."));
     }
 
-    /**
-     * Aprueba un pago en verificación: pago APROBADO (con quién y cuándo), pedido PAGADO y, por cada línea, la
-     * reserva se descuenta del stock ({@code quantity} y {@code reserved} bajan juntos). Todo o nada.
-     */
     public OrderDetail approve(long paymentId, String note) {
         User admin = session.requireRole(Role.ADMIN);
         Payment payment = payment(paymentId);
@@ -158,10 +138,6 @@ public class PaymentService {
         return orders.findDetail(payment.orderId()).orElseThrow();
     }
 
-    /**
-     * Rechaza un pago en verificación con motivo: el pedido vuelve a "Pendiente de pago" con un pago nuevo para que
-     * el cliente registre otro código. El stock sigue reservado.
-     */
     public OrderDetail reject(long paymentId, String reason) {
         User admin = session.requireRole(Role.ADMIN);
         String why = Validators.blankToNull(reason) == null ? "" : reason.trim();

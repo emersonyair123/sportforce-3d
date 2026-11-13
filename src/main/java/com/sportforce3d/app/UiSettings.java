@@ -6,7 +6,6 @@ import javafx.beans.property.SimpleBooleanProperty;
 
 import java.util.prefs.Preferences;
 
-/** Preferencias de interfaz de este equipo (no van en la base de datos). */
 public class UiSettings {
 
     private static final String REDUCE_MOTION = "reduceMotion";
@@ -27,7 +26,6 @@ public class UiSettings {
         return new UiSettings(Preferences.userRoot().node("com/sportforce3d"));
     }
 
-    /** "Reducir animaciones": sin desplazamientos ni auto-rotación, solo cambios de opacidad. */
     public BooleanProperty reduceMotionProperty() {
         return Motion.reducedProperty();
     }

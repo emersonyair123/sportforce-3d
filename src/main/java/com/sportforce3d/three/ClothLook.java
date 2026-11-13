@@ -11,27 +11,12 @@ import java.util.EnumMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-/**
- * Aspecto de la tela sobre una persona: aplica el sombreado horneado ({@link ClothShading}) a la textura del diseño
- * y los pliegues al relieve de la tela. JavaFX (Phong) no tiene oclusión ambiental, sombras propias ni colores por
- * vértice: todo eso se pinta en la textura. Hilo de JavaFX.
- *
- * <p>En las sombras el color pierde algo de saturación (como en una foto de estudio, donde la luz rebotada es
- * neutra). El relieve combina el de la tela (normal map del material) con la pendiente de los pliegues.
- */
 final class ClothLook {
-
-    /** Brillo de poliéster: especular suave y amplio. */
     static final Color POLYESTER_SPECULAR = Color.gray(0.24);
     static final double POLYESTER_POWER = 20;
     private static final double DESATURATE = 0.45;
     private static final double WRINKLE_RELIEF = 0.55;
-    /**
-     * Sobre una prenda simulada el relieve del material (FabricMaps) se atenúa: con el normal map de los pliegues,
-     * el tejido a toda intensidad se ve granulado.
-     */
     private static final double FABRIC_ON_SIMULATED = 0.35;
-    /** Radio (px del normal map horneado) del suavizado para telas lisas. */
     private static final int SMOOTH_RADIUS = 12;
 
     private final Map<Garment, ClothShading> shading;
@@ -50,7 +35,6 @@ final class ClothLook {
         return shading.containsKey(g);
     }
 
-    /** Textura del diseño con oclusión ambiental y pliegues (una copia; la del compositor no se toca). */
     Image shade(Garment g, Image texture) {
         ClothShading sh = shading.get(g);
         if (sh == null || texture == null) {
@@ -82,7 +66,6 @@ final class ClothLook {
             b = (b + (lum - b) * k) * f;
             buf[i] = (c & 0xFF000000) | (clamp(r) << 16) | (clamp(gr) << 8) | clamp(b);
         }
-        // Dos imágenes por prenda que se alternan, como el compositor: no se reescribe la que está en pantalla.
         WritableImage[] pair = outputs.computeIfAbsent(g, k -> new WritableImage[2]);
         int slot = next.getOrDefault(g, 0);
         if (pair[slot] == null || pair[slot].getWidth() != w || pair[slot].getHeight() != h) {
@@ -93,15 +76,12 @@ final class ClothLook {
         return pair[slot];
     }
 
-    /** Relieve de la tela con los pliegues de la prenda (en caché por material). */
     Image bump(Garment g, Image base) {
         ClothShading sh = shading.get(g);
         if (sh == null) {
             return base;
         }
         if (base == null) {
-            // Tela lisa (poliéster liso): solo los pliegues, a la misma resolución que las demás telas y con el normal
-            // map horneado suavizado: con su brillo alto los escalones del horneado se veían dentados.
             return flatBumps.computeIfAbsent(g, k -> combine(sh.withSmoothedNormals(SMOOTH_RADIUS), null, 2048));
         }
         return bumps.computeIfAbsent(g, k -> new IdentityHashMap<>())
@@ -134,7 +114,6 @@ final class ClothLook {
                 }
                 double[] baked = sh.normalAt(u, v);
                 if (baked != null) {
-                    // Mezcla "whiteout": suma las pendientes del tejido (atenuado) y de los pliegues horneados.
                     nx = nx * FABRIC_ON_SIMULATED + baked[0];
                     ny = ny * FABRIC_ON_SIMULATED + baked[1];
                     nz = nz * baked[2];

@@ -57,10 +57,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public class AdminProductEditController implements Router.Routable {
-
-    /** Anchos de las columnas del editor de variantes (cabecera y filas). */
     private static final double[] COLS = {100, 140, 104, 160, 80, 70, 64, 56, 40};
-    /** Orden de las zonas en "Foto realista". */
     private static final List<String> ZONE_ORDER = List.of("camiseta", "principal", "short", "paneles", "medias");
 
     private final AppContext context;
@@ -91,7 +88,6 @@ public class AdminProductEditController implements Router.Routable {
     private final Label variantsError = errorLabel();
     private final VBox variantRows = new VBox(8);
     private final FlowPane imagesPane = new FlowPane(12, 12);
-    /** Foto realista: miniatura y un color por zona (Etapa 12B: p. ej. la suela de la zapatilla de running). */
     private final VBox lookCard = new VBox();
     private final ImageView lookPreview = new ImageView();
     private final VBox lookZones = new VBox(16);
@@ -127,8 +123,6 @@ public class AdminProductEditController implements Router.Routable {
         viewModel.load(param instanceof Long id ? id : null,
                 message -> content.getChildren().setAll(new EmptyState(Feather.LOCK, "No se pudo abrir el producto", message)));
     }
-
-    // ------------------------------------------------------------------ Construcción
 
     private void buildForm() {
         category.setItems(FXCollections.observableArrayList(reference.categories()));
@@ -263,7 +257,6 @@ public class AdminProductEditController implements Router.Routable {
         if (!has) {
             return;
         }
-        // Orden fijo (el mapa guardado no conserva el orden): prenda principal primero.
         List<Map.Entry<String, String>> entries = new ArrayList<>(look.zoneColors().entrySet());
         entries.sort(java.util.Comparator.comparingInt(e -> {
             int i = ZONE_ORDER.indexOf(e.getKey());
@@ -281,13 +274,11 @@ public class AdminProductEditController implements Router.Routable {
         paintLook(look);
     }
 
-    /** Miniatura con los colores elegidos (aún sin guardar). */
     private void paintLook(RealisticLook saved) {
         RealisticLook shown = new RealisticLook(saved.modelKey(), zoneColors(saved), saved.pattern(), saved.patternColor());
         ProductImages.realistic(context.recolorService(), shown, lookPreview::setImage);
     }
 
-    /** Colores por zona del formulario (las zonas sin color válido conservan el guardado). */
     private Map<String, String> zoneColors(RealisticLook saved) {
         Map<String, String> out = new java.util.LinkedHashMap<>(saved.zoneColors());
         zoneInputs.forEach((zone, group) -> {
@@ -310,7 +301,6 @@ public class AdminProductEditController implements Router.Routable {
         };
     }
 
-    /** Buzos y accesorios no se personalizan (el carrito no compra su diseño): la casilla queda apagada. */
     private void refreshCustomizable() {
         boolean allowed = garment.getValue() == null || garment.getValue().designable();
         if (!allowed) {
@@ -376,8 +366,6 @@ public class AdminProductEditController implements Router.Routable {
         });
         imagesPane.getChildren().add(add);
     }
-
-    // ------------------------------------------------------------------ Variantes
 
     private final class VariantRow extends HBox {
         final Long id;
@@ -470,7 +458,6 @@ public class AdminProductEditController implements Router.Routable {
             if (current != null && options.contains(current)) {
                 size.setValue(current);
             } else if (current != null && id != null) {
-                // Variante existente con talla de otro grupo: se conserva para no perder datos.
                 size.getItems().add(current);
                 size.setValue(current);
             }
@@ -507,7 +494,6 @@ public class AdminProductEditController implements Router.Routable {
         VariantRow template = rows.isEmpty() ? null : rows.get(rows.size() - 1);
         VariantRow row = new VariantRow(v, template);
         if (v == null && template != null && template.size.getValue() != null) {
-            // Siguiente talla del mismo grupo, para cargar tallas rápido.
             List<Size> options = row.size.getItems();
             int next = options.indexOf(template.size.getValue()) + 1;
             if (next > 0 && next < options.size()) {
@@ -518,7 +504,6 @@ public class AdminProductEditController implements Router.Routable {
         variantRows.getChildren().add(row);
     }
 
-    /** Tallas que corresponden al tipo de prenda elegido. */
     private List<Size> sizeOptions() {
         String group = switch (garment.getValue() == null ? Garment.JERSEY : garment.getValue()) {
             case SHOES -> "CALZADO";
@@ -556,8 +541,6 @@ public class AdminProductEditController implements Router.Routable {
         }
         return header;
     }
-
-    // ------------------------------------------------------------------ Guardado
 
     private void save() {
         clearErrors();
@@ -653,8 +636,6 @@ public class AdminProductEditController implements Router.Routable {
             throw new IllegalArgumentException("Revisa el " + what + ": escribe un número entero.");
         }
     }
-
-    // ------------------------------------------------------------------ Ayudas de maquetación
 
     private static VBox card(String title, Node... children) {
         Label label = new Label(title);

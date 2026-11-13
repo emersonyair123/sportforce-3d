@@ -3,7 +3,6 @@ package com.sportforce3d.service;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** Datos de entrada inválidos. {@link #fieldErrors()} asocia cada campo con su mensaje. */
 public class ValidationException extends ServiceException {
 
     private final Map<String, String> fieldErrors;

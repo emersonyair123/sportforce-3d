@@ -18,17 +18,7 @@ import java.awt.image.DataBufferInt;
 import java.io.IOException;
 import java.io.InputStream;
 
-/**
- * Dibuja con Java2D (en CPU, cualquier hilo) la capa transparente de diseños y textos de la camiseta.
- * El recorte con {@code zona_camiseta} lo hace {@link Recolor} al mezclar.
- * <p>
- * Los diseños usan un sistema local centrado en {@code (centroX, cuelloY)} con escala {@code s = h / 300}
- * ({@code h = bastaY − cuelloY}): la camiseta mide 300 unidades de alto en cualquier foto. En la espalda los
- * diseños asimétricos se reflejan, así la banda o los trazos continúan alrededor del cuerpo.
- */
 final class DesignOverlay {
-
-    /** Unidades del sistema local en el alto de la camiseta. */
     static final double LOCAL = 300;
     static final int LIGHT_TEXT = 0xF2F5F8;
     static final int DARK_TEXT = 0x0B0E13;
@@ -37,7 +27,6 @@ final class DesignOverlay {
     private DesignOverlay() {
     }
 
-    /** null si el modelo no tiene camiseta o no hay nada que dibujar. */
     static ArgbImage draw(RealisticModel model, RecolorRequest req) {
         RealisticModel.ShirtGeometry geo = model.shirt();
         if (geo == null || !model.hasZone(RealisticModel.CAMISETA) || !req.hasOverlay()) {
@@ -71,14 +60,12 @@ final class DesignOverlay {
     record Tinted(Shape shape, float alpha) {
     }
 
-    /** Formas del diseño en el sistema local (x a la derecha de la imagen, y hacia abajo, cuello en 0). */
     static java.util.List<Tinted> pattern(RealisticPattern p) {
         java.util.List<Tinted> out = new java.util.ArrayList<>();
         switch (p) {
             case LISO -> {
             }
             case RAYAS -> {
-                // Rayas verticales de 24 u cada 48 u, con el centro del pecho libre.
                 for (int k = -7; k <= 6; k++) {
                     out.add(new Tinted(new Rectangle2D.Double(k * 48 + 12, -80, 24, 420), 1f));
                 }
@@ -89,15 +76,12 @@ final class DesignOverlay {
                 }
             }
             case DINAMICO -> {
-                // Trazos de grosor y ángulo distintos que se afinan hacia arriba. A propósito no son tres franjas
-                // paralelas iguales (se parecerían a una marca registrada).
                 out.add(new Tinted(stroke(-250, 300, 250, 70, 46, 10), 1f));
                 out.add(new Tinted(stroke(-250, 430, 250, 150, 16, 4), 1f));
                 out.add(new Tinted(stroke(-250, 150, 250, 115, 9, 3), 0.85f));
                 out.add(new Tinted(stroke(-250, 235, 250, -45, 6, 2), 0.7f));
             }
             case GEOMETRICO -> {
-                // Triángulos que se hacen más densos y opacos hacia la basta.
                 double cell = 36;
                 for (int row = 0; row * cell < 330; row++) {
                     double y = 90 + row * cell * 0.87;
@@ -112,7 +96,6 @@ final class DesignOverlay {
                 }
             }
             case MINIMAL -> {
-                // Canesú: cubre los hombros y baja hacia las mangas (y = 30 + 0.0016·x²).
                 Path2D.Double yoke = new Path2D.Double();
                 yoke.moveTo(-320, -120);
                 yoke.lineTo(320, -120);
@@ -127,7 +110,6 @@ final class DesignOverlay {
         return out;
     }
 
-    /** Trazo de (x0, y0) a (x1, y1) con grosor que pasa de {@code w0} a {@code w1} y bordes curvos. */
     private static Shape stroke(double x0, double y0, double x1, double y1, double w0, double w1) {
         double dx = x1 - x0;
         double dy = y1 - y0;
@@ -174,10 +156,6 @@ final class DesignOverlay {
         return p;
     }
 
-    /**
-     * Número y nombre con la geometría de {@code ALGORITMO.md} (Barlow Condensed 800). El tamaño es el alto de
-     * las cifras o de las mayúsculas.
-     */
     private static void drawTexts(Graphics2D g, RealisticModel model, RealisticModel.ShirtGeometry geo, RecolorRequest req) {
         if (req.overlay() != null) {
             drawSynced(g, model, geo, req.overlay());
@@ -201,11 +179,6 @@ final class DesignOverlay {
         }
     }
 
-    /**
-     * Textos y escudo de un diseño sincronizado con el 3D (Etapa 11), con sus colores, contornos y tipografías:
-     * espalda con nombre y número (como siempre); frente con el número pequeño en el pecho derecho del jugador
-     * (izquierda de la foto) y el escudo en el izquierdo, a la altura y el tamaño que tienen en el 3D.
-     */
     private static void drawSynced(Graphics2D g, RealisticModel model, RealisticModel.ShirtGeometry geo,
                                    RecolorRequest.Overlay o) {
         double h = geo.height();
@@ -239,7 +212,6 @@ final class DesignOverlay {
         }
     }
 
-    /** Relleno con el color del texto y, si tiene, el contorno con su color (como en el 3D). */
     private static void paint(Graphics2D g, Shape shape, double width, com.sportforce3d.design.RealisticView.Text t) {
         if (t.outline() != null) {
             g.setColor(new Color(RecolorRequest.rgb(t.outline())));
@@ -250,10 +222,6 @@ final class DesignOverlay {
         g.fill(shape);
     }
 
-    /**
-     * Rellena el texto con un contorno fino del color contrario: así se lee aunque el diseño de debajo tenga el
-     * mismo tono (por ejemplo, nombre oscuro sobre rayas oscuras).
-     */
     private static void outlined(Graphics2D g, Shape shape, double width, int fill) {
         g.setColor(new Color(luminance(fill) > 0.55 ? DARK_TEXT : LIGHT_TEXT));
         g.setStroke(new BasicStroke((float) Math.max(1.5, width * 2), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
@@ -262,10 +230,6 @@ final class DesignOverlay {
         g.fill(shape);
     }
 
-    /**
-     * Contorno del texto centrado en (cx, cy). La escala sale del alto de {@code reference} ("0" o "H"), así
-     * letras con cola (Q, Ñ) no achican el nombre; si pasa de {@code maxWidth}, se angosta.
-     */
     private static Shape text(Graphics2D g, String value, String reference, double cx, double cy, double size, double maxWidth) {
         return text(g, font(), value, reference, cx, cy, size, maxWidth);
     }
@@ -286,7 +250,6 @@ final class DesignOverlay {
         return t.createTransformedShape(outline);
     }
 
-    /** Color del texto: el pedido o, si es automático, claro u oscuro según la camiseta. */
     static int textColor(RecolorRequest req) {
         if (req.textColor() != null) {
             return RecolorRequest.rgb(req.textColor());
@@ -302,7 +265,6 @@ final class DesignOverlay {
 
     private static final java.util.Map<String, Font> FONTS = new java.util.concurrent.ConcurrentHashMap<>();
 
-    /** Tipografía del 3D ({@link DesignFonts}); la predeterminada si falta o no se puede leer. */
     private static Font font(String key) {
         if (key == null || DesignFonts.DEFAULT.equals(key)) {
             return font();

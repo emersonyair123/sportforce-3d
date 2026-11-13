@@ -41,23 +41,11 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Visor 3D del diseñador: SubScene con antialiasing, cámara orbital suave, iluminación de estudio de tres
- * luces (clave cálida, relleno frío y contraluz) más ambiente, suelo con sombra de contacto y el modelo.
- * Las luces giran con la cámara para que el maniquí se vea igual de bien desde cualquier lado. Muestra el maniquí
- * procedural con sus prendas ({@link #setModel}) o una persona de MakeHuman ({@link #setPerson}).
- *
- * <p>Controles: arrastrar = girar; rueda o pellizco = zoom; botón derecho/central = subir o bajar el encuadre;
- * doble clic = restablecer; flechas, + y −, 1–4 (vistas) y 0 (restablecer) con el teclado.
- */
 public class Viewer3D extends Region {
-
-    /** bg-000 del tema oscuro (design/tokens.json). El escenario 3D no se puede estilizar con CSS. */
     public static final Color STAGE_BACKGROUND = Color.web("#07080a");
-    /** Centro del suelo: entre bg-100 y bg-200, para que la figura "pise" un círculo sutil. */
     public static final Color FLOOR_CENTER = Color.web("#14171c");
 
-    private static final double ROTATE_RATE = 11;  // 1/s: ~95 % del camino en ~0.27 s (≈ 320 ms)
+    private static final double ROTATE_RATE = 11;
     private static final double IDLE_BEFORE_SPIN_MS = 4000;
     private static final double AUTO_SPIN_DEG_PER_S = 9;
 
@@ -83,24 +71,15 @@ public class Viewer3D extends Region {
     private final Map<javafx.scene.Node, Zone> viewZones = new java.util.HashMap<>();
     private ModelData model;
     private HumanModel person;
-    /** Sombreado y pliegues de la ropa sobre una persona; null con el maniquí. */
     private ClothLook clothLook;
-    /** Textura del compositor por prenda (sin agujeros ni sombreado) y zonas con malla de agujeros. */
     private final Map<Garment, Image> rawTextures = new EnumMap<>(Garment.class);
     private final Map<Zone, Boolean> perforatedZones = new EnumMap<>(Zone.class);
     private final Perforation perforation = new Perforation();
-    /** Encuadre por prenda del modelo visible (vacío mientras no hay modelo). */
     private Map<Garment, Focus> focusMap = Map.of();
-    /** Altura del modelo que encuadró la cámara (para conservar la vista al cambiar de modelo). */
     private double frameHeight;
     private PickDrag pickDrag;
     private boolean draggingElement;
 
-    /**
-     * Arrastre de elementos sobre la prenda. {@code press} recibe la zona y la coordenada de textura bajo el
-     * cursor ({@code PickResult.getIntersectedTexCoord()}); si devuelve true, el gesto mueve el elemento en lugar
-     * de girar la cámara. {@code drag} recibe null en zona/UV cuando el cursor sale de la prenda.
-     */
     public interface PickDrag {
         boolean press(Zone zone, double u, double v);
 
@@ -156,12 +135,9 @@ public class Viewer3D extends Region {
         });
     }
 
-    // ---------------------------------------------------------------- Luces
-
     private Group createLights() {
         AmbientLight ambient = new AmbientLight(Color.rgb(52, 56, 66));
 
-        // Direcciones en coordenadas de JavaFX (Y abajo, +Z se aleja de la cámara en la vista frontal).
         DirectionalLight key = new DirectionalLight(Color.rgb(255, 242, 226).deriveColor(0, 1, 0.92, 1));
         key.setDirection(new Point3D(0.55, 0.62, 0.56));
 
@@ -174,23 +150,14 @@ public class Viewer3D extends Region {
         return new Group(ambient, key, fill, rim);
     }
 
-    // ---------------------------------------------------------------- Modelo
-
-    /** Reemplaza el modelo (hilo de JavaFX). Encuadra el cuerpo completo de frente. */
     public void setModel(ModelData data) {
         clothLook = null;
         show(data, null);
     }
 
-    /**
-     * Persona con el uniforme ajustado a su cuerpo ({@code OutfitFitter}): las prendas son zonas como las del
-     * maniquí, así que colores, texturas, relieve y arrastre funcionan igual. Orden de dibujo: piel y ojos opacos,
-     * prendas y al final lo transparente (pelo), para que una coleta sobre la espalda se mezcle con la camiseta.
-     */
     public void setDressedPerson(OutfitFitter.DressedPerson dressed) {
         clothLook = new ClothLook(dressed.shading());
         show(dressed.outfit(), dressed.body());
-        // Tela de poliéster con pliegues hasta que llegue el material del diseño (setLook).
         zoneMaterials.forEach((zone, m) -> {
             if (clothLook.covers(zone.garment())) {
                 m.setBumpMap(clothLook.bump(zone.garment(), m.getBumpMap()));
@@ -239,7 +206,6 @@ public class Viewer3D extends Region {
             for (Part part : parts) {
                 MeshView view = new MeshView(part.mesh().toTriangleMesh());
                 view.setMaterial(material);
-                // Las prendas tienen aberturas (cuello, mangas, ruedo): se ven ambas caras.
                 view.setCullFace(zone.garment() == Garment.SHOES ? CullFace.BACK : CullFace.NONE);
                 view.setId(part.name());
                 viewZones.put(view, zone);
@@ -267,12 +233,6 @@ public class Viewer3D extends Region {
         return view;
     }
 
-    /**
-     * Muestra una persona (hilo de JavaFX): un {@code MeshView} por material con su textura. Lo opaco va primero y
-     * lo transparente (pelo, ojos) después, porque JavaFX no ordena por profundidad. Solo caras delanteras: con
-     * ambas caras el interior del pelo se ve oscuro (JavaFX no invierte la normal de la cara trasera). Sin prendas:
-     * {@link #getModel()} queda en null.
-     */
     public void setPerson(HumanModel human) {
         this.person = human;
         this.model = null;
@@ -297,11 +257,6 @@ public class Viewer3D extends Region {
         frame(all, h);
     }
 
-    /**
-     * Límites de zoom según la altura y "Reiniciar" = cuerpo completo de frente. La primera vez la cámara va a ese
-     * encuadre; si ya había algo a la vista (se vuelve a vestir la persona: manga, largo, otra persona) la cámara
-     * conserva su giro, inclinación y encuadre, escalados a la nueva altura: editar nunca mueve la vista.
-     */
     private void frame(Map<Garment, Focus> focus, double h) {
         boolean keep = !focusMap.isEmpty() && frameHeight > 0;
         double k = keep ? h / frameHeight : 1;
@@ -327,38 +282,31 @@ public class Viewer3D extends Region {
         return new Vec3(v.x() * k, v.y() * k, v.z() * k);
     }
 
-    /** Copia del estado al que va la cámara (pruebas: editar no debe cambiarlo). */
     public OrbitState cameraGoal() {
         return goal.copy();
     }
 
-    /** Modelo con prendas (maniquí o persona vestida), o null si se ve una persona sin uniforme (o nada todavía). */
     public ModelData getModel() {
         return model;
     }
 
-    /** Persona visible o null. */
     public HumanModel getPerson() {
         return person;
     }
 
-    /** true cuando hay algo que mostrar (maniquí o persona). */
     public boolean hasContent() {
         return !focusMap.isEmpty();
     }
 
-    /** Material de una zona (la Etapa 4 cambiará color, mapas y brillo desde aquí). */
     public PhongMaterial material(Zone zone) {
         return zoneMaterials.get(zone);
     }
 
-    /** Textura compuesta de una prenda: se aplica a todas sus zonas (el color sale de la textura). */
     public void setGarmentTexture(Garment garment, Image texture) {
         rawTextures.put(garment, texture);
         showTexture(garment);
     }
 
-    /** Textura visible: la del compositor, con los agujeros de la malla y el sombreado de la persona si corresponde. */
     private void showTexture(Garment garment) {
         Image texture = rawTextures.get(garment);
         if (texture == null) {
@@ -382,10 +330,6 @@ public class Viewer3D extends Region {
         });
     }
 
-    /**
-     * Relieve, brillo y agujeros (malla) de un material en las zonas indicadas. Cada tela conserva su brillo también
-     * sobre la persona: el algodón queda mate y el poliéster liso brilla más que el dry-fit.
-     */
     public void setLook(java.util.Collection<Zone> zones, MaterialLook look) {
         java.util.Set<Garment> retexture = java.util.EnumSet.noneOf(Garment.class);
         for (Zone z : zones) {
@@ -398,7 +342,6 @@ public class Viewer3D extends Region {
                 continue;
             }
             if (clothLook != null && clothLook.covers(z.garment())) {
-                // Sobre una persona: pliegues en el relieve; el brillo es el del material, sin brillos de punta.
                 m.setBumpMap(clothLook.bump(z.garment(), look.bump()));
                 m.setSpecularColor(look.specular());
                 m.setSpecularPower(Math.max(6, Math.min(40, look.power())));
@@ -415,7 +358,6 @@ public class Viewer3D extends Region {
         this.pickDrag = handler;
     }
 
-    /** Captura con la cámara en una vista fija (cuerpo completo) y luego vuelve a donde estaba. */
     public WritableImage captureView(ViewPreset preset, int width) {
         OrbitState savedCurrent = current.copy();
         OrbitState savedGoal = goal.copy();
@@ -431,7 +373,6 @@ public class Viewer3D extends Region {
         return Collections.unmodifiableList(zoneViews.getOrDefault(zone, List.of()));
     }
 
-    /** Suelo con la sombra de contacto de los vértices a menos de 3 cm del piso ({@code floorY}, Y arriba). */
     private void rebuildFloor(List<MeshData> meshes, double floorY) {
         List<float[]> near = new ArrayList<>();
         double minX = Double.MAX_VALUE;
@@ -455,16 +396,12 @@ public class Viewer3D extends Region {
         floorGroup.getChildren().setAll(StudioFloor.create(near, cx, cz, STAGE_BACKGROUND, FLOOR_CENTER));
     }
 
-    // ---------------------------------------------------------------- Cámara
-
-    /** Gira a una vista (frente, espalda, lados) manteniendo el encuadre actual. */
     public void showView(ViewPreset preset) {
         goal.aimAt(preset.yaw(), goal.pitch(), goal.distance(), goal.target());
         interacted();
         snapIfReduced();
     }
 
-    /** Encuadra una prenda (la cámara se acerca en ~320 ms). */
     public void focus(Garment garment) {
         if (focusMap.isEmpty()) {
             return;
@@ -475,7 +412,6 @@ public class Viewer3D extends Region {
         snapIfReduced();
     }
 
-    /** Vuelve al cuerpo completo de frente. */
     public void resetView() {
         goal.aimAt(home.yaw(), home.pitch(), home.distance(), home.target());
         interacted();
@@ -488,7 +424,6 @@ public class Viewer3D extends Region {
         snapIfReduced();
     }
 
-    /** Coloca la cámara al instante (capturas y pruebas). */
     public void jumpTo(ViewPreset preset, Garment garment) {
         if (focusMap.isEmpty()) {
             return;
@@ -500,7 +435,6 @@ public class Viewer3D extends Region {
         apply(current);
     }
 
-    /** Encuadra la cabeza de la persona al instante, sin cambiar el giro (capturas). */
     public void jumpToFace() {
         if (person == null) {
             return;
@@ -533,7 +467,7 @@ public class Viewer3D extends Region {
 
         if (Math.abs(yawVelocity) > 0.01) {
             goal.rotate(yawVelocity, 0);
-            yawVelocity *= Math.pow(0.0025, dt); // la inercia se apaga en ~1 s
+            yawVelocity *= Math.pow(0.0025, dt);
         } else {
             yawVelocity = 0;
         }
@@ -559,8 +493,6 @@ public class Viewer3D extends Region {
         pitchR.setAngle(-s.pitch());
         distanceT.setZ(-s.distance());
     }
-
-    // ---------------------------------------------------------------- Entrada
 
     private void installInput() {
         addEventHandler(MouseEvent.MOUSE_PRESSED, e -> {
@@ -611,7 +543,7 @@ public class Viewer3D extends Region {
         });
         setOnScroll(e -> {
             if (e.getTouchCount() >= 2) {
-                return; // el pellizco llega como ZoomEvent
+                return;
             }
             if (e.getTouchCount() == 1) {
                 goal.rotate(e.getDeltaX() * 0.3, e.getDeltaY() * 0.2);
@@ -668,8 +600,6 @@ public class Viewer3D extends Region {
         return new double[]{pr.getIntersectedTexCoord().getX(), pr.getIntersectedTexCoord().getY()};
     }
 
-    // ---------------------------------------------------------------- Diseño y capturas
-
     @Override
     protected void layoutChildren() {
         subScene.setWidth(getWidth());
@@ -686,7 +616,6 @@ public class Viewer3D extends Region {
         return 720;
     }
 
-    /** Captura del visor a {@code width} píxeles de ancho (mantiene la proporción actual). */
     public WritableImage capture(int width) {
         double k = width / Math.max(1, subScene.getWidth());
         SnapshotParameters params = new SnapshotParameters();

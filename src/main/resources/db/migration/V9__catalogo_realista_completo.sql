@@ -1,17 +1,3 @@
--- SPORTFORCE 3D · Etapa 12B: fotos realistas propias (sportforce-productos/) para los productos que todavía
--- tenían dibujo o una foto provisional de la Etapa 12A. Modelos nuevos en models/realista/modelos.json.
---
---   * Reemplazan una foto PROVISIONAL de V8: SF-UFU-003 (arquero), SF-ENT-002 (compresión), SF-BUZ-002 (casaca),
---     SF-MED-002 (media caña) y SF-ZAP-002 (futsal).
---   * Dejan de usar el dibujo: SF-ZAP-003 (running), SF-ACC-002 (brazalete), SF-ACC-003 (guantes) y
---     SF-ACC-004 (mochila).
---   * Siguen provisionales (ningún modelo nuevo es su prenda): SF-CAM-003 (Camiseta Running Reflect, cuello redondo)
---     y SF-SHO-003 (Short Running 2 en 1, short de fútbol).
---
--- Color principal = el color actual del producto (su primera variante; "{c}" en la plantilla). Lo demás queda como
--- en la foto de referencia: short del arquero negro y suela de la zapatilla de running blanca (zona "paneles",
--- editable en ADMIN › Productos). Solo se cambia un producto que sigue sin modelo o con la foto provisional de V8.
-
 CREATE TEMP TABLE realistic_assign (
     sku          TEXT PRIMARY KEY,
     model_key    TEXT NOT NULL,

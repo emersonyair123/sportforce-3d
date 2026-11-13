@@ -1,16 +1,3 @@
-"""Camiseta de fútbol con cuello V: malla de tela de densidad uniforme sobre el cuerpo medido.
-
-El torso es una rejilla de columnas (alrededor del cuerpo, a igual distancia sobre el pecho) por filas en tres
-tramos: del ruedo a la axila (cortes horizontales que caen rectos desde el pecho), de la axila a la altura del
-hombro (cortes horizontales sin los brazos) y del hombro al escote (rayos desde el pecho contra la envolvente
-horizontal del cuerpo, convexa también en vertical). En cada costado, entre la axila y el hombro, hay una sisa:
-las mangas son tubos que nacen de su borde y siguen el eje del brazo hasta media altura del brazo. El cuello V
-se recorta sobre el escote redondo y sus bordes se ajustan exactamente a la línea de la V.
-
-UV: frente y espalda con la misma escala en u y v (proporciones de las zonas de diseño de Area.java, así los
-textos no se estiran), mangas por ángulo alrededor del brazo (0 = frente, 90° = afuera) como el modelo procedural,
-paneles laterales y puños en sus islas.
-"""
 import math
 
 import numpy as np
@@ -19,47 +6,44 @@ from cuerpo import TablaPolar, hull2d, radio_polar
 from malla import Malla, isla, smoothstep
 
 ZONAS = ["jersey_body", "jersey_sleeves", "jersey_collar", "jersey_cuffs", "jersey_sides"]
-AREA_W, AREA_H = 0.47, 0.58  # Area.JERSEY_FRONT / JERSEY_BACK (m)
-MANGA_H = 0.17               # Area.SLEEVE_*: largo de la manga (m)
-ANTEBRAZO_H = 0.36           # isla del antebrazo de la manga larga (UvLayout.JERSEY_FOREARM_*): largo nominal (m)
+AREA_W, AREA_H = 0.47, 0.58
+MANGA_H = 0.17
+ANTEBRAZO_H = 0.36
 
 
 class Corte:
-    """Medidas del corte (metros para una persona de 1,86 m, se escalan con su alto; ruedos en fracción del alto)."""
-    arista = 0.012            # lado de la malla de tela antes de subdividir
-    ruedo_frente = 0.034      # sobre la entrepierna (fracción del alto): tapa la pretina del short
+    arista = 0.012
+    ruedo_frente = 0.034
     ruedo_espalda = 0.027
-    caida = 0.80              # cuánto cae recta la tela desde el pecho (0 = pegada al cuerpo, 1 = recta)
+    caida = 0.80
     holgura_pecho = 0.010
     holgura_ruedo = 0.022
-    holgura_hombro = 0.007    # fuera de la distancia de colisión (3,5 mm + 2 mm de la piel)
+    holgura_hombro = 0.007
     holgura_escote = 0.006
     holgura_manga = 0.011
-    escote = 0.010            # separación del escote redondo al cuello
-    clavicula = 0.076         # de la base del cuello a las clavículas (escotadura del esternón)
-    v_profundidad = 0.06      # de las clavículas a la punta de la V
-    v_max_escote = 0.05       # la punta nunca más abajo que esto del escote redondo (cuellos bajos, como el de mujer)
-    v_angulo = 26.0           # media apertura máxima de la V en el escote (grados alrededor del torso)
-    largo_manga = 0.16        # desde el acromion, a lo largo del brazo (mitad del brazo)
-    puno_filas = 2            # anillos finales de la manga que son puño
-    anclaje_manga = (0.7, 0.3)  # peso de "fijar" en el hombro y en el puño
-    lado_columnas = 3         # columnas a cada lado del centro del panel lateral
-    lado_angulo = 82.0        # centro del panel lateral (90° = costado): algo adelante, se ve igual desde el frente
-    suavizado = 10            # pasadas de suavizado antes de simular (la tela no hace esquinas)
-    relajado_canesu = 60      # pasadas que reparten las filas del canesú sobre su superficie
-    redondeo_escote = 10      # pasadas que redondean la unión de la V con el escote (el ribete no hace quiebre)
-    redondeo_vecinos = 4      # puntos del borde a cada lado de la esquina que se redondean
-    ribete = 0.008            # ancho del ribete del cuello
-    # Manga larga (Etapa 10): hasta la muñeca, con puño plano; el eje sigue el codo (Cuerpo.brazo_eje).
+    escote = 0.010
+    clavicula = 0.076
+    v_profundidad = 0.06
+    v_max_escote = 0.05
+    v_angulo = 26.0
+    largo_manga = 0.16
+    puno_filas = 2
+    anclaje_manga = (0.7, 0.3)
+    lado_columnas = 3
+    lado_angulo = 82.0
+    suavizado = 10
+    relajado_canesu = 60
+    redondeo_escote = 10
+    redondeo_vecinos = 4
+    ribete = 0.008
     manga_larga = False
-    largo_manga_larga = 0.49  # desde el acromion hasta la muñeca (persona de 1,86 m)
-    holgura_puno = 0.006      # la manga se cierra hacia la muñeca
+    largo_manga_larga = 0.49
+    holgura_puno = 0.006
     anclaje_manga_larga = (0.8, 0.6)
-    holgura_hombro_larga = 0.018  # holgura de la manga larga sobre el deltoides (baja a holgura_manga en el brazo)
+    holgura_hombro_larga = 0.018
 
 
 def construir(c, corte=Corte):
-    """Devuelve (Malla, datos): datos con el borde del escote, el ruedo y el final de cada manga."""
     k = c.alto / 1.86
     e = corte.arista
     h, s0 = c.alto, c.suelo
@@ -70,12 +54,9 @@ def construir(c, corte=Corte):
     hem_b = c.entrepierna + corte.ruedo_espalda * h
     xclip = float(np.abs(c.torso_corte(y_a)[:, 0]).max()) + 0.004
     medio = TablaPolar(c, y_a - 0.01, y_s + 0.01, recorte=xclip)
-    # Sobre el hombro la tela pasa por encima del brazo; más abajo los brazos no cuentan (si no, la envolvente
-    # uniría la espalda con la parte de atrás de los brazos y quedaría un escalón).
     alto = TablaPolar(c, y_s - 0.16, c.base_cuello + 0.05,
                       recorte=lambda y: None if y >= y_s + 0.012 else xclip + max(0.0, y - y_s) * 6)
 
-    # ---------------------------------------------------------------- cortes del torso con caída
     cache = {}
 
     def hull_en(y):
@@ -87,7 +68,6 @@ def construir(c, corte=Corte):
     union = {}
 
     def radio_caida(y, th):
-        """Radio del torso en y con la tela cayendo recta desde lo más saliente entre y y el pecho."""
         clave = round(y / 0.004)
         if clave not in union:
             pts = [hull_en(yy) for yy in np.arange(clave * 0.004, y_ch + 1e-9, 0.008)] or [hull_en(y)]
@@ -97,7 +77,6 @@ def construir(c, corte=Corte):
         ru = radio_polar(union[clave], centro, [th])[0]
         return ry + corte.caida * max(0.0, ru - ry)
 
-    # ---------------------------------------------------------------- columnas
     zc_ch = c.torso_z(y_ch)
     densos = np.radians(np.arange(0.0, 360.25, 0.25))
     rr = radio_polar(hull_en(y_ch), np.array((0.0, zc_ch)), densos)
@@ -110,7 +89,6 @@ def construir(c, corte=Corte):
     def th_de(a):
         return float(np.interp(a, arco, densos))
 
-    # Columnas exactas en 0°, 90°, 180° y 270°; a igual arco dentro de cada cuarto.
     cuartos = [0.0, math.pi / 2, math.pi]
     th_izq = []
     for a, b in zip(cuartos, cuartos[1:]):
@@ -124,12 +102,9 @@ def construir(c, corte=Corte):
         th[j] = 2 * math.pi - th[n - j]
     j90 = th_izq.index(min(th_izq, key=lambda t: abs(t - math.pi / 2)))
     j270 = n - j90
-    # Centro del panel lateral de cada lado (simétricos: la columna n − j es el espejo de j).
     jl_izq = th_izq.index(min(th_izq, key=lambda t: abs(t - math.radians(corte.lado_angulo))))
     jl_der = n - jl_izq
 
-    # Sisa: las columnas que, a media altura entre axila y hombro, caen en la pared donde se corta el brazo;
-    # sus bordes quedan en los pliegues delantero y trasero de la axila.
     y_m = (y_a + y_s) / 2
     x_pared = max(math.sin(t) * float(medio.radio(y_m, t)) for t in th[: len(th_izq)])
     en_pared = [j for j in range(1, len(th_izq) - 1)
@@ -140,7 +115,6 @@ def construir(c, corte=Corte):
     def en_sisa(j):
         return any(a < j < b for a, b in sisas)
 
-    # ---------------------------------------------------------------- filas: ruedo → axila → hombro
     n1 = max(8, round((y_a - (hem_f + hem_b) / 2) / e))
     n2 = max(3, round((y_s - y_a) / e))
     r_a, r_s = n1, n1 + n2
@@ -166,7 +140,6 @@ def construir(c, corte=Corte):
             crudo[j] = punto(t, y, zc, rad)
             P[(r, j)] = punto(t, y, zc, rad + corte.holgura_pecho)
 
-    # ---------------------------------------------------------------- tramo superior: hombro → escote
     y_o = y_s - 0.10
     o2 = np.array((0.0, y_o, float(alto.centro_z(y_o))))
     pc = c.torso_corte(c.base_cuello + 0.008)
@@ -197,7 +170,7 @@ def construir(c, corte=Corte):
             if q is None:
                 continue
             if not puntos and q[1] < y_s - 0.003:
-                continue  # sisa: la cadena empieza sobre el hombro
+                continue
             f = fuera_del_escote(q)
             if f <= 0 and puntos:
                 fp = fuera_del_escote(puntos[-1])
@@ -205,7 +178,6 @@ def construir(c, corte=Corte):
                 puntos.append(puntos[-1] + (q - puntos[-1]) * tt)
                 break
             puntos.append(q)
-        # Convexa también en vertical (semiplano ρ, y): sin hundirse entre hombro, trapecio y cuello.
         pila = []
         for q in (plano(p) for p in puntos):
             while len(pila) >= 2:
@@ -238,7 +210,6 @@ def construir(c, corte=Corte):
             q = q + np.array((tan[1], -tan[0])) * hol
             P[(r_s + i, j)] = np.array((math.sin(t) * q[0], q[1], o2[2] + math.cos(t) * q[0]))
 
-    # ---------------------------------------------------------------- parámetros UV (antes del recorte de la V)
     def arco_fila(r, desde, paso, hasta):
         out = {desde: 0.0}
         acc, j = 0.0, desde
@@ -255,11 +226,8 @@ def construir(c, corte=Corte):
     for r in range(filas):
         s_fr.update({(r, j): a for j, a in arco_fila(r, 0, +1, j90).items()})
         s_fr.update({(r, j): -a for j, a in arco_fila(r, 0, -1, j270).items()})
-        # Espalda vista desde atrás: u crece hacia -x (la izquierda de la persona queda a la izquierda).
         s_es.update({(r, j): -a for j, a in arco_fila(r, n // 2, -1, j90).items()})
         s_es.update({(r, j): a for j, a in arco_fila(r, n // 2, +1, j270).items()})
-    # v como el modelo procedural: 0 a la altura de la base del cuello y hacia abajo en metros (escala de Area);
-    # sobre los hombros sigue el arco de la tela y, si no cabe, se comprime hasta v = 0.
     y_ref = c.base_cuello
     v_raw = {}
     for j in range(n):
@@ -270,8 +238,6 @@ def construir(c, corte=Corte):
         for r in range(r_s + 1, filas):
             acc -= float(np.linalg.norm(P[(r, j)] - P[(r - 1, j)]))
             v_raw[(r, j)] = acc
-    # La escala la fija el cuerpo (ruedo → axila), donde van los diseños; más arriba, donde la tela rodea la
-    # sisa y pasa sobre los hombros, cada fila se comprime lo justo para no salir de la isla.
     s_max = max(abs(a) for key, a in list(s_fr.items()) + list(s_es.items()) if key[0] <= r_a)
     escala = max(s_max / (0.49 * AREA_W), (max(v_raw.values()) + 0.01) / (0.98 * AREA_H))
     for j in range(n):
@@ -292,15 +258,6 @@ def construir(c, corte=Corte):
                 if lim > tope:
                     s_dict[key] = a * tope / lim
 
-    # ---------------------------------------------------------------- cuello V
-    # Recta (en ángulo y altura) desde la punta hasta el escote en ±v_angulo, donde el escote empieza a subir por
-    # los lados del cuello. Cada columna se corta a la altura de la recta y su punto más alto queda justo sobre
-    # ella; los puntos que quedarían en escalón entre dos columnas se corren por su fila hasta la recta.
-    # La punta queda v_profundidad por debajo de las clavículas; la esquina, donde la recta desde la punta toca el
-    # escote por debajo (la menor pendiente hasta v_angulo): entre la punta y la esquina la recta nunca queda por
-    # encima del escote, así que no hay escalón en las esquinas altas.
-    # Las clavículas se miden desde la base del cuello (una fracción fija del alto no sirve para los niños, que
-    # tienen otras proporciones); la punta nunca queda por encima del escote redondo.
     y_clav = c.base_cuello - corte.clavicula * k
     y_frente = P[(filas - 1, 0)][1]
     y_punta = min(max(y_clav - corte.v_profundidad * k, y_frente - corte.v_max_escote * k), y_frente - 0.02 * k)
@@ -328,7 +285,7 @@ def construir(c, corte=Corte):
         r1 = min(arriba)
         r0 = r1 - 1
         f = (y_l - orig[(r0, j)][1]) / (orig[(r1, j)][1] - orig[(r0, j)][1])
-        destino = (r0, j) if f < 0.3 else (r1, j)  # sin caras diminutas junto a la recta
+        destino = (r0, j) if f < 0.3 else (r1, j)
         quitado.discard(destino)
         mezclar(destino, (r0, j), (r1, j), f)
         ajustado.add(destino)
@@ -345,14 +302,12 @@ def construir(c, corte=Corte):
             if a_in < a_obj < a_j:
                 mezclar((r, j), (r, jin), (r, j), (a_obj - a_in) / (a_j - a_in))
 
-    # ---------------------------------------------------------------- malla del torso
     m = Malla(ZONAS)
     idx = {key: m.vert(q) for key, q in P.items() if key not in quitado}
     lc = corte.lado_columnas
 
     def uv_torso(r, j, zona, lado, delante):
         if zona == "jersey_sides":
-            # u = 0 en el borde delantero del panel (en el lado derecho las columnas crecen hacia adelante).
             u = (j - (jl_izq - lc)) if lado > 0 else (jl_der + lc - j)
             return isla("lado_izq" if lado > 0 else "lado_der", u / (2 * lc), 1 - r / r_a)
         v = 0.01 + v_raw[(r, j)] / (AREA_H * escala)
@@ -381,10 +336,9 @@ def construir(c, corte=Corte):
         if r <= 1:
             m.peso("doble", i, 1.0)
 
-    # ---------------------------------------------------------------- mangas
     mangas = {}
     sisa_bordes = set()
-    sisa_tope = []  # punto más alto de cada sisa (hombro): ahí la manga larga deja un pliegue al caer
+    sisa_tope = []
     for lado, (a, b) in zip((1, -1), sisas):
         borde = [(r_a, j) for j in range(a, b)] + [(r, b) for r in range(r_a, r_s)] + \
                 [(r_s, j) for j in range(b, a, -1)] + [(r, a) for r in range(r_s, r_a, -1)]
@@ -392,15 +346,13 @@ def construir(c, corte=Corte):
         sisa_tope.append(max((idx[q] for q in borde), key=lambda i: m.v[i][1]))
         mangas[lado] = _manga(c, m, lado, [idx[q] for q in borde], corte, k)
 
-    # Escote: entre cada esquina y la punta, el borde va sobre la recta (el corte por columnas deja escalones);
-    # después se redondea apenas la unión de la V con el escote (la punta queda aguda).
     escote = _bucle_borde(m, idx[(filas - 1, j90)])
     nb = len(escote)
     pos = {v: i for i, v in enumerate(escote)}
     punta = min(range(nb), key=lambda i: m.v[escote[i]][1] if m.v[escote[i]][2] > 0 else 9.0)
     esquinas = [pos[idx[(filas - 1, j_v)]], pos[idx[(filas - 1, n - j_v)]]]
     for e_i in esquinas:
-        paso = 1 if (e_i - punta) % nb > nb // 2 else -1  # recorrer de la esquina hacia la punta
+        paso = 1 if (e_i - punta) % nb > nb // 2 else -1
         tramo = [e_i]
         while tramo[-1] != punta:
             tramo.append((tramo[-1] + paso) % nb)
@@ -408,8 +360,6 @@ def construir(c, corte=Corte):
                                                    for a, b in zip(tramo, tramo[1:])])))
         c0, c1 = m.v[escote[tramo[0]]].copy(), m.v[escote[tramo[-1]]].copy()
         for i, f in zip(tramo[1:-1], largos[1:-1] / largos[-1]):
-            # Misma distancia a la piel que tenía el punto (si quedara más cerca que la tela vecina, la tela se
-            # hundiría en la esquina y al simular haría un pliegue).
             antes = m.v[escote[i]]
             sa, na, _ = c.cercano(antes)
             dist = max(float(np.dot(antes - sa, na)), corte.holgura_escote)
@@ -423,10 +373,6 @@ def construir(c, corte=Corte):
         for i, q in nuevo.items():
             m.v[escote[i]] = m.v[escote[i]] * 0.5 + q * 0.5
 
-    # Canesú: todas las columnas tienen las mismas filas, así que donde la columna es corta (adelante, junto al
-    # escote) las filas y los puntos del borde se amontonan en abanico en las esquinas de la V y la tela hace un
-    # pliegue. Se relaja sobre su propia superficie: el interior se reparte parejo y los puntos del borde se
-    # deslizan por la línea del escote (V izquierda, V derecha y escote redondo; la punta y las esquinas, quietas).
     tramos = []
     for e_i in esquinas:
         paso = 1 if (e_i - punta) % nb > nb // 2 else -1
@@ -449,8 +395,6 @@ def construir(c, corte=Corte):
         - set(escote) - sisa_bordes
     m.relajar(canesu | set(rectas), corte.relajado_canesu, rectas=rectas)
 
-    # Todo el borde del cuello queda fijo y, cada vez menos, varios anillos de tela alrededor: si los bordes de la
-    # V quedaran más sueltos que el escote redondo, al caer doblarían la tela en las esquinas.
     ady = m.vecinos()
     anillo, vistos = set(escote), set(escote)
     for peso in (1.0, 1.0, 0.95, 0.85, 0.65, 0.4):
@@ -459,7 +403,6 @@ def construir(c, corte=Corte):
         anillo = {w for v in anillo for w in ady[v]} - vistos
         vistos |= anillo
 
-    # Suavizado general (sin bordes): quita el quiebre entre el tramo medio y el superior.
     bordes = set(escote) | {idx[(0, j)] for j in range(n)}
     bordes |= {v for fin in mangas.values() for v in fin}
     m.suavizar(corte.suavizado, 0.5, set(range(len(m.v))) - bordes)
@@ -472,7 +415,6 @@ def construir(c, corte=Corte):
 
 
 def _manga(c, m, lado, borde, corte, k):
-    """Tubo de la manga desde el borde de la sisa hasta media altura del brazo. Devuelve el anillo final."""
     e = corte.arista
     _, d = c.brazo[lado]
     a0 = c.brazo_punto(lado, 0.0)
@@ -483,8 +425,6 @@ def _manga(c, m, lado, borde, corte, k):
         sa = -sa
     L = [m.v[i] for i in borde]
     s_m = [float(np.dot(q - a0, d)) for q in L]
-    # Ángulo de cada punto de la sisa alrededor de su propio centro (el eje del brazo, prolongado hacia el
-    # hombro, puede pasar por fuera de la sisa).
     centro = np.mean(L, axis=0)
     al = []
     for q in L:
@@ -497,7 +437,6 @@ def _manga(c, m, lado, borde, corte, k):
     eje = c.brazo_eje(lado, s_fin + 0.01) if larga else None
 
     def marco(s):
-        """Centro y ejes perpendiculares del brazo a s metros del hombro (recta, o eje curvo en la manga larga)."""
         if eje is None:
             return a0 + d * s, fa, sa
         p, t = eje(s)
@@ -509,7 +448,6 @@ def _manga(c, m, lado, borde, corte, k):
         return p, f, sv
 
     def tubo(s, a):
-        """Punto del tubo de la manga; el radio del brazo se mide fuera del hombro (s ≥ 5 cm)."""
         centro_s, f, sv = marco(s)
         direc = f * math.cos(a) + sv * math.sin(a)
         clave = (round(max(s, 0.05), 3), round(a, 3))
@@ -522,8 +460,6 @@ def _manga(c, m, lado, borde, corte, k):
                 radios[clave] = hit[2] if hit else 0.05
         hol = corte.holgura_manga
         if larga:
-            # Etapa 10D: más holgura sobre el deltoides (la manga larga pesa y, tensa, lo atravesaba al simular) y
-            # menos hacia la muñeca.
             hol = corte.holgura_hombro_larga + (corte.holgura_manga - corte.holgura_hombro_larga) * float(
                 smoothstep(0.08 * k, 0.20 * k, s))
             hol += (corte.holgura_puno - corte.holgura_manga) * float(smoothstep(s_fin - 0.14 * k, s_fin, s))
@@ -531,7 +467,6 @@ def _manga(c, m, lado, borde, corte, k):
 
     s_min = min(s_m)
     escala = 1.0 if larga else max(1.0, (s_fin - s_min) / (0.97 * MANGA_H))
-    # Manga larga: la transición del borde de la sisa al tubo dura lo mismo que en la corta (en metros).
     t_mezcla = 0.7
     if larga:
         t_mezcla = 0.7 * (corte.largo_manga * k - float(np.mean(s_m))) / (s_fin - float(np.mean(s_m)))
@@ -545,7 +480,6 @@ def _manga(c, m, lado, borde, corte, k):
             si = s + (s_fin - s) * t
             fin = tubo(s_fin, a)
             fila.append(m.vert((1 - w) * (q + (fin - q) * t) + w * tubo(si, a)))
-            # Anclaje suave: en pose A la gravedad haría resbalar la manga brazo abajo y se arrugaría.
             m.peso("fijar", fila[-1], anclaje[0] + (anclaje[1] - anclaje[0]) * t)
             if i >= anillos - 1:
                 m.peso("doble", fila[-1], 1.0)
@@ -558,8 +492,6 @@ def _manga(c, m, lado, borde, corte, k):
     def s_anillo(ring, bb):
         return s_m[bb] + (s_fin - s_m[bb]) * ring / anillos
 
-    # Manga larga: hasta el anillo i_corte la isla de siempre con su escala (17 cm: ahí van los logos de la manga);
-    # desde ahí, el antebrazo en su propia isla (UvLayout.JERSEY_FOREARM_*), con v = 0 en ese anillo.
     i_corte = anillos
     if larga:
         i_corte = max(i for i in range(anillos + 1)
@@ -569,7 +501,7 @@ def _manga(c, m, lado, borde, corte, k):
         for b in range(nb):
             b2 = (b + 1) % nb
             us = {b: al[b] / (2 * math.pi), b2: al[b2] / (2 * math.pi)}
-            if abs(us[b] - us[b2]) > 0.5:  # costura de la manga (frente): u = 1 en lugar de 0
+            if abs(us[b] - us[b2]) > 0.5:
                 us = {x: (u + 1 if u < 0.5 else u) for x, u in us.items()}
             esquinas = [(i, b), (i, b2), (i + 1, b2), (i + 1, b)]
             uv = []
@@ -583,14 +515,12 @@ def _manga(c, m, lado, borde, corte, k):
                     s_vert = s_m[bb] + (s_fin - s_m[bb]) * ring / anillos
                     uv.append(isla(isla_m, us[bb], 0.01 + (s_vert - s_min) / (MANGA_H * escala)))
             m.cara([ids[ring][bb] for ring, bb in esquinas], uv, "jersey_cuffs" if puno else "jersey_sleeves")
-    # Suaviza el interior de la manga (sin tocar la sisa ni el puño final).
     interior = {v for fila in ids[1:-1] for v in fila}
     m.suavizar(4, 0.5, interior)
     return ids[-1]
 
 
 def _bucle_borde(m, inicio):
-    """Vértices del borde (aristas de una sola cara) que pasa por ``inicio``, en orden."""
     usos = {}
     for idx, _, _ in m.caras:
         for a in range(len(idx)):

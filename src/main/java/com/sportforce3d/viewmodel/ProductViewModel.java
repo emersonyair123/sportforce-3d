@@ -24,14 +24,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-/** Ficha de producto: color, talla, cantidad y "Agregar al carrito". */
 public class ProductViewModel {
 
     private final CatalogService catalog;
     private final CartService cart;
 
     private final ObjectProperty<ProductDetail> detail = new SimpleObjectProperty<>();
-    /** Foto realista del producto (null si no tiene); se fija antes que {@link #detail}. */
     private RealisticLook look;
     private final StringProperty colorHex = new SimpleStringProperty();
     private final ObjectProperty<ProductVariant> variant = new SimpleObjectProperty<>();
@@ -47,7 +45,6 @@ public class ProductViewModel {
         this.catalog = catalog;
         this.cart = cart;
         colorHex.addListener((obs, old, hex) -> {
-            // Al cambiar de color se conserva la talla si existe en ese color.
             ProductVariant previous = variant.get();
             variant.set(previous == null ? null : variantsFor(hex).stream()
                     .filter(v -> v.sizeId() == previous.sizeId()).findFirst().orElse(null));
@@ -73,19 +70,16 @@ public class ProductViewModel {
                     detail.set(d);
                     List<ProductVariant> active = d.variants();
                     colorHex.set(active.isEmpty() ? null : active.get(0).colorHex());
-                    // Producto de talla única: se elige solo.
                     List<ProductVariant> forColor = variantsFor(colorHex.get());
                     variant.set(forColor.size() == 1 ? forColor.get(0) : null);
                 },
                 e -> error.set(ErrorMessages.of(e)));
     }
 
-    /** Foto realista del producto ficha (null si no tiene: se muestra la ilustración). */
     public RealisticLook look() {
         return look;
     }
 
-    /** Colores distintos (HEX → nombre) en el orden de las variantes. */
     public Map<String, String> colors() {
         Map<String, String> map = new LinkedHashMap<>();
         if (detail.get() != null) {

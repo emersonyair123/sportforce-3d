@@ -17,11 +17,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 
-/**
- * Genera el icono del instalador y del ejecutable (src/packaging/windows/sportforce3d.ico) a partir del monograma
- * "SF" de {@link Logo#monogram}: un .ico con PNG de 16 a 256 px. Solo hace falta volver a ejecutarlo si cambia el
- * monograma. Uso: {@code packaging\build-installer.ps1 -Icon} o directamente con esta clase y la carpeta de salida.
- */
 public final class IconTool {
 
     private static final int[] SIZES = {16, 24, 32, 48, 64, 128, 256};
@@ -58,7 +53,6 @@ public final class IconTool {
         }
     }
 
-    /** Formato ICO con imágenes PNG (Windows Vista o superior). */
     static byte[] ico(List<byte[]> pngs) throws IOException {
         ByteBuffer header = ByteBuffer.allocate(6 + 16 * pngs.size()).order(ByteOrder.LITTLE_ENDIAN);
         header.putShort((short) 0).putShort((short) 1).putShort((short) pngs.size());

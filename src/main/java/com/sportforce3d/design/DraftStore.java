@@ -10,16 +10,11 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 
-/**
- * Borrador local del diseñador (autoguardado cada 30 s): un archivo JSON por usuario en la carpeta de datos.
- * Se escribe en un archivo temporal y luego se mueve, así un corte de luz no deja un borrador a medias.
- */
 public class DraftStore {
 
     private static final Logger log = LoggerFactory.getLogger(DraftStore.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    /** Borrador: diseño guardado al que pertenece (o null), nombre, JSON del documento y fecha ISO-8601. */
     public record Draft(Long designId, String name, String documentJson, String savedAt) {
     }
 
@@ -29,7 +24,6 @@ public class DraftStore {
         this.dir = dir;
     }
 
-    // synchronized: dos autoguardados a la vez (temporizador y salir del diseñador) chocaban al renombrar en Windows.
     public synchronized void save(long userId, Draft draft) {
         try {
             Files.createDirectories(dir);

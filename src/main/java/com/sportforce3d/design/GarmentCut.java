@@ -1,10 +1,5 @@
 package com.sportforce3d.design;
 
-/**
- * Corte del uniforme en la Vista 3D (Etapa 10C): largo de la manga, del short y de las medias. Cada combinación usa
- * las prendas simuladas en Blender para esa persona; no cambia el precio. Un diseño anterior (sin corte) abre con
- * {@link #DEFAULT}: manga corta, short medio y media larga, que son las prendas de siempre.
- */
 public record GarmentCut(Sleeve sleeve, ShortsLength shorts, SocksLength socks) {
 
     public enum Sleeve {
@@ -37,21 +32,10 @@ public record GarmentCut(Sleeve sleeve, ShortsLength shorts, SocksLength socks) 
             this.numberV = numberV;
         }
 
-        /**
-         * u (0–1 en Area.SHORTS_LEFT) del frente del muslo izquierdo a la altura del número: en la isla, u = 0,5 es la
-         * línea media del cuerpo junto a la entrepierna y se abre hacia el muslo más abajo, así que en el short corto
-         * (número más arriba) va más hacia afuera.
-         */
         public double numberU() {
             return numberU;
         }
 
-        /**
-         * v (0–1 en Area.SHORTS_LEFT) de la mitad de lo que se ve del short con este largo, entre el ruedo de la
-         * camiseta y la basta, calculada con las medidas de las cuatro personas (las UV del corto y del largo usan la
-         * escala del medio anclada a la basta; difieren menos de 0,04 entre personas). GarmentCutVariantsTest
-         * comprueba en las prendas simuladas que el número queda a la vista.
-         */
         public double numberV() {
             return numberV;
         }
@@ -106,7 +90,6 @@ public record GarmentCut(Sleeve sleeve, ShortsLength shorts, SocksLength socks) 
         return new GarmentCut(sleeve, shorts, s);
     }
 
-    /** Para la ficha técnica: "Manga larga · Short corto (medio muslo) · Medias tobilleras (sobre el tobillo)". */
     public String summary() {
         return "Manga " + sleeve.label().toLowerCase(java.util.Locale.ROOT)
                 + " · Short " + shorts.label().toLowerCase(java.util.Locale.ROOT) + " (" + shorts.detail() + ")"

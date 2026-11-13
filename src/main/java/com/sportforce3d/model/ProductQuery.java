@@ -2,7 +2,6 @@ package com.sportforce3d.model;
 
 import java.util.Set;
 
-/** Filtros del catálogo. Los null o vacíos no filtran. {@code page} empieza en 1. */
 public record ProductQuery(String text, Long categoryId, Long sportId, Set<String> sizeCodes,
                            Long minPriceCents, Long maxPriceCents, boolean inStockOnly,
                            boolean customizableOnly, ProductSort sort, int page, int pageSize) {

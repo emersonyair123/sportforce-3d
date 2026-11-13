@@ -20,7 +20,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.Instant;
 
-/** Servicios reales sobre una base SQLite temporal con los datos de prueba (V2). */
 final class Fixture {
 
     static final String ADMIN = "admin@sportforce3d.pe";
@@ -81,7 +80,6 @@ final class Fixture {
         auth.login(CLIENT, "Cliente123!".toCharArray());
     }
 
-    /** Registra y conecta a otro CLIENTE. */
     void loginNewClient(String email) {
         auth.logout();
         auth.register("Otro Cliente", email, null, "Futbol2026".toCharArray(), "Futbol2026".toCharArray());

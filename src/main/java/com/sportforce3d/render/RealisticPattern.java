@@ -2,7 +2,6 @@ package com.sportforce3d.render;
 
 import java.util.Locale;
 
-/** Diseños que se dibujan sobre la camiseta de la vista realista. {@code code} es el de {@code catalogo.json}. */
 public enum RealisticPattern {
     LISO("liso", "Liso"),
     RAYAS("rayas", "Rayas"),
@@ -28,7 +27,6 @@ public enum RealisticPattern {
         return label;
     }
 
-    /** null o vacío = liso. */
     public static RealisticPattern fromCode(String code) {
         if (code == null || code.isBlank()) {
             return LISO;

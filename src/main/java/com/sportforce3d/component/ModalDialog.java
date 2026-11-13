@@ -11,11 +11,6 @@ import javafx.scene.layout.VBox;
 
 import java.util.function.Consumer;
 
-/**
- * Diálogo modal con contenido propio (un formulario) sobre el scrim. "Cancelar" o Esc lo cierran; el botón de
- * confirmar llama a {@code onConfirm} con el diálogo, que decide cuándo cerrarlo (p. ej. después de guardar en
- * segundo plano) y puede marcarlo ocupado o mostrar un error.
- */
 public final class ModalDialog {
 
     private final StackPane layer;
@@ -103,13 +98,11 @@ public final class ModalDialog {
         }
     }
 
-    /** Mientras trabaja en segundo plano: botones deshabilitados. */
     public void setBusy(boolean busy) {
         confirm.setDisable(busy);
         cancel.setDisable(busy);
     }
 
-    /** Mensaje de error dentro del diálogo (null lo oculta). */
     public void setError(String message) {
         error.setText(message == null ? "" : message);
         error.setVisible(message != null && !message.isBlank());

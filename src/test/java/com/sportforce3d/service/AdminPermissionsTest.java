@@ -18,14 +18,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Ninguna acción de ADMIN se ejecuta con una sesión CLIENTE (ni sin sesión), aunque alguien llame al service
- * directamente sin pasar por la interfaz. Recorre por reflexión todos los métodos públicos de los services de
- * administración: si mañana se agrega uno sin {@code session.requireRole(Role.ADMIN)} al inicio, esta prueba falla.
- */
 class AdminPermissionsTest {
-
-    /** Huella de las tablas que no deben cambiar por un intento rechazado. */
     private static final List<String> SNAPSHOT = List.of(
             "SELECT count(*) || ':' || group_concat(email || active) FROM users",
             "SELECT count(*) || ':' || group_concat(user_id || '-' || role_id) FROM user_roles",
@@ -52,7 +45,6 @@ class AdminPermissionsTest {
         adminServices.put(f.dashboard, Set.of());
         adminServices.put(f.reports, Set.of("today"));
         adminServices.put(f.settings, Set.of());
-        // En PaymentService, registrar el pago e instrucciones son del cliente; el resto es del ADMIN.
         adminServices.put(f.payments, Set.of("register", "instructions"));
     }
 
@@ -98,7 +90,6 @@ class AdminPermissionsTest {
         UserAdminService userAdmin = new UserAdminService(f.users, f.session);
         userAdmin.setAdmin(secondId, true);
 
-        // El segundo ADMIN trabaja en otra ventana con su propia sesión.
         Session other = new Session(f.users::findById);
         new AuthService(f.users, new PasswordHasher(4), other, new LoginThrottle(f.clock), f.clock)
                 .login("segundo.admin@correo.pe", "Futbol2026".toCharArray());
@@ -134,7 +125,6 @@ class AdminPermissionsTest {
         throw new IllegalArgumentException(name);
     }
 
-    /** Llama al método con argumentos "vacíos" (null, 0, false) y devuelve la excepción que lanzó. */
     private static Throwable invoke(Object target, Method m) {
         Object[] args = new Object[m.getParameterCount()];
         Class<?>[] types = m.getParameterTypes();

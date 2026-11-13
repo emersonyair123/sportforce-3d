@@ -14,10 +14,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Láminas de prueba del recoloreado realista (para comparar con sportforce-realista/referencia). Sin JavaFX.
- * Uso: {@code RealisticSamples <carpeta>}.
- */
 public final class RealisticSamples {
 
     private RealisticSamples() {
@@ -62,7 +58,6 @@ public final class RealisticSamples {
                 RecolorRequest.of("producto_zapatilla_fg", Map.of("principal", "#1f5fff"))));
     }
 
-    /** Une varias miniaturas de 360 px en una lámina horizontal. */
     private static void sheet(RecolorService service, Path file, List<RecolorRequest> requests) throws IOException {
         int w = 360;
         int h = 450;

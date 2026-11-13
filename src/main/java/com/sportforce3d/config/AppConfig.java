@@ -3,32 +3,19 @@ package com.sportforce3d.config;
 import java.nio.file.Path;
 import java.util.Map;
 
-/**
- * Configuración de arranque. La ruta de la base de datos se resuelve en este orden:
- * <ol>
- *     <li>propiedad del sistema {@code -Dsportforce.db=...}</li>
- *     <li>variable de entorno {@code SPORTFORCE_DB}</li>
- *     <li>instalada con el instalador de Windows: {@code %APPDATA%\SportForce3D\data\sportforce3d.db}
- *     (la carpeta de Archivos de programa no se puede escribir)</li>
- *     <li>{@code data/sportforce3d.db} relativo a la carpeta de trabajo</li>
- * </ol>
- */
 public record AppConfig(Path databaseFile) {
 
     public static final String DB_PROPERTY = "sportforce.db";
     public static final String DB_ENV = "SPORTFORCE_DB";
     public static final Path DEFAULT_DB = Path.of("data", "sportforce3d.db");
-    /** El lanzador de jpackage define esta propiedad: la aplicación corre desde el instalador. */
     public static final String JPACKAGE_PROPERTY = "jpackage.app-path";
     public static final String INSTALLED_FOLDER = "SportForce3D";
 
-    /** Archivos subidos (imágenes de producto, logos, comprobantes): carpeta "storage" junto al .db. */
     public Path storageDir() {
         Path parent = databaseFile.getParent();
         return (parent == null ? Path.of(".") : parent).resolve("storage");
     }
 
-    /** Registros de la aplicación: carpeta "logs" junto al .db. */
     public Path logDir() {
         Path parent = databaseFile.getParent();
         return (parent == null ? Path.of(".") : parent).resolve("logs");

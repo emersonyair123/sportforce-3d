@@ -1,6 +1,5 @@
 package com.sportforce3d.design;
 
-/** Tipos de elementos de un diseño. {@code dbType} es el valor de design_elements.element_type. */
 public enum ElementType {
     NAME("Nombre", "TEXT"),
     NUMBER("Número", "NUMBER"),

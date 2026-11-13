@@ -18,10 +18,6 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Camiseta, short y medias simulados en Blender (tools/blender) para cada persona: zonas y UV de UvLayout, sombreado
- * horneado, tela por fuera de la piel y piel tapada oculta al vestir a la persona.
- */
 class SimulatedGarmentsTest {
 
     private record Dressed(Map<Garment, SimulatedGarments.Piece> pieces, HumanModel human,
@@ -88,7 +84,6 @@ class SimulatedGarmentsTest {
             assertThat(min).isGreaterThanOrEqualTo(0.39);
             assertThat(max).isLessThanOrEqualTo(1.0001).isGreaterThan(0.95);
         }
-        // En el centro del pecho la tela está abierta y casi plana: normal hacia afuera.
         ClothShading jersey = ALL.get(p).pieces().get(Garment.JERSEY).shading();
         double u = UvLayout.JERSEY_FRONT.u(0.5);
         double v = UvLayout.JERSEY_FRONT.v(0.6);
@@ -103,9 +98,9 @@ class SimulatedGarmentsTest {
         List<Vec3> openings = d.pieces().get(Garment.JERSEY).openings();
         double floor = d.human().minY();
         double h = d.human().height();
-        assertThat(openings).anyMatch(q -> q.y() > floor + 0.80 * h);                                // escote
-        assertThat(openings).anyMatch(q -> q.y() < floor + 0.56 * h && Math.abs(q.x()) < 0.05 * h);   // ruedo
-        assertThat(openings).anyMatch(q -> Math.abs(q.x()) > 0.16 * h);                               // puños
+        assertThat(openings).anyMatch(q -> q.y() > floor + 0.80 * h);
+        assertThat(openings).anyMatch(q -> q.y() < floor + 0.56 * h && Math.abs(q.x()) < 0.05 * h);
+        assertThat(openings).anyMatch(q -> Math.abs(q.x()) > 0.16 * h);
     }
 
     @ParameterizedTest
@@ -133,11 +128,6 @@ class SimulatedGarmentsTest {
         });
     }
 
-    /**
-     * Confirma que un punto está dentro de la piel por paridad: un número impar de cruces con la malla en al menos dos
-     * de tres direcciones. El signo de la normal de la cara más cercana sola falla junto a aristas convexas (tobillo,
-     * corva): ahí la cara más cercana puede mirar hacia otro lado aunque el punto esté afuera.
-     */
     static boolean inside(TriangleIndex.Query skin, Vec3 p) {
         int votes = 0;
         for (Vec3 dir : List.of(new Vec3(1, 0, 0), new Vec3(-1, 0, 0), new Vec3(0, 0, 1))) {
@@ -167,7 +157,6 @@ class SimulatedGarmentsTest {
         assertThat(zones).containsKeys(Zone.SOCKS_LEG, Zone.SHOE_UPPER);
         assertThat(d.dressed().shading().get(Garment.JERSEY)).isSameAs(d.pieces().get(Garment.JERSEY).shading());
         assertThat(d.dressed().shading().get(Garment.SOCKS)).isSameAs(d.pieces().get(Garment.SOCKS).shading());
-        // Las medias pierden la parte que queda dentro de la zapatilla.
         int socks = d.pieces().get(Garment.SOCKS).zones().get(Zone.SOCKS_LEG).stream()
                 .mapToInt(part -> part.mesh().faceCount()).sum();
         assertThat(zones.get(Zone.SOCKS_LEG).stream().mapToInt(part -> part.mesh().faceCount()).sum())
@@ -176,8 +165,6 @@ class SimulatedGarmentsTest {
         MeshData before = OutfitFitter.skinOf(d.human()).mesh();
         MeshData after = OutfitFitter.skinOf(d.dressed().body()).mesh();
         assertThat(after.faceCount()).isLessThan((int) (before.faceCount() * 0.85));
-        // Ningún triángulo de piel del vientre queda visible bajo la camiseta, salvo a menos de 3,5 cm de una abertura
-        // (en los niños la punta de la V baja hasta esa zona: por ahí la piel se puede ver y no se oculta).
         List<Vec3> openings = d.pieces().values().stream().flatMap(piece -> piece.openings().stream()).toList();
         double floor = d.human().minY();
         double h = d.human().height();

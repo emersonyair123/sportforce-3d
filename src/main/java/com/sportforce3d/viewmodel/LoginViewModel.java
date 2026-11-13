@@ -24,7 +24,6 @@ public class LoginViewModel {
         this.auth = auth;
     }
 
-    /** BCrypt tarda ~250 ms: se ejecuta fuera del hilo de la interfaz. */
     public void login(char[] password, Consumer<User> onSuccess, Runnable onFailure) {
         if (busy.get()) {
             return;

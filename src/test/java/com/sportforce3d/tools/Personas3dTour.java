@@ -33,12 +33,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
-/**
- * Capturas de la Vista 3D del diseñador con las cuatro personas vestidas (frente y espalda), en la ventana real de la
- * aplicación sobre una base temporal. Sirve para revisar las personas de MakeHuman y las prendas simuladas en Blender
- * tras regenerarlas. Imprime si se vio la persona o el maniquí de respaldo.
- * Uso: {@code Personas3dTour [carpeta]} (por defecto docs/capturas/reconstruccion).
- */
 public final class Personas3dTour {
 
     private static final int W = 1440;

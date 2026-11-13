@@ -3,11 +3,6 @@ package com.sportforce3d.design;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Emblemas originales para los clientes (design/emblemas, copiados en resources/emblems). No incluye el
- * monograma ni el logotipo de la tienda, ni marcas de terceros. Sus colores fijos son azul (#1F5FFF) y verde
- * (#39FF88): al usarlos se reemplazan por el color principal y el de acento del elemento.
- */
 public final class EmblemCatalog {
 
     public static final String SOURCE_PRIMARY = "#1F5FFF";

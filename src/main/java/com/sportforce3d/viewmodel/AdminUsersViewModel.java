@@ -14,7 +14,6 @@ import javafx.collections.transformation.FilteredList;
 import java.util.Locale;
 import java.util.function.Consumer;
 
-/** Lista de usuarios para el ADMIN. Si la sesión no es ADMIN, el service rechaza la carga. */
 public class AdminUsersViewModel {
 
     private final UserAdminService service;

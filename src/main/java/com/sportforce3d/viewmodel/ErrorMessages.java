@@ -3,7 +3,6 @@ package com.sportforce3d.viewmodel;
 import com.sportforce3d.db.DataAccessException;
 import com.sportforce3d.service.ServiceException;
 
-/** Traduce excepciones a mensajes amables, sin trazas ni SQL. */
 public final class ErrorMessages {
 
     private ErrorMessages() {

@@ -6,7 +6,6 @@ import org.kordamp.ikonli.Ikon;
 
 import java.util.Locale;
 
-/** Etiqueta corta en mayúsculas. Los estados se dicen con texto, nunca solo con color. */
 public class SfBadge extends Label {
 
     public enum Kind { NEUTRAL, NEW, BRAND, SALE, SUCCESS, WARNING, DANGER }

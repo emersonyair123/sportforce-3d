@@ -15,16 +15,11 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
-/** Números del dashboard (solo ADMIN). Una venta es un pago aprobado, en el día de Lima en que se aprobó. */
 public class DashboardService {
 
     public static final ZoneId LIMA = ZoneId.of("America/Lima");
     public static final int DAYS = 30;
 
-    /**
-     * @param daily      ventas por día de los últimos {@link #DAYS} días (serie principal)
-     * @param previous   los {@link #DAYS} días anteriores (comparación), en el mismo orden
-     */
     public record Stats(LocalDate today, Total todaySales, Total monthSales, Total previousMonthSales,
                         int pendingPayments, Map<OrderStatus, Integer> ordersByStatus,
                         Map<LocalDate, Long> daily, Map<LocalDate, Long> previous, List<TopProduct> topProducts) {
@@ -49,7 +44,6 @@ public class DashboardService {
         session.requireRole(Role.ADMIN);
         LocalDate today = LocalDate.now(clock.withZone(LIMA));
         LocalDate monthStart = today.withDayOfMonth(1);
-        // Mismo tramo del mes anterior (1 al día de hoy), para comparar sin desventaja.
         LocalDate prevStart = monthStart.minusMonths(1);
         LocalDate prevEnd = prevStart.plusDays(Math.min(today.getDayOfMonth(), prevStart.lengthOfMonth()) - 1L);
         LocalDate from = today.minusDays(DAYS - 1L);

@@ -22,10 +22,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.prefs.Preferences;
 
-/**
- * Arranque de la aplicación real sobre una base SQLite temporal y utilidades para buscar nodos por su texto.
- * Las pruebas corren sin ventana (Monocle) salvo con {@code -Dtestfx.headless=false}.
- */
 final class UiTestSupport {
 
     static final int TIMEOUT_SECONDS = 20;
@@ -33,7 +29,6 @@ final class UiTestSupport {
     private UiTestSupport() {
     }
 
-    /** Debe llamarse en el hilo de JavaFX (método @Start de TestFX). */
     static AppContext start(Stage stage, Path tempDir) {
         Fonts.loadAll();
         UiSettings settings = new UiSettings(Preferences.userRoot().node("com/sportforce3d-test"));
@@ -49,7 +44,6 @@ final class UiTestSupport {
         waitUntil(what, TIMEOUT_SECONDS, condition);
     }
 
-    /** Con plazo propio: para trabajo pesado en segundo plano (vestir a una persona 3D y tomar sus fotos). */
     static void waitUntil(String what, int seconds, java.util.concurrent.Callable<Boolean> condition) {
         try {
             WaitForAsyncUtils.waitFor(seconds, TimeUnit.SECONDS, condition);
@@ -95,7 +89,6 @@ final class UiTestSupport {
         }
     }
 
-    /** Nodo visible y habilitado cuyo texto es exactamente {@code text} (botones, enlaces, etiquetas). */
     static Optional<Labeled> labeled(FxRobot robot, String text) {
         return robot.lookup((Predicate<Node>) n -> n instanceof Labeled l && text.equals(l.getText()) && n.isVisible()
                         && !n.isDisabled() && n.getScene() != null && visibleChain(n))
@@ -112,7 +105,6 @@ final class UiTestSupport {
         clickNode(robot, waitLabeled(robot, text));
     }
 
-    /** Hace clic en el nodo después de desplazar su ScrollPane para que quede a la vista. */
     static void clickNode(FxRobot robot, Node node) {
         robot.interact(() -> scrollIntoView(node));
         robot.clickOn(node, MouseButton.PRIMARY);
@@ -135,7 +127,6 @@ final class UiTestSupport {
         }
     }
 
-    /** Escribe en el campo de formulario con esa etiqueta (SfTextField). */
     static void type(FxRobot robot, String fieldLabel, String value) {
         waitUntil("campo " + fieldLabel, () -> field(robot, fieldLabel).isPresent());
         SfTextField field = field(robot, fieldLabel).orElseThrow();

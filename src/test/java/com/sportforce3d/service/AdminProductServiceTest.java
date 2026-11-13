@@ -109,7 +109,6 @@ class AdminProductServiceTest {
                 List.of(variant(null, sizeM, "SF-HAL-010-M", 5))));
         long variantId = p.variants().get(0).id();
 
-        // Un cliente reserva 3 unidades con un pedido sin pagar.
         f.loginClient();
         f.cart.add(variantId, 3);
         f.orders.placeOrder(f.addresses.list().get(0).id(), PaymentMethod.YAPE, null);
@@ -128,7 +127,6 @@ class AdminProductServiceTest {
                         e -> assertThat(e.fieldErrors().get("variants")).contains("reservadas"));
     }
 
-    /** Etapa 12B: la suela de la zapatilla de running (zona "paneles") es blanca y el ADMIN puede cambiarla. */
     @Test
     void adminChangesTheZoneColorsOfTheRealisticPhoto() {
         long id = f.productId("SF-ZAP-003");
@@ -184,24 +182,20 @@ class AdminProductServiceTest {
     @Test
     void lowStockBadgeNamesTheVariantThatTriggersIt() {
         f.loginAdmin();
-        // Camiseta Pro: 120 u. en total, pero la XXL tiene 2 (umbral 5) → baja, y se dice cuál.
         AdminProductRow jersey = f.admin.list("SF-CAM-001", false).get(0);
         assertThat(jersey.stock()).isGreaterThan(100);
         assertThat(jersey.lowStock()).isTrue();
         assertThat(jersey.lowStockVariants()).extracting(LowStockVariant::label).contains("Talla XXL: 2 u.");
 
-        // Canilleras: una sola variante con 16 u. (> 5) → no es stock bajo.
         AdminProductRow shinGuards = f.admin.list("canilleras", false).get(0);
         assertThat(shinGuards.stock()).isEqualTo(16);
         assertThat(shinGuards.lowStock()).isFalse();
 
-        // Al bajar a 5 (= umbral) se marca, y el total también queda en el umbral.
         f.admin.updateStock(f.variantId("SF-ACC-001-UNICA"), 5, 5);
         AdminProductRow after = f.admin.list("canilleras", false).get(0);
         assertThat(after.stock()).isEqualTo(5);
         assertThat(after.lowStockVariants()).extracting(LowStockVariant::label).containsExactly("Talla Única: 5 u.");
 
-        // Producto agotado: todas sus tallas aparecen, marcadas como agotadas.
         AdminProductRow soldOut = f.admin.list("SF-ZAP-003", false).get(0);
         assertThat(soldOut.lowStockVariants()).hasSize(9)
                 .allSatisfy(v -> assertThat(v.label()).endsWith("0 u. (agotada)"));

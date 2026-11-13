@@ -72,7 +72,6 @@ public class AdminUsersController {
     private TableColumn<User, User> column(String title, double width, Function<User, javafx.scene.Node> renderer) {
         TableColumn<User, User> col = new TableColumn<>(title);
         col.setPrefWidth(width);
-        // Sin truncar: si no cabe, la tabla muestra desplazamiento horizontal.
         col.setMinWidth(width);
         col.setSortable(false);
         col.setReorderable(false);

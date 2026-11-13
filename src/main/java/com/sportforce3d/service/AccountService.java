@@ -11,7 +11,6 @@ import java.util.Map;
 import static com.sportforce3d.service.AuthService.putIfError;
 import static com.sportforce3d.service.AuthService.wipe;
 
-/** Operaciones del usuario conectado sobre su propia cuenta. */
 public class AccountService {
 
     private final UserRepository users;

@@ -1,15 +1,5 @@
 package com.sportforce3d.render;
 
-/**
- * Canal alfa (0–255) de una capa, recortado a la caja donde no es cero. Así una máscara de medias no ocupa
- * 720 × 900 bytes y el recoloreado solo recorre su rectángulo.
- *
- * @param x      columna izquierda de la caja en la imagen completa
- * @param y      fila superior de la caja
- * @param width  ancho de la caja (0 si la máscara está vacía)
- * @param height alto de la caja
- * @param alpha  alfa de cada píxel de la caja, fila por fila
- */
 public record Mask(int x, int y, int width, int height, byte[] alpha) {
 
     public static final Mask EMPTY = new Mask(0, 0, 0, 0, new byte[0]);
@@ -24,7 +14,6 @@ public record Mask(int x, int y, int width, int height, byte[] alpha) {
         return width == 0 || height == 0;
     }
 
-    /** Alfa (0–255) en coordenadas de la imagen completa. */
     public int at(int px, int py) {
         int lx = px - x;
         int ly = py - y;
@@ -34,16 +23,10 @@ public record Mask(int x, int y, int width, int height, byte[] alpha) {
         return alpha[ly * width + lx] & 0xFF;
     }
 
-    /** Toma el alfa de una imagen ARGB y lo recorta a su caja. */
     public static Mask fromAlpha(ArgbImage img) {
         return crop(img, true);
     }
 
-    /**
-     * Recorta una imagen a la caja donde su alfa no es cero. Con {@code alphaChannel} guarda el alfa; si no,
-     * el gris (promedio de R, G y B) de los mismos píxeles: así la capa de detalle se guarda en dos máscaras
-     * con la misma caja.
-     */
     static Mask crop(ArgbImage img, boolean alphaChannel) {
         return crop(img, alphaChannel, bounds(img));
     }

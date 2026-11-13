@@ -7,7 +7,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import org.kordamp.ikonli.feather.Feather;
 
-/** Selector de cantidad en píldora (− 1 +). Flechas arriba/abajo también cambian el valor. */
 public class QuantityStepper extends HBox {
 
     private final IntegerProperty value = new SimpleIntegerProperty(this, "value", 1);
@@ -51,7 +50,6 @@ public class QuantityStepper extends HBox {
         return value.get();
     }
 
-    /** Ajusta el valor al rango [min, max]. */
     public void setValue(int v) {
         value.set(Math.max(min.get(), Math.min(max.get(), v)));
     }

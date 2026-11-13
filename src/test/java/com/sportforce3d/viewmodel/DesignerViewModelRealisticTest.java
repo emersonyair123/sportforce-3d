@@ -12,10 +12,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** La vista realista vive en el DesignDocument: se edita con deshacer y se guarda en el JSON. */
 class DesignerViewModelRealisticTest {
-
-    // Editar no llama a los services (solo cargar y guardar), así que aquí no hacen falta.
     private final DesignerViewModel vm = new DesignerViewModel(null, null, Clock.systemUTC());
 
     @Test
@@ -43,7 +40,6 @@ class DesignerViewModelRealisticTest {
         assertThat(vm.personaProperty().get()).isEqualTo(Persona.NINA);
         vm.editRealistic("Categoría · Mujer", s -> s.withModel("polo_mujer_frente"), null);
         assertThat(vm.personaProperty().get()).isEqualTo(Persona.MUJER);
-        // Un producto sin persona (medias) conserva la última.
         vm.editRealistic("Producto", s -> s.withModel("producto_medias"), null);
         assertThat(vm.personaProperty().get()).isEqualTo(Persona.MUJER);
         vm.undo();

@@ -18,11 +18,6 @@ import javafx.scene.paint.Color;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Lista de tarjetas de material: muestra de textura, nombre (title-s), uso (body-s, ink-muted)
- * y recargo ("+ S/ 15.00" o "Incluido"). La elegida lleva borde brand y fondo bg-300.
- * Se navega con Tab y se elige con Espacio, Enter o las flechas.
- */
 public class MaterialPicker extends VBox {
 
     private static final PseudoClass SELECTED = PseudoClass.getPseudoClass("selected");
@@ -101,7 +96,6 @@ public class MaterialPicker extends VBox {
         sampleColor.addListener((obs, old, color) -> cards.forEach(c -> c.sample.paint(color)));
     }
 
-    /** Reemplaza los materiales mostrados (solo los válidos para la prenda activa) y elige el primero. */
     public void setMaterials(List<Material> materials) {
         cards.clear();
         for (Material material : materials) {
@@ -118,7 +112,6 @@ public class MaterialPicker extends VBox {
         return selected;
     }
 
-    /** Elige por id (null deja sin elegir); útil al sincronizar con un diseño abierto. */
     public void setSelected(Material material) {
         selected.set(material == null ? null
                 : cards.stream().map(c -> c.material).filter(m -> m.id() == material.id()).findFirst().orElse(null));
@@ -128,7 +121,6 @@ public class MaterialPicker extends VBox {
         return selected.get();
     }
 
-    /** Color de la prenda con el que se dibujan las muestras. */
     public ObjectProperty<Color> sampleColorProperty() {
         return sampleColor;
     }

@@ -10,10 +10,6 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Colores del tema claro (el de reportes imprimibles según la guía de marca), leídos de css/tokens-light.css para
- * no duplicar valores HEX: si cambia el token, cambia el reporte.
- */
 public final class ReportPalette {
 
     private static final Pattern TOKEN = Pattern.compile("-sf-([a-z0-9-]+):\\s*#([0-9a-fA-F]{6})\\s*;");
@@ -22,7 +18,6 @@ public final class ReportPalette {
     private ReportPalette() {
     }
 
-    /** RGB del token (sin el prefijo -sf-), p. ej. {@code rgb("brand")}. */
     public static int rgb(String token) {
         return Objects.requireNonNull(LIGHT.get(token), "Token sin color HEX en tokens-light.css: " + token);
     }

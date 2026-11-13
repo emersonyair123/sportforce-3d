@@ -9,16 +9,11 @@ import com.sportforce3d.model.ProductSummary;
 import com.sportforce3d.viewmodel.ErrorMessages;
 import javafx.scene.Node;
 
-/** Acciones de tienda compartidas por las vistas que muestran tarjetas de producto. */
 final class ShopActions {
 
     private ShopActions() {
     }
 
-    /**
-     * Tarjeta con imagen, apertura de ficha y botón de carrito conectados. La foto subida por el ADMIN tiene
-     * prioridad; si no hay, se muestra la foto realista recoloreada y, si tampoco, la ilustración de la prenda.
-     */
     static ProductCard card(AppContext context, ProductSummary product) {
         ProductCard card = new ProductCard(product,
                 ProductImages.load(context.storage(), product.imagePath(), ProductCard.WIDTH, ProductCard.MEDIA_HEIGHT));
@@ -30,7 +25,6 @@ final class ShopActions {
         return card;
     }
 
-    /** Si el producto tiene una sola variante se agrega directo; si no, se abre la ficha para elegir talla. */
     static void addOrChooseSize(AppContext context, ProductSummary product, Node anyNode) {
         if (product.singleVariantId() == null) {
             context.router().go(Routes.PRODUCT, product.id());

@@ -29,10 +29,6 @@ import static com.sportforce3d.ui.UiTestSupport.waitUntil;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
-/**
- * Diseñador 3D: editar (color, texto, prenda, zona) no mueve la cámara, y cada opción de la pestaña Texto tiene su
- * editor dentro de su propia tarjeta, con botón para quitarla.
- */
 @ExtendWith(ApplicationExtension.class)
 class DesignerUiTest {
 
@@ -58,7 +54,6 @@ class DesignerUiTest {
         DesignerViewModel vm = viewModel(robot);
         waitUntil("persona o maniquí en el visor", () -> viewer.getModel() != null);
 
-        // El cliente gira a la espalda y acerca: ese encuadre no debe cambiar mientras edita.
         click(robot, "Espalda");
         robot.interact(() -> viewer.zoomBy(0.82));
         OrbitState before = viewer.cameraGoal();
@@ -84,7 +79,6 @@ class DesignerUiTest {
         waitUntil("nombre en el documento", () -> vm.doc().elements().stream()
                 .anyMatch(e -> e.type() == ElementType.NAME && "QUISPE".equals(e.text())));
 
-        // El giro automático está apagado en el diseñador: tras más de 4 s quieto la cámara sigue igual.
         WaitForAsyncUtils.sleep(4500, java.util.concurrent.TimeUnit.MILLISECONDS);
         WaitForAsyncUtils.waitForFxEvents();
         OrbitState after = viewer.cameraGoal();
@@ -93,7 +87,6 @@ class DesignerUiTest {
         assertThat(after.distance()).isCloseTo(before.distance(), within(1e-6));
         assertThat(after.target()).isEqualTo(before.target());
 
-        // Cada tarjeta quita su propio elemento.
         Node remove = robot.lookup((Predicate<Node>) n -> "Quitar nombre en la espalda".equals(n.getAccessibleText())
                 && isInside(n, card(robot, "Nombre en la espalda"))).query();
         UiTestSupport.clickNode(robot, remove);
@@ -101,10 +94,6 @@ class DesignerUiTest {
         assertThat(vm.doc().elements()).hasSize(1);
     }
 
-    /**
-     * Etapa 10D: con manga larga (o un largo o tela que la vista realista no tiene) las fotos que se guardan y que el
-     * pedido copia salen de la Vista 3D: retrato, persona completa, fondo oscuro. Con el corte de serie, las realistas.
-     */
     @Test
     void longSleeveDesignsAreSavedWithPhotosFromThe3dView(FxRobot robot) throws Exception {
         type(robot, "Correo", "cliente@sportforce3d.pe");
@@ -114,19 +103,16 @@ class DesignerUiTest {
         robot.interact(() -> context.router().go(Routes.DESIGNER, null));
         DesignerViewModel vm = viewModel(robot);
 
-        // Corte de serie desde la Vista realista: fotos realistas (estudio gris claro).
         saveAs(robot, "Serie");
         java.awt.image.BufferedImage serie = savedFront("Serie");
         assertThat(luminance(serie.getRGB(4, 4))).as("fondo de estudio de la foto realista").isGreaterThan(60);
 
-        // Manga larga del hombre: la Vista realista tiene esa foto (Etapa 11), así que el pedido lleva la foto realista.
         robot.interact(() -> vm.edit("Manga larga", d -> d.withCut(d.cut().withSleeve(
                 com.sportforce3d.design.GarmentCut.Sleeve.LARGA)), null));
         saveAs(robot, "Manga larga");
         java.awt.image.BufferedImage foto = savedFront("Manga larga");
         assertThat((double) foto.getWidth() / foto.getHeight()).as("foto realista 720 × 900").isCloseTo(0.8, within(0.01));
 
-        // Short corto (sin foto realista), sin abrir la Vista 3D: las fotos se toman del 3D con ese corte.
         robot.interact(() -> vm.edit("Short corto", d -> d.withCut(d.cut().withShorts(
                 com.sportforce3d.design.GarmentCut.ShortsLength.CORTO)), null));
         saveAs(robot, "Short corto");
@@ -138,13 +124,11 @@ class DesignerUiTest {
     }
 
     private void saveAs(FxRobot robot, String name) {
-        // Se activa el botón directamente: el aviso del guardado anterior puede quedar encima un momento.
         javafx.scene.control.Labeled save = UiTestSupport.waitLabeled(robot, "Guardar diseño");
         robot.interact(() -> ((javafx.scene.control.ButtonBase) save).fire());
         waitUntil("diálogo de guardar", () -> UiTestSupport.field(robot, "Nombre del diseño").isPresent());
         robot.interact(() -> UiTestSupport.field(robot, "Nombre del diseño").orElseThrow().getInput().setText(name));
         click(robot, "Guardar");
-        // Con un corte sin foto realista se viste a la persona 3D para las fotos: puede tardar en un equipo cargado.
         waitUntil("diseño guardado: " + name, 90, () -> context.designService().myDesigns().stream()
                 .anyMatch(d -> d.name().equals(name)));
     }
@@ -164,7 +148,6 @@ class DesignerUiTest {
         return (DesignerViewModel) root.getProperties().get(DesignerViewModel.class);
     }
 
-    /** Tarjeta (.sf-text-card) cuyo botón dice {@code label}. */
     private static Node card(FxRobot robot, String label) {
         for (Node c : robot.lookup(".sf-text-card").queryAll()) {
             if (c instanceof Parent p && p.lookupAll(".sf-btn").stream()

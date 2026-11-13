@@ -14,7 +14,6 @@
     <VBox fx:id="page" spacing="48" maxWidth="1280">
         <padding><Insets top="32" right="24" bottom="64" left="24"/></padding>
 
-        <!-- Hero: el único CTA accent de la vista -->
         <VBox styleClass="sf-hero">
             <Label fx:id="greeting" styleClass="label-text, brand-text"/>
             <Label text="FORJA TU EQUIPO" styleClass="display-xl, ink" wrapText="true"/>

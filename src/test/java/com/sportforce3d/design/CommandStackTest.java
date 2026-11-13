@@ -12,8 +12,6 @@ import java.time.ZoneOffset;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CommandStackTest {
-
-    /** Reloj manual para probar la ventana de fusión. */
     static final class TestClock extends Clock {
         long millis = 1_000_000;
 
@@ -54,7 +52,7 @@ class CommandStackTest {
         assertThat(stack.undo()).isEqualTo(red);
         assertThat(stack.undo()).isEqualTo(initial);
         assertThat(stack.canUndo()).isFalse();
-        assertThat(stack.undo()).isEqualTo(initial); // sin efecto
+        assertThat(stack.undo()).isEqualTo(initial);
 
         assertThat(stack.redo()).isEqualTo(red);
         assertThat(stack.redo()).isEqualTo(withName);

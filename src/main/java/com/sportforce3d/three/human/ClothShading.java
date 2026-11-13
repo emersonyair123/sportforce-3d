@@ -4,22 +4,7 @@ import com.sportforce3d.three.geom.MeshData;
 
 import java.util.List;
 
-/**
- * Sombreado horneado de una prenda en su espacio UV (la misma distribución de islas que la textura del diseño):
- * {@code shade} multiplica la textura (oclusión ambiental y valles de los pliegues) y {@code height} es el relieve
- * de los pliegues, que se suma al de la tela. JavaFX no tiene oclusión ambiental ni colores por vértice: la única
- * forma de oscurecer axilas, cuello o entrepierna es pintarlo en la textura.
- *
- * <p>Las prendas simuladas en Blender ({@link SimulatedGarments}) traen la oclusión horneada con Cycles y un normal
- * map de sus pliegues ({@code normals}, ARGB en espacio tangente, verde hacia la v de la textura); entonces
- * {@code height} es plano y los pliegues están en la geometría y en el normal map.
- *
- * @param size    lado de los mapas en píxeles (menor que la textura: se muestrean con interpolación)
- * @param normals normal map horneado (size × size) o null
- */
 public record ClothShading(int size, float[] shade, float[] height, int[] normals) {
-
-    /** Oclusión horneada mínima (los huecos más cerrados no quedan negros: hay luz rebotada). */
     private static final double AO_FLOOR = 0.40;
     private static final double AO_GAMMA = 1.25;
 
@@ -27,14 +12,9 @@ public record ClothShading(int size, float[] shade, float[] height, int[] normal
         this(size, shade, height, null);
     }
 
-    /** Datos por punto de cada malla: apertura (1 = sin oclusión), peso del pliegue y su ángulo en UV (rad). */
     record PointData(float[] openness, float[] wrinkle, float[] angle) {
     }
 
-    /**
-     * Sombreado de una prenda simulada: oclusión ambiental (gris, 1 = abierto) y normal map horneados en Blender
-     * sobre las mismas UV. Las dos imágenes deben ser cuadradas y del mismo lado.
-     */
     static ClothShading fromMaps(java.awt.image.BufferedImage ao, java.awt.image.BufferedImage normal) {
         int size = ao.getWidth();
         if (ao.getHeight() != size || normal.getWidth() != size || normal.getHeight() != size) {
@@ -50,11 +30,6 @@ public record ClothShading(int size, float[] shade, float[] height, int[] normal
         return new ClothShading(size, shade, new float[size * size], n);
     }
 
-    /**
-     * Copia con el normal map horneado suavizado (dos pasadas de caja separable de {@code radius} px, como una
-     * gaussiana): con una tela lisa y brillante los escalones del horneado (aristas de los pliegues a 1024 px) se ven
-     * dentados. Sin normal map devuelve el mismo sombreado.
-     */
     public ClothShading withSmoothedNormals(int radius) {
         if (normals == null || radius <= 0) {
             return this;
@@ -89,7 +64,6 @@ public record ClothShading(int size, float[] shade, float[] height, int[] normal
         return (int) Math.max(0, Math.min(255, Math.round((v * 0.5 + 0.5) * 255)));
     }
 
-    /** Media móvil de 2r+1 píxeles en filas ({@code rows}) o columnas, con el borde repetido. */
     private void boxBlur(float[] src, float[] dst, int r, boolean rows) {
         float k = 1f / (2 * r + 1);
         for (int line = 0; line < size; line++) {
@@ -110,7 +84,6 @@ public record ClothShading(int size, float[] shade, float[] height, int[] normal
         return rows ? line * size + t : t * size + line;
     }
 
-    /** Normal horneada en (u, v) como (x, y, z) en [-1, 1] con interpolación bilineal; null si no hay. */
     public double[] normalAt(double u, double v) {
         if (normals == null) {
             return null;
@@ -133,7 +106,6 @@ public record ClothShading(int size, float[] shade, float[] height, int[] normal
         return out;
     }
 
-    /** Valor del sombreado en (u, v) ∈ [0, 1] con interpolación bilineal. */
     public double shadeAt(double u, double v) {
         return sample(shade, u, v);
     }
@@ -155,11 +127,6 @@ public record ClothShading(int size, float[] shade, float[] height, int[] normal
         return a * (1 - fy) + b * fy;
     }
 
-    /**
-     * Rasteriza las mallas de una prenda en UV: interpola por triángulo la apertura, el peso y el ángulo del pliegue
-     * de sus puntos; dibuja los pliegues (crestas suaves cuya intensidad varía con un ruido de baja frecuencia) y
-     * extiende unos píxeles el borde de cada isla para que el filtrado de la textura no muestre costuras.
-     */
     static ClothShading bake(List<MeshData> meshes, List<PointData> data, int size) {
         int n = size * size;
         float[] open = new float[n];
@@ -177,7 +144,7 @@ public record ClothShading(int size, float[] shade, float[] height, int[] normal
                 int[] p = {f[b], f[b + 3], f[b + 6]};
                 int[] tc = {f[b + 2], f[b + 5], f[b + 8]};
                 if (p[0] >= d.openness().length || p[1] >= d.openness().length || p[2] >= d.openness().length) {
-                    continue; // caras agregadas después (basta): sin datos, quedan con el valor del vecino
+                    continue;
                 }
                 double[] x = new double[3];
                 double[] y = new double[3];
@@ -200,7 +167,7 @@ public record ClothShading(int size, float[] shade, float[] height, int[] normal
         dilate(w, covered.clone(), size, 4, 0);
         float[] shade = new float[n];
         float[] height = new float[n];
-        double period = size / 34.0; // ~3 cm sobre la camiseta
+        double period = size / 34.0;
         for (int y = 0; y < size; y++) {
             for (int x = 0; x < size; x++) {
                 int i = y * size + x;
@@ -209,10 +176,8 @@ public record ClothShading(int size, float[] shade, float[] height, int[] normal
                 double s = len < 1e-6 ? 1 : sa[i] / len;
                 double along = (x * c + y * s) / period;
                 double across = (-x * s + y * c) / (period * 3.2);
-                // Crestas que nacen y se apagan: la fase y la intensidad varían despacio a lo largo del pliegue.
                 double wobble = 1.1 * noise(across * 0.8, along * 0.15);
                 double ridge = Math.sin(2 * Math.PI * (along + wobble));
-                // Solo algunos pliegues, en manchas: una tela real no se arruga en rayas parejas.
                 double ruido = noise(across * 0.6 + 7.1, along * 0.45 + 3.3);
                 double fade = ruido * ruido * (3 - 2 * ruido);
                 fade = Math.max(0, Math.min(1, (fade - 0.25) / 0.5));
@@ -231,7 +196,6 @@ public record ClothShading(int size, float[] shade, float[] height, int[] normal
         void put(int index, double l0, double l1, double l2);
     }
 
-    /** Recorre los píxeles cuyo centro cae en el triángulo (coordenadas en píxeles) con sus baricéntricas. */
     private static void raster(double[] x, double[] y, int size, PixelSink sink) {
         int x0 = Math.max(0, (int) Math.floor(Math.min(x[0], Math.min(x[1], x[2]))));
         int x1 = Math.min(size - 1, (int) Math.ceil(Math.max(x[0], Math.max(x[1], x[2]))));
@@ -253,7 +217,6 @@ public record ClothShading(int size, float[] shade, float[] height, int[] normal
         }
     }
 
-    /** Extiende los valores cubiertos a sus vecinos sin dato ({@code passes} veces); el resto toma {@code fill}. */
     private static void dilate(float[] map, boolean[] covered, int size, int passes, float fill) {
         for (int pass = 0; pass < passes; pass++) {
             boolean[] next = covered.clone();
@@ -290,7 +253,6 @@ public record ClothShading(int size, float[] shade, float[] height, int[] normal
         }
     }
 
-    /** Ruido de valor suave en [0, 1] (interpolación cúbica de una rejilla pseudoaleatoria). */
     static double noise(double x, double y) {
         int xi = (int) Math.floor(x);
         int yi = (int) Math.floor(y);

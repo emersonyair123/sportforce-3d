@@ -57,7 +57,6 @@ public class CheckoutController {
         backLink.setGraphic(Icons.of(Feather.ARROW_LEFT, Icons.SM));
         backLink.setOnAction(e -> context.router().go(Routes.CART));
 
-        // 1. Dirección
         addressCards.selectedProperty().bindBidirectional(viewModel.addressIdProperty());
         viewModel.addresses().addListener((ListChangeListener<Address>) c -> renderAddresses());
         addressForm.setVisible(false);
@@ -72,13 +71,11 @@ public class CheckoutController {
                 addressForm::showErrors,
                 message -> Toast.error(layout, message)));
 
-        // 2. Pago: la tarjeta queda deshabilitada con "Próximamente".
         for (PaymentMethod m : PaymentMethod.values()) {
             paymentCards.add(m, m.label(), paymentDetail(m), null, m.available());
         }
         paymentCards.selectedProperty().bindBidirectional(viewModel.methodProperty());
 
-        // 3. Notas
         notes.setPromptText("Ej.: entregar por la tarde, tocar el timbre 2.");
         notes.setPrefRowCount(3);
         notes.setWrapText(true);

@@ -2,23 +2,7 @@ package com.sportforce3d.render;
 
 import java.util.Map;
 
-/**
- * La fórmula de {@code sportforce-realista/ALGORITMO.md}, píxel por píxel sobre arreglos (valores 0–1):
- * <pre>
- * res = base
- * por zona Z con color C:   res = res·(1 − a) + (res·C)·a                    (multiplicar)
- * diseños y textos (O):     res = res·(1 − aO) + O·aO, con aO = alfa(O)·aCam  (normal, recortado a la camiseta)
- *                           res = res·(1 − aCam·0.85) + (res·base)·aCam·0.85 (sombra de la foto, solo camiseta)
- * detalle (overlay):        d = gris, ad = alfa·0.85
- *                           ov = res &lt; 0.5 ? 2·res·d : 1 − 2·(1 − res)·(1 − d)
- *                           res = res·(1 − ad) + ov·ad
- * </pre>
- * La sombra de la camiseta se aplica cuando hay diseños o textos, como indica el algoritmo. Cada paso recorre
- * solo la caja de su máscara. Sin JavaFX: se puede probar y ejecutar en cualquier hilo.
- */
 public final class Recolor {
-
-    /** Intensidad de la sombra de la foto sobre diseños y textos, y de la capa de detalle. */
     static final float SHADOW = 0.85f;
     static final float DETAIL = 0.85f;
     private static final float[] UNIT = unit();
@@ -34,13 +18,6 @@ public final class Recolor {
         return t;
     }
 
-    /**
-     * Recolorea un modelo.
-     *
-     * @param layers  capas del modelo
-     * @param colors  zona → 0xRRGGBB; las zonas que el modelo no tiene se ignoran
-     * @param overlay diseños y textos (ARGB del mismo tamaño que la foto) o null
-     */
     public static ArgbImage compose(ModelLayers layers, Map<String, Integer> colors, ArgbImage overlay) {
         int w = layers.width();
         int h = layers.height();
@@ -62,7 +39,6 @@ public final class Recolor {
                 continue;
             }
             int c = e.getValue();
-            // res·(1 − a) + res·C·a = res·(1 − a·(1 − C))
             float kr = 1 - UNIT[(c >> 16) & 0xFF];
             float kg = 1 - UNIT[(c >> 8) & 0xFF];
             float kb = 1 - UNIT[c & 0xFF];
@@ -108,7 +84,6 @@ public final class Recolor {
                         g[i] = g[i] * (1 - ao) + UNIT[(o >> 8) & 0xFF] * ao;
                         b[i] = b[i] * (1 - ao) + UNIT[o & 0xFF] * ao;
                     }
-                    // res·(1 − k) + res·base·k = res·(1 − k·(1 − base))
                     float k = aCam * SHADOW;
                     int c = base[i];
                     r[i] *= 1 - k * (1 - UNIT[(c >> 16) & 0xFF]);
@@ -158,10 +133,6 @@ public final class Recolor {
         return i < 0 ? 0 : Math.min(i, 255);
     }
 
-    /**
-     * Reduce una imagen promediando cada bloque de píxeles (filtro de caja, ponderado por alfa): nítido y sin
-     * el aliasing de un escalado bilineal de un solo paso.
-     */
     public static ArgbImage downscale(ArgbImage src, int dw, int dh) {
         int sw = src.width();
         int sh = src.height();

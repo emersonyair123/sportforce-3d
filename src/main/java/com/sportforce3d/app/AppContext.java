@@ -40,7 +40,6 @@ import javafx.beans.property.SimpleIntegerProperty;
 
 import java.time.Clock;
 
-/** Composición de la aplicación: crea una sola vez la base de datos, repositorios y servicios. */
 public final class AppContext {
 
     private final AppConfig config;
@@ -104,7 +103,6 @@ public final class AppContext {
         this.designService = new DesignService(designs, storage,
                 new com.sportforce3d.design.DraftStore((dataDir == null ? java.nio.file.Path.of(".") : dataDir).resolve("drafts")),
                 session, clock);
-        // Solo lee modelos.json: las fotos de cada modelo se cargan la primera vez que se usan.
         this.recolorService = new RecolorService(new RealisticModelRepository());
     }
 
@@ -180,7 +178,6 @@ public final class AppContext {
         return storeSettingsService;
     }
 
-    /** Fotos realistas recoloreadas (tarjetas del catálogo y, más adelante, el diseñador). */
     public RecolorService recolorService() {
         return recolorService;
     }
@@ -205,17 +202,14 @@ public final class AppContext {
         this.router = router;
     }
 
-    /** Unidades en el carrito, para el contador de la barra superior. */
     public ReadOnlyIntegerProperty cartCountProperty() {
         return cartCount;
     }
 
-    /** Vuelve a contar las unidades del carrito en segundo plano. */
     public void refreshCartCount() {
         Async.run(cartService::countUnits, cartCount::set, e -> { });
     }
 
-    /** Actualiza el contador con un valor ya conocido (p. ej. tras modificar el carrito). */
     public void setCartCount(int units) {
         cartCount.set(units);
     }

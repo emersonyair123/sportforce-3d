@@ -58,11 +58,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-/**
- * Administración → Pedidos → uniforme personalizado, de solo lectura: la vista realista (fotos recoloreadas con la
- * copia del diseño) y el mismo visor 3D del diseñador, con las capturas del pedido, la ficha técnica por zona (también
- * la de la vista realista, en HEX) y la descarga de los archivos originales. Parámetro: id de la línea.
- */
 public class AdminDesignController implements Router.Routable {
 
     private final AppContext context;
@@ -75,7 +70,6 @@ public class AdminDesignController implements Router.Routable {
     private final ToggleGroup viewGroup = new ToggleGroup();
     private final ElementImages images;
     private OrderDesign design;
-    /** true si el visor muestra a la persona vestida con el corte del pedido (no el maniquí). */
     private boolean dressed;
     private long orderId;
 
@@ -133,7 +127,6 @@ public class AdminDesignController implements Router.Routable {
         showRealistic(false);
     }
 
-    /** Vista realista (si el diseño la tiene) o visor 3D. */
     private void showRealistic(boolean real) {
         preview.node().setVisible(real);
         viewer.setVisible(!real);
@@ -155,8 +148,6 @@ public class AdminDesignController implements Router.Routable {
             context.router().go(Routes.ADMIN_ORDERS);
             return;
         }
-        // La persona del diseño vestida con el corte del pedido (manga, largos) y sus telas; si falta su modelo, el
-        // maniquí (que solo tiene el corte de serie: la ficha lo avisa).
         Async.run(() -> {
             OrderDesign d = context.adminOrderService().design(itemId);
             var doc = d.document();
@@ -188,13 +179,7 @@ public class AdminDesignController implements Router.Routable {
         });
     }
 
-    /**
-     * Con vista realista guardada (diseños desde la Etapa 7) se abre en ella y se dibuja con la copia del pedido;
-     * los diseños anteriores solo tienen el visor 3D y el selector no aparece.
-     */
     private void showRealisticView() {
-        // La foto se calcula del mismo diseño que el 3D (Etapa 11). Si no puede mostrarlo todo (otro corte, tela,
-        // textos movidos…), se ve solo el 3D: el taller no recibe una imagen distinta a lo comprado.
         RealisticView view = ViewSync.view(design.document());
         boolean show = design.document().realistic() != null && view.notices().isEmpty();
         viewSwitch.setVisible(show);
@@ -210,8 +195,6 @@ public class AdminDesignController implements Router.Routable {
                 imgs -> preview.show(imgs[0], imgs[1]),
                 e -> preview.showMessage("No se pudo dibujar la vista realista. " + ErrorMessages.of(e)));
     }
-
-    // ---------------------------------------------------------------- Panel
 
     private void buildPanel() {
         OrderItem item = design.item();
@@ -244,7 +227,6 @@ public class AdminDesignController implements Router.Routable {
     }
 
     private Node capture(String path, String label) {
-        // Las capturas son de cuerpo completo: la miniatura muestra el centro; al hacer clic, la imagen completa.
         ImageView view = ProductImages.designCapture(context.storage(), path, 180, 220);
         StackPane box = new StackPane();
         box.getStyleClass().add("sf-proof");
@@ -268,7 +250,6 @@ public class AdminDesignController implements Router.Routable {
         return new VBox(6, box, l);
     }
 
-    /** Ficha de la vista realista: modelo, color HEX por zona, diseño, nombre y número. */
     private Node realistic(TechSheet sheet) {
         TechSheet.Realistic r = sheet.realistic();
         if (r == null) {
@@ -282,7 +263,6 @@ public class AdminDesignController implements Router.Routable {
                 : RealisticDesigner.CUTS.getOrDefault(model.cut(), model.cut()) + " · "
                 + RealisticDesigner.CATEGORIES.getOrDefault(model.audience(), String.valueOf(model.audience()));
         grid.addRow(row++, muted("Modelo"), new VBox(2, text(modelLabel), mono(r.model())));
-        // Solo las zonas que el modelo usa, en su orden (el diseño guarda también las de otros cortes).
         List<String> order = model == null ? new ArrayList<>(r.zones().keySet()) : model.zones();
         for (String z : order) {
             String hex = r.zones().get(z);
@@ -301,7 +281,6 @@ public class AdminDesignController implements Router.Routable {
         grid.addRow(row++, muted("Nombre"), r.name() == null ? text("—") : mono(r.name()));
         grid.addRow(row++, muted("Número"), r.number() == null ? text("—") : mono(String.valueOf(r.number())));
         if (!design.document().realisticPhotosMatch()) {
-            // Otro corte u otra tela: las fotos realistas no lo muestran; el pedido se fabrica según el 3D.
             Label note = muted("Solo referencia: la foto no muestra todo este uniforme ("
                     + String.join(", ", com.sportforce3d.design.ViewSync.view(design.document()).notices()
                     .stream().map(n -> n.replace(": ver en Vista 3D", "").toLowerCase()).toList())
@@ -312,7 +291,6 @@ public class AdminDesignController implements Router.Routable {
         return section("VISTA REALISTA", grid);
     }
 
-    /** Manga y largos (Etapa 10): el visor 3D muestra a la persona con este corte. */
     private Node cut(TechSheet sheet) {
         GridPane grid = grid();
         grid.addRow(0, muted("Manga"), text(sheet.cut().sleeve().label()));
@@ -376,7 +354,6 @@ public class AdminDesignController implements Router.Routable {
         if (sheet.elements().isEmpty()) {
             list.getChildren().add(muted("Sin nombres, números, emblemas ni logos."));
         }
-        // La capa de arriba primero, como en el diseñador.
         for (int i = sheet.elements().size() - 1; i >= 0; i--) {
             TechSheet.ElementRow e = sheet.elements().get(i);
             String id = design.document().elements().get(e.layer() - 1).id();
@@ -412,7 +389,6 @@ public class AdminDesignController implements Router.Routable {
         return section("ELEMENTOS (clic para ubicarlo en el 3D)", list);
     }
 
-    /** Resalta el elemento en el 3D con el contorno de foco y gira la cámara hacia él. */
     private void focusElement(String id, Area area) {
         String old = renderer.composer().highlight();
         renderer.composer().setHighlight(id);
@@ -434,8 +410,6 @@ public class AdminDesignController implements Router.Routable {
                 folder -> Toast.success(stage, "Archivos guardados en " + folder.getFileName()),
                 e -> Toast.error(stage, ErrorMessages.of(e)));
     }
-
-    // ---------------------------------------------------------------- Utilidades
 
     private static VBox section(String title, Node body) {
         Label l = new Label(title);

@@ -42,12 +42,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
-/**
- * Estado del diseñador 3D: el {@link DesignDocument} actual con su historial (deshacer/rehacer), el elemento
- * elegido, los materiales del catálogo con el recargo en vivo, y abrir/guardar/borrador. La geometría del maniquí
- * y la persona 3D se cargan fuera del hilo de la interfaz. La persona sale de la categoría de la vista realista
- * ({@link Persona#fromModelKey}); si su modelo falta o no se puede leer, la Vista 3D usa el maniquí.
- */
 public class DesignerViewModel {
 
     private final DesignService designs;
@@ -75,11 +69,9 @@ public class DesignerViewModel {
     private final ObjectProperty<Persona> persona = new SimpleObjectProperty<>(Persona.HOMBRE);
     private final ObjectProperty<DressedPerson> person = new SimpleObjectProperty<>();
     private final BooleanProperty personLoading = new SimpleBooleanProperty(false);
-    /** true = la persona elegida no está disponible: se muestra el maniquí procedural. */
     private final BooleanProperty personFallback = new SimpleBooleanProperty(false);
     private int request;
     private int personRequest;
-    /** Corte con que está vestida la persona visible, y persona/corte que se están cargando. */
     private GarmentCut shownCut;
     private Persona loadingPersona;
     private GarmentCut loadingCut;
@@ -108,17 +100,10 @@ public class DesignerViewModel {
         product.addListener((obs, old, p) -> updatePrice());
     }
 
-    /**
-     * Diseño nuevo: el 3D de siempre con la Vista realista predeterminada aplicada, así las dos vistas muestran lo
-     * mismo desde el inicio (los detalles que la foto no distingue toman el color de su prenda).
-     */
     static DesignDocument startDocument(BodyType type) {
         return ViewSync.seedFromRealistic(DesignDefaults.document(type), RealisticSpec.defaults());
     }
 
-    // ---------------------------------------------------------------- Carga
-
-    /** Materiales del catálogo (ambos ámbitos), en segundo plano. */
     public void loadMaterials() {
         Async.run(() -> {
                     Map<String, Material> map = new HashMap<>();
@@ -131,7 +116,6 @@ public class DesignerViewModel {
                 e -> error.set("No se pudo cargar los materiales. " + ErrorMessages.of(e)));
     }
 
-    /** Producto base del diseño: aporta el precio y lo que cuenta para el recargo. */
     public void loadProduct(long productId) {
         record Loaded(ProductDetail detail, Optional<RealisticLook> look) {
         }
@@ -140,7 +124,6 @@ public class DesignerViewModel {
             product.set(p);
             if (!java.util.Objects.equals(document.get().productId(), p.id())) {
                 DesignDocument doc = document.get().withProduct(p.id());
-                // Diseño nuevo desde un producto: la vista realista empieza con su modelo, colores y diseño.
                 if (designId.get() == null && loaded.look().isPresent()) {
                     doc = ViewSync.seedFromRealistic(doc, fromLook(loaded.look().get()));
                 }
@@ -183,11 +166,6 @@ public class DesignerViewModel {
                 });
     }
 
-    /**
-     * Persona de la Vista 3D (la de la categoría realista) con el uniforme ajustado a su cuerpo y con la manga y los
-     * largos del documento ({@link GarmentCut}), en segundo plano. Sin modelo: maniquí de respaldo. No hace nada si
-     * ya se ve (o se está cargando) esa persona con ese corte.
-     */
     public void loadPerson() {
         Persona p = persona.get();
         GarmentCut cut = document.get().cut();
@@ -225,14 +203,12 @@ public class DesignerViewModel {
                 });
     }
 
-    /** true si se ve la persona del documento vestida con su corte (lista para las fotos del pedido). */
     public boolean personMatchesDocument() {
         DressedPerson shown = person.get();
         return shown != null && !personFallback.get() && !personLoading.get() && shown.body().persona() == persona.get()
                 && document.get().cut().equals(shownCut);
     }
 
-    /** Abre un diseño guardado (reemplaza el actual y vacía el historial). */
     public void open(long id, Runnable onDone, Consumer<Throwable> onError) {
         Async.run(() -> designs.open(id), opened -> {
             designId.set(opened.summary().id());
@@ -246,7 +222,6 @@ public class DesignerViewModel {
         }, onError);
     }
 
-    /** Recupera el borrador autoguardado. */
     public void restore(DraftStore.Draft draft) {
         designId.set(draft.designId());
         name.set(draft.name() == null ? "" : draft.name());
@@ -280,15 +255,8 @@ public class DesignerViewModel {
         syncHistory();
     }
 
-    // ---------------------------------------------------------------- Edición
-
-    /**
-     * Aplica un cambio con nombre (para "Deshacer …"). Los cambios continuos (arrastrar, deslizar, escribir) pasan
-     * la misma {@code mergeKey} y quedan como un solo paso del historial.
-     */
     public void edit(String label, UnaryOperator<DesignDocument> change, String mergeKey) {
         DesignDocument before = document.get();
-        // Un solo diseño para las dos vistas: tras cada cambio la vista realista guardada se recalcula del 3D.
         DesignDocument after = stack.execute(label, d -> {
             DesignDocument next = change.apply(d);
             return next == d ? d : ViewSync.normalize(next);
@@ -300,11 +268,6 @@ public class DesignerViewModel {
         syncHistory();
     }
 
-    /**
-     * Cambia el diseño desde la Vista realista (corte, colores, diseño, nombre o número): el cambio se traduce a los
-     * datos del 3D ({@link ViewSync#applyRealistic}), así las dos vistas siguen mostrando el mismo diseño. Deshacer
-     * funciona igual que en 3D.
-     */
     public void editRealistic(String label, UnaryOperator<RealisticSpec> change, String mergeKey) {
         edit(label, d -> {
             RealisticSpec before = ViewSync.view(d).spec();
@@ -313,22 +276,18 @@ public class DesignerViewModel {
         }, mergeKey);
     }
 
-    /** Lo que muestra la Vista realista ahora (modelo, colores, diseño, nombre y número), calculado del diseño. */
     public RealisticSpec realistic() {
         return realisticView().spec();
     }
 
-    /** La Vista realista completa del diseño actual: además textos con sus colores, escudo y avisos. */
     public RealisticView realisticView() {
         return ViewSync.view(document.get());
     }
 
-    /** Cambia solo el elemento indicado (si sigue existiendo). */
     public void editElement(String id, String label, UnaryOperator<DesignElement> change, String mergeKey) {
         edit(label, d -> d.element(id).map(e -> d.replaceElement(change.apply(e))).orElse(d), mergeKey);
     }
 
-    /** Termina el gesto actual: el próximo cambio es un paso nuevo aunque tenga la misma clave. */
     public void seal() {
         stack.seal();
     }
@@ -347,7 +306,6 @@ public class DesignerViewModel {
         syncHistory();
     }
 
-    /** Vuelve a los colores y materiales por defecto sin elementos (se puede deshacer). */
     public void resetDesign() {
         edit("Restablecer diseño", d -> startDocument(d.bodyType()).withProduct(d.productId()), null);
         stack.seal();
@@ -373,9 +331,6 @@ public class DesignerViewModel {
         redoLabel.set(stack.canRedo() ? "Rehacer: " + stack.redoLabel() : "Nada que rehacer");
     }
 
-    // ---------------------------------------------------------------- Precio
-
-    /** Recargo según {@link DesignPricing}: las ranuras del producto elegido o, sin producto, todo el uniforme. */
     private void updatePrice() {
         ProductDetail p = product.get();
         long sum = DesignPricing.surchargeCents(document.get(), materials.get(), p == null ? null : p.garment());
@@ -383,9 +338,6 @@ public class DesignerViewModel {
         totalCents.set(product.get() == null ? sum : product.get().basePriceCents() + sum);
     }
 
-    // ---------------------------------------------------------------- Guardar
-
-    /** Guarda (versión nueva si ya existía) con las capturas de frente y espalda ya escritas en disco. */
     public void save(String newName, Path front, Path back, Consumer<DesignSummary> onSaved, Consumer<Throwable> onError) {
         DesignDocument doc = document.get();
         Long id = designId.get();
@@ -394,7 +346,6 @@ public class DesignerViewModel {
             saving.set(false);
             designId.set(summary.id());
             name.set(summary.name());
-            // Si se editó mientras se guardaba, sigue habiendo cambios sin guardar.
             dirty.set(document.get() != doc);
             onSaved.accept(summary);
         }, e -> {
@@ -403,7 +354,6 @@ public class DesignerViewModel {
         });
     }
 
-    /** Autoguardado: solo si hay cambios sin guardar. Corre en segundo plano y no molesta si falla. */
     public void autosave() {
         if (!dirty.get() || saving.get()) {
             return;
@@ -416,8 +366,6 @@ public class DesignerViewModel {
             return true;
         }, ok -> { }, e -> { });
     }
-
-    // ---------------------------------------------------------------- Propiedades
 
     public DesignDocument doc() { return document.get(); }
     public Optional<DesignElement> selected() {

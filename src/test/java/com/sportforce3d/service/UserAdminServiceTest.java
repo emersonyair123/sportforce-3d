@@ -14,7 +14,6 @@ import java.time.Clock;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Los permisos se comprueban en el service, aunque la vista oculte el menú. */
 class UserAdminServiceTest {
 
     @TempDir
@@ -73,12 +72,10 @@ class UserAdminServiceTest {
         assertThatThrownBy(() -> admin.setAdmin(1, false))
                 .isInstanceOf(ServiceException.class).hasMessageContaining("propio rol");
 
-        // Con un segundo admin, el primero sí puede perder el rol si lo quita otro.
         admin.setAdmin(2, true);
         auth.logout();
         auth.login("cliente@sportforce3d.pe", "Cliente123!".toCharArray());
         assertThat(admin.setAdmin(1, false).isAdmin()).isFalse();
-        // Ahora el usuario 2 es el último admin activo.
         assertThat(users.countActiveWithRole(Role.ADMIN)).isEqualTo(1);
     }
 

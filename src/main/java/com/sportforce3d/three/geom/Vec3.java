@@ -1,6 +1,5 @@
 package com.sportforce3d.three.geom;
 
-/** Vector 3D inmutable en espacio del modelo: metros, Y hacia arriba, +Z hacia el frente del maniquí. */
 public record Vec3(double x, double y, double z) {
 
     public static final Vec3 ZERO = new Vec3(0, 0, 0);
@@ -19,7 +18,6 @@ public record Vec3(double x, double y, double z) {
         return new Vec3(x * k, y * k, z * k);
     }
 
-    /** this + o·k */
     public Vec3 addScaled(Vec3 o, double k) {
         return new Vec3(x + o.x * k, y + o.y * k, z + o.z * k);
     }
@@ -36,7 +34,6 @@ public record Vec3(double x, double y, double z) {
         return Math.sqrt(x * x + y * y + z * z);
     }
 
-    /** Vector unitario; si la longitud es casi cero devuelve ZERO. */
     public Vec3 normalize() {
         double len = length();
         return len < 1e-12 ? ZERO : new Vec3(x / len, y / len, z / len);

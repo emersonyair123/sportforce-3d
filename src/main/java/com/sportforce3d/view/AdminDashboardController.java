@@ -40,11 +40,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Administración → Dashboard: ventas del día y del mes (pagos aprobados), pagos por verificar, pedidos por estado,
- * ventas de 30 días contra los 30 anteriores y productos más vendidos. Colores de las series en components.css
- * (principal brand, comparación accent, rejilla line).
- */
 public class AdminDashboardController {
 
     private static final DateTimeFormatter DAY = DateTimeFormatter.ofPattern("d MMM", Locale.forLanguageTag("es-PE"));
@@ -60,7 +55,6 @@ public class AdminDashboardController {
         this.context = context;
     }
 
-    /** Números del dashboard y si los datos de pago siguen siendo los de prueba. */
     private record Loaded(DashboardService.Stats stats, boolean paymentSettingsReviewed) {
     }
 
@@ -124,7 +118,6 @@ public class AdminDashboardController {
         return t.count() == 1 ? "1 pago aprobado" : t.count() + " pagos aprobados";
     }
 
-    /** "+12 % vs. el mismo tramo del mes anterior" o null si no hay base de comparación. */
     private static String compare(Total now, Total before) {
         if (before.cents() == 0) {
             return now.cents() == 0 ? null : "Primer mes con ventas en este tramo";
@@ -149,7 +142,6 @@ public class AdminDashboardController {
         }
         box.getStyleClass().addAll("sf-card", "sf-kpi");
         box.setPadding(new Insets(20));
-        // Las cuatro tarjetas comparten la fila y se ajustan al ancho de la ventana.
         box.setPrefWidth(0);
         box.setMinWidth(170);
         box.setMaxWidth(Double.MAX_VALUE);
@@ -176,8 +168,6 @@ public class AdminDashboardController {
         card.setPadding(new Insets(20));
         return card;
     }
-
-    // ---------------------------------------------------------------- Gráficos
 
     private Node salesChart(DashboardService.Stats s) {
         List<LocalDate> days = new ArrayList<>(s.daily().keySet());
@@ -251,7 +241,6 @@ public class AdminDashboardController {
         };
     }
 
-    /** Barras horizontales: los nombres de estado se leen completos (en vertical se giraban 90°). */
     private Node statusChart(Map<OrderStatus, Integer> counts) {
         NumberAxis x = new NumberAxis();
         x.setTickUnit(1);
@@ -262,7 +251,6 @@ public class AdminDashboardController {
         XYChart.Series<Number, String> series = new XYChart.Series<>();
         series.setName("Pedidos");
         OrderStatus[] all = OrderStatus.values();
-        // El eje de categorías dibuja de abajo hacia arriba: se agregan al revés para leer el flujo de arriba abajo.
         for (int i = all.length - 1; i >= 0; i--) {
             OrderStatus s = all[i];
             XYChart.Data<Number, String> d = new XYChart.Data<>(counts.getOrDefault(s, 0), s.label());
@@ -294,7 +282,6 @@ public class AdminDashboardController {
         BarChart<Number, String> chart = new BarChart<>(x, y);
         XYChart.Series<Number, String> series = new XYChart.Series<>();
         series.setName("Unidades");
-        // El más vendido arriba: el eje de categorías dibuja de abajo hacia arriba.
         for (int i = top.size() - 1; i >= 0; i--) {
             TopProduct t = top.get(i);
             XYChart.Data<Number, String> d = new XYChart.Data<>(t.units(), t.name());
@@ -305,7 +292,6 @@ public class AdminDashboardController {
         integerRange(x, top.stream().mapToInt(TopProduct::units).max().orElse(0));
         chart.setLegendVisible(false);
         chart.setAnimated(false);
-        // Alto según la cantidad de productos: con uno solo, la barra no ocupa todo el gráfico.
         chart.setPrefHeight(Math.max(150, 70 + 46 * top.size()));
         chart.setMaxHeight(Region.USE_PREF_SIZE);
         chart.setCategoryGap(14);
@@ -317,7 +303,6 @@ public class AdminDashboardController {
         return box;
     }
 
-    /** Eje de conteos: de 0 a máx + 1 con marcas enteras (unas 6 como mucho). */
     private static void integerRange(NumberAxis axis, int max) {
         int upper = Math.max(1, max + 1);
         axis.setAutoRanging(false);

@@ -9,19 +9,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Ficha técnica de un diseño para producción: color HEX por zona, material y patrón por prenda, y cada elemento con
- * posición (u, v dentro de su zona, 0–1), escala y rotación; además la vista realista (modelo, color HEX por zona,
- * diseño, nombre y número), null en diseños anteriores a la Etapa 7, y el corte (manga y largos; los diseños anteriores a
- * la Etapa 10 tienen el de siempre). La usan el visor del ADMIN y la descarga en CSV.
- */
 public record TechSheet(List<ZoneRow> zones, List<MaterialRow> materials, List<PatternRow> patterns,
                         List<ElementRow> elements, Realistic realistic, GarmentCut cut) {
-
-    /**
-     * Vista realista: {@code model} es la clave de {@code models/realista} (frente), {@code zones} zona → HEX en el
-     * orden del modelo cuando se conoce, {@code patternColor} null si es liso.
-     */
     public record Realistic(String model, Map<String, String> zones, String pattern, String patternColor,
                             String name, Integer number) {
     }
@@ -35,7 +24,6 @@ public record TechSheet(List<ZoneRow> zones, List<MaterialRow> materials, List<P
     public record PatternRow(Garment garment, PatternType type, String color, double widthCm) {
     }
 
-    /** {@code layer} 1 = la de más abajo. {@code assetName} es el nombre original del logo subido. */
     public record ElementRow(int layer, ElementType type, String content, Area area, double u, double v,
                              double scalePercent, double rotationDeg, double heightCm, String font, String color,
                              String accentColor, double outlineMm, boolean visible, Long assetId, String assetName) {
@@ -78,7 +66,6 @@ public record TechSheet(List<ZoneRow> zones, List<MaterialRow> materials, List<P
         return new TechSheet(zones, mats, patterns, elements, realistic, doc.cut());
     }
 
-    /** CSV con punto y coma (Excel en español lo abre bien) y UTF-8 con BOM. */
     public String toCsv(String title) {
         StringBuilder sb = new StringBuilder("﻿");
         line(sb, "Ficha técnica", title);

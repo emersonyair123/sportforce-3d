@@ -27,14 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Administración → Reportes: ventas por rango de fechas, por categoría y por producto, y su exportación a PDF
- * (OpenPDF) y Excel (Apache POI). Solo ADMIN. Las fechas son días de Lima.
- */
 public class ReportService {
 
     private static final Logger log = LoggerFactory.getLogger(ReportService.class);
-    /** Rango máximo: tres años. */
     public static final int MAX_DAYS = 3 * 366;
     static final LocalDate MIN_DATE = LocalDate.of(2020, 1, 1);
 
@@ -48,7 +43,6 @@ public class ReportService {
         this.clock = clock;
     }
 
-    /** Hoy en Lima: para los atajos de rango de la pantalla. */
     public LocalDate today() {
         return LocalDate.now(clock.withZone(DashboardService.LIMA));
     }
@@ -76,19 +70,16 @@ public class ReportService {
                 reports.byCategory(from, to), reports.byProduct(from, to), reports.byMethod(from, to));
     }
 
-    /** Escribe el reporte en PDF. Si falla, no deja un archivo a medias. */
     public Path exportPdf(SalesReport report, Path target) {
         session.requireRole(Role.ADMIN);
         return write(report, target, out -> new PdfReportWriter().write(report, out));
     }
 
-    /** Escribe el reporte en Excel (.xlsx) con una hoja por vista. */
     public Path exportExcel(SalesReport report, Path target) {
         session.requireRole(Role.ADMIN);
         return write(report, target, out -> new ExcelReportWriter().write(report, out));
     }
 
-    /** Nombre sugerido: ventas-2026-10-01-a-2026-10-18.pdf */
     public static String suggestedName(SalesReport report, String extension) {
         return "ventas-" + report.from() + "-a-" + report.to() + "." + extension;
     }
@@ -138,7 +129,6 @@ public class ReportService {
                 try {
                     Files.deleteIfExists(temp);
                 } catch (IOException ignored) {
-                    // Se limpia en el próximo intento.
                 }
             }
         }

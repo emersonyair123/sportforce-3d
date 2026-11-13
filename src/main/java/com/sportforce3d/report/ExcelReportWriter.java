@@ -23,11 +23,6 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-/**
- * Reporte de ventas en Excel (.xlsx) con Apache POI: hojas Resumen, Por día/mes, Por categoría, Por producto y Por
- * método. Los montos son números en soles con formato {@code S/ #,##0.00} y los totales son fórmulas SUM, para que
- * la tienda pueda seguir trabajando la hoja.
- */
 public class ExcelReportWriter {
 
     private static final String SOLES = "\"S/ \"#,##0.00";
@@ -59,8 +54,6 @@ public class ExcelReportWriter {
             wb.write(out);
         }
     }
-
-    // ------------------------------------------------------------------ Hojas
 
     private void summary(SalesReport r) {
         XSSFSheet s = wb.createSheet("Resumen");
@@ -118,7 +111,7 @@ public class ExcelReportWriter {
     private void categories(SalesReport r) {
         XSSFSheet s = sheet("Por categoría", "Categoría", "Pedidos", "Unidades", "Ventas", "% del total");
         List<CategoryRow> rows = r.categories();
-        int last = rows.size() + 1; // fila (1-based) del último dato
+        int last = rows.size() + 1;
         fill(s, rows, (row, c) -> {
             cell(row, 0, c.category());
             number(row, 1, c.orders());
@@ -159,8 +152,6 @@ public class ExcelReportWriter {
         widths(s, 28, 12, 16);
     }
 
-    // ------------------------------------------------------------------ Ayudas
-
     private XSSFSheet sheet(String name, String... headers) {
         XSSFSheet s = wb.createSheet(name);
         Row row = s.createRow(0);
@@ -179,7 +170,6 @@ public class ExcelReportWriter {
         }
     }
 
-    /** Fila de totales con SUM en las columnas indicadas (las de dinero, con formato de soles). */
     private void totals(XSSFSheet s, int dataRows, int... columns) {
         Row row = s.createRow(dataRows + 1);
         Cell label = row.createCell(0);

@@ -13,10 +13,6 @@ import java.time.Clock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Etapa 11: la Vista realista y la Vista 3D son un solo diseño. La realista se calcula de los datos del 3D y sus
- * cambios vuelven al 3D; lo que la foto no puede mostrar da un aviso y nunca otros colores o textos.
- */
 class ViewSyncTest {
 
     private static DesignDocument kit3d() {
@@ -24,7 +20,6 @@ class ViewSyncTest {
                 .withColor(Zone.JERSEY_BODY, "#D7192A").withColor(Zone.JERSEY_SLEEVES, "#D7192A")
                 .withColor(Zone.JERSEY_SIDES, "#0B0E13").withColor(Zone.SHORTS_BASE, "#0B2A6B")
                 .withColor(Zone.SOCKS_LEG, "#F2F5F8")
-                // Detalles del color de su prenda: la foto los muestra así (si no, hay aviso).
                 .withColor(Zone.JERSEY_COLLAR, "#D7192A").withColor(Zone.JERSEY_CUFFS, "#D7192A")
                 .withColor(Zone.SHORTS_STRIPE, "#0B2A6B").withColor(Zone.SHORTS_WAIST, "#0B2A6B")
                 .withColor(Zone.SOCKS_BAND, "#F2F5F8")
@@ -50,7 +45,6 @@ class ViewSyncTest {
         assertThat(s.patternColor()).isEqualTo("#F2F5F8");
         assertThat(s.name()).isEqualTo("QUISPE");
         assertThat(s.number()).isEqualTo(9);
-        // Textos con los colores del 3D y el escudo del pecho.
         DesignElement nameEl = TextSlot.BACK_NAME.find(d);
         assertThat(v.name().fill()).isEqualTo(nameEl.color());
         assertThat(v.name().outline()).isEqualTo(nameEl.accentColor());
@@ -80,11 +74,8 @@ class ViewSyncTest {
         assertThat(TextSlot.BACK_NAME.find(out).text()).isEqualTo("ROJAS");
         assertThat(TextSlot.BACK_NUMBER.find(out).text()).isEqualTo("7");
         assertThat(TextSlot.CHEST_NUMBER.find(out).text()).isEqualTo("7");
-        // Ida y vuelta: la vista realista muestra exactamente lo que se eligió.
-        // ("principal" es la zona del buzo: sigue al color de la camiseta.)
         assertThat(ViewSync.view(out).spec()).isEqualTo(after.withColor("principal", "#1F5FFF"));
 
-        // Sin nombre ni número: se quitan del 3D.
         RealisticSpec cleared = ViewSync.view(out).spec().withName(null).withNumber(null);
         DesignDocument none = ViewSync.applyRealistic(out, ViewSync.view(out).spec(), cleared);
         assertThat(TextSlot.BACK_NAME.find(none)).isNull();
@@ -95,14 +86,11 @@ class ViewSyncTest {
     @Test
     void cutEquivalences() {
         DesignDocument d = kit3d();
-        // Manga larga en 3D ↔ foto "Manga larga" (existe para el hombre).
         DesignDocument longSleeve = ViewSync.normalize(d.withCut(d.cut().withSleeve(Sleeve.LARGA)));
         assertThat(ViewSync.view(longSleeve).modelKey()).isEqualTo("mangalarga_hombre_frente");
         assertThat(ViewSync.view(longSleeve).notices()).isEmpty();
-        // Short largo en 3D ↔ foto "Short largo".
         DesignDocument longShorts = ViewSync.normalize(d.withCut(d.cut().withShorts(ShortsLength.LARGO)));
         assertThat(ViewSync.view(longShorts).modelKey()).isEqualTo("shortlargo_hombre_frente");
-        // Y al revés: elegir la foto cambia el corte del 3D.
         RealisticSpec s = ViewSync.view(d).spec();
         DesignDocument fromPhoto = ViewSync.applyRealistic(d, s, s.withModel("mangalarga_hombre_frente"));
         assertThat(fromPhoto.cut().sleeve()).isEqualTo(Sleeve.LARGA);
@@ -112,7 +100,6 @@ class ViewSyncTest {
                 ViewSync.view(fromPhoto).spec().withModel("futbol_hombre_frente"));
         assertThat(back.cut().sleeve()).isEqualTo(Sleeve.CORTA);
 
-        // Sin foto (manga larga de mujer, short corto, tobilleras): la foto más parecida y un aviso.
         DesignDocument woman = ViewSync.applyRealistic(d, s, s.withModel("futbol_mujer_frente"));
         woman = ViewSync.normalize(woman.withCut(new GarmentCut(Sleeve.LARGA, ShortsLength.CORTO, SocksLength.TOBILLERA)));
         RealisticView wv = ViewSync.view(woman);
@@ -120,7 +107,6 @@ class ViewSyncTest {
         assertThat(wv.notices()).contains("Manga larga: ver en Vista 3D", "Short corto: ver en Vista 3D",
                 "Medias tobilleras: ver en Vista 3D");
         assertThat(woman.realisticPhotosMatch()).as("las fotos del pedido salen del 3D").isFalse();
-        // Los colores de la foto siguen siendo los del diseño.
         assertThat(wv.spec().color("camiseta")).isEqualTo("#D7192A");
     }
 
@@ -142,7 +128,6 @@ class ViewSyncTest {
     @Test
     void whatThePhotoCannotShowGivesANoticeNeverOtherColors() {
         DesignDocument d = kit3d();
-        // Diseño que solo existe en foto: el 3D queda liso con aviso; si el 3D elige rayas, la foto también.
         RealisticSpec s = ViewSync.view(d).spec();
         DesignDocument dyn = ViewSync.applyRealistic(d, s, s.withPattern("dinamico"));
         assertThat(dyn.pattern(Garment.JERSEY).type()).isEqualTo(PatternType.LISO);
@@ -152,19 +137,16 @@ class ViewSyncTest {
                 dyn.pattern(Garment.JERSEY).withType(PatternType.FRANJAS_VERTICALES)));
         assertThat(ViewSync.view(striped).spec().pattern()).isEqualTo("rayas");
 
-        // Cuadros (sin foto): la foto lisa con aviso.
         DesignDocument checks = ViewSync.normalize(d.withPattern(Garment.JERSEY,
                 d.pattern(Garment.JERSEY).withType(PatternType.CUADROS)));
         assertThat(ViewSync.view(checks).spec().pattern()).isEqualTo("liso");
         assertThat(ViewSync.view(checks).notices()).contains("Diseño cuadros: ver en Vista 3D");
 
-        // Tela, mangas de otro color, nombre movido.
         DesignDocument other = ViewSync.normalize(d.withMaterial(MaterialSlot.JERSEY, "MALLA")
                 .withColor(Zone.JERSEY_SLEEVES, "#FFFFFF")
                 .replaceElement(TextSlot.BACK_NAME.find(d).at(0.5, 0.6)));
         assertThat(ViewSync.view(other).notices()).contains("Tela malla deportiva: ver en Vista 3D",
                 "Mangas de otro color: ver en Vista 3D", "Posición del nombre: ver en Vista 3D");
-        // Detalles que la foto no recolorea (cuello neón del diseño por defecto).
         DesignDocument collar = ViewSync.normalize(d.withColor(Zone.JERSEY_COLLAR, "#39FF88"));
         assertThat(ViewSync.view(collar).notices()).contains("Color del cuello y los puños: ver en Vista 3D");
         assertThat(collar.realisticPhotosMatch()).isFalse();
@@ -173,20 +155,17 @@ class ViewSyncTest {
     @Test
     void oneObservableDocumentForBothViewsInTheViewModel() {
         DesignerViewModel vm = new DesignerViewModel(null, null, Clock.systemUTC());
-        // 3D → realista al instante.
         vm.edit("Color", d -> d.withColor(Zone.JERSEY_BODY, "#D7192A"), null);
         vm.edit("Manga larga", d -> d.withCut(d.cut().withSleeve(Sleeve.LARGA)), null);
         assertThat(vm.realistic().color("camiseta")).isEqualTo("#D7192A");
         assertThat(vm.realistic().modelKey()).isEqualTo("mangalarga_hombre_frente");
         assertThat(vm.doc().realistic()).isEqualTo(vm.realistic());
-        // Realista → 3D al instante.
         vm.editRealistic("Nombre", s -> s.withName("GUERRERO").withNumber(10), null);
         assertThat(TextSlot.BACK_NAME.find(vm.doc()).text()).isEqualTo("GUERRERO");
         assertThat(TextSlot.CHEST_NUMBER.find(vm.doc()).text()).isEqualTo("10");
         vm.editRealistic("Categoría", s -> s.withModel("futbol_mujer_frente"), null);
         assertThat(vm.personaProperty().get()).hasToString("Mujer");
         assertThat(vm.realisticView().notices()).contains("Manga larga: ver en Vista 3D");
-        // Deshacer devuelve las dos vistas a la vez.
         vm.undo();
         vm.undo();
         assertThat(TextSlot.BACK_NAME.find(vm.doc())).isNull();
@@ -195,7 +174,6 @@ class ViewSyncTest {
 
     @Test
     void designsSavedBeforeStage11OpenWithBothViewsInSync() {
-        // Esquema 3: la vista realista se había hecho aparte (roja con rayas), el 3D quedó como venía.
         DesignDocument old = DesignDefaults.document(BodyType.ADULTO_HOMBRE).withRealistic(new RealisticSpec(
                 "futbol_hombre_frente", java.util.Map.of("camiseta", "#D7141E", "short", "#0B0E13",
                 "paneles", "#0B0E13", "medias", "#D7141E"), "rayas", "#F2F5F8", "QUISPE", 10));

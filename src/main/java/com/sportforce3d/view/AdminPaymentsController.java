@@ -27,7 +27,6 @@ import org.kordamp.ikonli.feather.Feather;
 import java.time.Instant;
 import java.util.List;
 
-/** Administración → Pagos: cola de verificación (los más antiguos primero) y pagos ya resueltos. */
 public class AdminPaymentsController {
 
     private final AppContext context;

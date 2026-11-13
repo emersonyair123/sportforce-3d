@@ -1,4 +1,3 @@
-"""Renders rápidos (Workbench) para revisar la tela mientras se ajusta la simulación."""
 import math
 
 import bpy
@@ -6,7 +5,6 @@ from mathutils import Vector
 
 
 def camara(nombre, objetivo, distancia, azimut, elevacion=5.0, lente=50):
-    """Cámara mirando a ``objetivo`` (Blender) desde el azimut dado (0 = frente de la persona, que mira a -Y)."""
     cam = bpy.data.objects.get(nombre)
     if cam is None:
         cam = bpy.data.objects.new(nombre, bpy.data.cameras.new(nombre))

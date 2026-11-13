@@ -24,34 +24,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Prendas con la caída de la tela simulada en Blender ({@code tools/blender/generar_prendas.py}): una carpeta por
- * persona y corte en {@code resources/models/prendas/<persona>/<corte>/} con {@code prenda.obj} (un objeto por zona,
- * con las islas UV de UvLayout), {@code ao.png} (oclusión ambiental horneada con Cycles) y {@code normal.png}
- * (normal map de los pliegues). Las que faltan se ajustan con {@link OutfitFitter} como antes.
- *
- * <p>Etapa 10: cada largo es otra carpeta ({@link #folder(Persona, Garment, GarmentCut)}): manga larga
- * {@code camiseta_futbol_v_larga}, short {@code short_futbol_corto}/{@code short_futbol_largo} y medias
- * {@code medias_futbol_tobillera}/{@code medias_futbol_media}; el corte de siempre no lleva sufijo.
- */
 public final class SimulatedGarments {
 
     private static final Logger log = LoggerFactory.getLogger(SimulatedGarments.class);
 
-    /** Corte de cada prenda simulada (nombre de la carpeta). */
     static final Map<Garment, String> CUTS = Map.of(Garment.JERSEY, "camiseta_futbol_v", Garment.SHORTS, "short_futbol",
             Garment.SOCKS, "medias_futbol");
 
-    /** Bordes de la tela (cuello, puños, bastas): el Solidify los cierra con una cara casi perpendicular. */
     private static final double RIM_COS = Math.cos(Math.toRadians(70));
 
-    /**
-     * Una prenda simulada.
-     *
-     * @param zones    mallas por zona (espacio de JavaFX, como el resto del visor)
-     * @param shading  oclusión y normal map horneados
-     * @param openings puntos de los bordes de la tela (espacio del modelo), por donde la piel se puede ver
-     */
     public record Piece(Map<Zone, List<Part>> zones, ClothShading shading, List<Vec3> openings) {
     }
 
@@ -62,7 +43,6 @@ public final class SimulatedGarments {
         return folder(persona, garment, GarmentCut.DEFAULT);
     }
 
-    /** Carpeta de la prenda con ese largo (el corte de siempre no lleva sufijo). */
     static String folder(Persona persona, Garment garment, GarmentCut cut) {
         String suffix = switch (garment) {
             case JERSEY -> cut.sleeve() == GarmentCut.Sleeve.LARGA ? "_larga" : "";
@@ -90,15 +70,10 @@ public final class SimulatedGarments {
                 && SimulatedGarments.class.getResource(folder(persona, garment, cut) + "prenda.obj") != null;
     }
 
-    /** Prendas simuladas de la persona que estén empaquetadas (vacío si ninguna). Lento: segundo plano. */
     public static Map<Garment, Piece> load(Persona persona) {
         return load(persona, GarmentCut.DEFAULT);
     }
 
-    /**
-     * Prendas simuladas con el largo pedido; si falta una variante se usa la de siempre (con un aviso en el
-     * registro) para que el diseñador siga funcionando.
-     */
     public static Map<Garment, Piece> load(Persona persona, GarmentCut cut) {
         Map<Garment, Piece> out = new EnumMap<>(Garment.class);
         for (Garment g : CUTS.keySet()) {
@@ -113,7 +88,6 @@ public final class SimulatedGarments {
             try {
                 out.put(g, read(persona, g, use));
             } catch (IOException | RuntimeException e) {
-                // Sin la prenda simulada se usa el ajuste de OutfitFitter: el diseñador sigue funcionando.
                 log.warn("No se pudo cargar la prenda simulada {}: {}", folder(persona, g, use), e.toString());
             }
         }
@@ -146,11 +120,9 @@ public final class SimulatedGarments {
         return new Piece(data.zones(), ClothShading.fromMaps(ao, normal), openings);
     }
 
-    /** Puntos (espacio del modelo) de las aristas donde la tela dobla en ángulo cerrado: el canto de los bordes. */
     static List<Vec3> rims(MeshData mesh) {
         float[] p = mesh.points();
         int[] f = mesh.faces();
-        // El OBJ trae cada esquina por separado: se sueldan los puntos en la misma posición (0,01 mm).
         Map<List<Integer>, Integer> ids = new HashMap<>();
         int[] canon = new int[mesh.pointCount()];
         List<Integer> first = new ArrayList<>();

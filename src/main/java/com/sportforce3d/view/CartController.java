@@ -79,7 +79,6 @@ public class CartController {
         thumb.getStyleClass().add("sf-thumb");
         thumb.setMinSize(88, 110);
         thumb.setMaxSize(88, 110);
-        // Las líneas personalizadas muestran la captura frontal del diseño, recortada al uniforme.
         ImageView designView = line.hasDesign()
                 ? ProductImages.designCapture(context.storage(), line.designThumbnail(), 88, 110) : null;
         Image image = line.hasDesign() ? null : ProductImages.load(context.storage(), line.imagePath(), 88, 110);
@@ -140,7 +139,6 @@ public class CartController {
         stepper.setMax(Math.max(1, Math.min(99, Math.max(line.available(), line.quantity()))));
         stepper.setValue(line.quantity());
         stepper.setDisable(!line.purchasable());
-        // Espera un instante antes de guardar para no escribir en cada clic.
         PauseTransition debounce = new PauseTransition(Duration.millis(400));
         debounce.setOnFinished(e -> viewModel.updateQuantity(line.itemId(), stepper.getValue(),
                 message -> Toast.error(layout, message)));

@@ -33,7 +33,6 @@ public class AccountController {
         this.viewModel = new AccountViewModel(context.accountService(), context.session());
     }
 
-    /** El shell lo usa para refrescar el nombre de la barra superior. */
     public void setOnProfileSaved(Runnable callback) {
         this.onProfileSaved = callback;
     }

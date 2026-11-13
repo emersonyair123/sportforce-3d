@@ -14,7 +14,6 @@ import javafx.scene.layout.VBox;
 
 import java.util.Map;
 
-/** Formulario de dirección de envío (crear o editar). */
 final class AddressForm extends VBox {
 
     private final Label title = new Label();
@@ -86,7 +85,6 @@ final class AddressForm extends VBox {
         isDefault.setSelected(a != null && a.isDefault());
     }
 
-    /** Prefill útil para la primera dirección: nombre y celular de la cuenta. */
     void prefill(String fullName, String phoneNumber) {
         if (recipient.getText() == null || recipient.getText().isBlank()) {
             recipient.setText(fullName);

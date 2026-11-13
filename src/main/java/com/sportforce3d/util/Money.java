@@ -3,7 +3,6 @@ package com.sportforce3d.util;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-/** Formato de soles de la guía: "S/ 129.90" (espacio tras S/, dos decimales, punto decimal). */
 public final class Money {
 
     private Money() {
@@ -15,20 +14,14 @@ public final class Money {
         return sign + "S/ " + groupThousands(abs / 100) + "." + String.format("%02d", abs % 100);
     }
 
-    /** Recargo de material: "+ S/ 15.00" o "Incluido" si es cero. */
     public static String surcharge(long cents) {
         return cents == 0 ? "Incluido" : "+ " + format(cents);
     }
 
-    /** Monto para un campo de texto editable: 12990 → "129.90". */
     public static String toInput(long cents) {
         return BigDecimal.valueOf(cents, 2).toPlainString();
     }
 
-    /**
-     * Lee un monto escrito por una persona: "129.90", "129,90", "S/ 129.9", "1,299.00" o "129".
-     * Devuelve los céntimos o lanza IllegalArgumentException si no es un monto válido.
-     */
     public static long parse(String text) {
         if (text == null) {
             throw new IllegalArgumentException("Monto vacío");

@@ -13,7 +13,6 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Modelos reales de resources/models/realista (decodificados con ImageIO para no depender de JavaFX). */
 class RecolorServiceTest {
 
     static final RealisticModelRepository.ImageDecoder IMAGE_IO = in -> {
@@ -85,7 +84,7 @@ class RecolorServiceTest {
         RecolorRequest green = RecolorRequest.of("voley_mujer_frente", Map.of("camiseta", "#39ff88"));
         service.renderPixels(red);
         service.renderPixels(blue);
-        service.renderPixels(red); // rojo pasa a ser el más reciente
+        service.renderPixels(red);
         service.renderPixels(green);
         assertThat(service.isCached(red)).isTrue();
         assertThat(service.isCached(green)).isTrue();
@@ -167,7 +166,6 @@ class RecolorServiceTest {
         repo.layers(key);
         long[] times = new long[25];
         for (int run = -10; run < times.length; run++) {
-            // Color distinto en cada vuelta: nunca sale de la caché.
             String shirt = String.format("#%06x", 0x102030 + Math.abs(run) * 0x010101 + (run < 0 ? 0x400000 : 0));
             Map<String, String> colors = new LinkedHashMap<>();
             colors.put("camiseta", shirt);

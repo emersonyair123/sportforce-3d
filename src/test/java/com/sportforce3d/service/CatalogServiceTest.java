@@ -36,7 +36,6 @@ class CatalogServiceTest {
     @Test
     void paginatesTheWholeCatalogFromTheDatabase() {
         Page<ProductSummary> first = f.catalog.search(ProductQuery.all());
-        // 26 de V2 + 42 de catalogo.json (V6; otros 2 ya existían con el mismo nombre y se actualizaron).
         assertThat(first.total()).as("68 - SF-BUZ-001 (V8)").isEqualTo(67);
         assertThat(first.totalPages()).isEqualTo(6);
         assertThat(first.items()).hasSize(12);

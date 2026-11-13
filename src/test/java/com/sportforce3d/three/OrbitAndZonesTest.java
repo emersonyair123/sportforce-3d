@@ -38,7 +38,7 @@ class OrbitAndZonesTest {
         OrbitState current = new OrbitState(0, 0, 4, Vec3.ZERO);
         OrbitState goal = new OrbitState(180, 20, 2, new Vec3(0, 1, 0));
         double frame = 1 / 60.0;
-        for (int i = 0; i < 20; i++) { // ~0.33 s
+        for (int i = 0; i < 20; i++) {
             current.approach(goal, OrbitState.alpha(frame, 11));
         }
         assertThat(current.yaw()).isGreaterThan(170);

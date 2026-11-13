@@ -18,19 +18,14 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
-/** Modelo predeterminado: maniquí y uniforme generados por código, con UV y zonas con nombre fijo. */
 public final class ProceduralModelProvider implements ModelProvider {
 
     private static final Logger log = LoggerFactory.getLogger(ProceduralModelProvider.class);
 
-    /** Altura (espacio de diseño de {@link BodyShape}) bajo la cual el short pasa de la pelvis a cada pierna. */
     public static final double SHORTS_CROTCH = GarmentGenerator.CROTCH;
-    /** Altura de diseño bajo la cual la pelvis del short conserva su sección (no se angosta hacia la entrepierna). */
     public static final double SHORTS_HIP_FREEZE = GarmentGenerator.HIP_FREEZE;
-    /** Alturas de diseño entre las que la camiseta cae recta desde el pecho en vez de seguir el cuerpo. */
     public static final double JERSEY_DRAPE_TOP = GarmentGenerator.DRAPE_TOP;
     public static final double JERSEY_DRAPE_BOTTOM = GarmentGenerator.DRAPE_BOTTOM;
-    /** Altura de diseño de la axila: donde la manga se une al cuerpo de la camiseta. */
     public static final double ARMPIT = GarmentGenerator.ARMPIT;
 
     @Override
@@ -43,7 +38,6 @@ public final class ProceduralModelProvider implements ModelProvider {
         long start = System.nanoTime();
         BodyShape b = BodyShape.of(type);
 
-        // Cada pieza es independiente: se generan en paralelo.
         CompletableFuture<List<Part>> mannequin = async(() -> MannequinGenerator.build(b));
         Map<Zone, CompletableFuture<MeshData>> jobs = new EnumMap<>(Zone.class);
         jobs.put(Zone.JERSEY_BODY, async(() -> GarmentGenerator.jerseyBody(b)));

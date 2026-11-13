@@ -28,7 +28,6 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
 
-/** "Mis diseños": tarjetas con la captura frontal, versión y fecha; abrir, duplicar y eliminar. */
 public class DesignsController {
 
     private static final double CARD_WIDTH = 248;
@@ -84,7 +83,6 @@ public class DesignsController {
                 ImageView view = new ImageView(image);
                 view.setFitWidth(CARD_WIDTH);
                 view.setFitHeight(CARD_WIDTH * 4 / 3);
-                // La captura es de cuerpo completo con el encuadre del visor: se recorta al centro en 3:4.
                 Runnable crop = () -> {
                     double w = image.getWidth();
                     double h = image.getHeight();
@@ -105,7 +103,6 @@ public class DesignsController {
                 thumb.getChildren().setAll(view);
             }
         }
-        // Esquinas superiores redondeadas también para la imagen (el fondo ya las tiene por CSS).
         javafx.scene.shape.Rectangle clip = new javafx.scene.shape.Rectangle();
         clip.widthProperty().bind(thumb.widthProperty());
         clip.heightProperty().bind(thumb.heightProperty().add(30));

@@ -20,15 +20,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Carga las personas de {@code resources/models/humanos} con {@link ObjMtlReader} y sus texturas. Guarda en caché
- * las dos últimas (cada una ocupa ~50 MB con sus texturas de 2048 px). Llamar {@link #load} en segundo plano.
- */
 public final class HumanModels {
 
     private static final Logger log = LoggerFactory.getLogger(HumanModels.class);
     private static final int CACHE_SIZE = 2;
-    /** MakeHuman exporta Ks casi nulo en la piel: un mínimo de brillo evita que se vea como yeso. */
     private static final double MIN_SPECULAR = 0.08;
 
     private static final Map<Persona, HumanModel> CACHE = new LinkedHashMap<>(4, 0.75f, true) {
@@ -38,7 +33,6 @@ public final class HumanModels {
         }
     };
 
-    /** Persona vestida por corte (manga y largos): al alternar entre dos cortes no se vuelve a ajustar. */
     private record DressKey(Persona persona, GarmentCut cut) {
     }
 
@@ -52,16 +46,10 @@ public final class HumanModels {
     private HumanModels() {
     }
 
-    /**
-     * Persona con el uniforme del maniquí procedural de su talla ({@link Persona#fallback()}) ajustado a su cuerpo,
-     * en caché; la camiseta y el short simulados en Blender ({@link SimulatedGarments}) reemplazan a los ajustados
-     * cuando la persona los tiene. Lento la primera vez (carga + ajuste): segundo plano.
-     */
     public static OutfitFitter.DressedPerson dress(Persona persona) {
         return dress(persona, GarmentCut.DEFAULT);
     }
 
-    /** Igual, con la manga y los largos del diseño (prendas simuladas de esa variante). */
     public static OutfitFitter.DressedPerson dress(Persona persona, GarmentCut cut) {
         DressKey key = new DressKey(persona, cut);
         synchronized (DRESSED) {
@@ -82,12 +70,10 @@ public final class HumanModels {
         return dressed;
     }
 
-    /** true si el OBJ de la persona está empaquetado. */
     public static boolean available(Persona persona) {
         return persona != null && HumanModels.class.getResource(persona.objResource()) != null;
     }
 
-    /** Geometría y materiales sin texturas (no necesita JavaFX). */
     public static ObjMtlReader.Result readGeometry(Persona persona) {
         try (InputStream in = HumanModels.class.getResourceAsStream(persona.objResource())) {
             if (in == null) {
@@ -99,7 +85,6 @@ public final class HumanModels {
         }
     }
 
-    /** Persona en caché o recién cargada con sus texturas. */
     public static HumanModel load(Persona persona) {
         synchronized (CACHE) {
             HumanModel cached = CACHE.get(persona);
@@ -155,7 +140,6 @@ public final class HumanModels {
         }
     }
 
-    /** PNG con canal alfa (tipo de color 4 o 6) o con transparencia por paleta (chunk tRNS). */
     static boolean pngHasAlpha(byte[] png) {
         if (png.length < 33 || (png[0] & 0xFF) != 0x89 || png[1] != 'P' || png[2] != 'N' || png[3] != 'G') {
             return false;

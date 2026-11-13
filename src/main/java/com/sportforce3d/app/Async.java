@@ -11,10 +11,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-/**
- * Ejecuta trabajo de base de datos o BCrypt fuera del hilo de la interfaz con {@link Task} de JavaFX.
- * Los callbacks corren en el hilo de JavaFX.
- */
 public final class Async {
 
     private static final Logger log = LoggerFactory.getLogger(Async.class);
@@ -44,7 +40,6 @@ public final class Async {
         return task;
     }
 
-    /** Para pruebas o casos en que ya se está en el hilo de la interfaz. */
     public static void fx(Runnable action) {
         if (Platform.isFxApplicationThread()) {
             action.run();

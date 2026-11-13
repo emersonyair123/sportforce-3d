@@ -15,21 +15,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Consultas de los reportes. Igual que el dashboard, una venta es un pago APROBADO y cuenta el día de Lima en que se
- * aprobó ({@code date(verified_at, '-5 hours')}: Lima es UTC−5 todo el año). Cada pedido tiene a lo sumo un pago
- * aprobado (los rechazados abren uno nuevo).
- */
 public class ReportRepository {
-
-    /** Pedidos vendidos en [?, ?] con su día de venta y monto cobrado. */
     private static final String SOLD = """
             SELECT p.order_id, p.method, p.amount_cents, date(p.verified_at, '-5 hours') AS day
             FROM payments p
             WHERE p.status = 'APROBADO' AND date(p.verified_at, '-5 hours') BETWEEN ? AND ?
             """;
 
-    /** Totales de un día o mes. */
     public record PeriodTotal(int orders, int units, long totalCents) {
     }
 
@@ -59,10 +51,6 @@ public class ReportRepository {
         });
     }
 
-    /**
-     * Ventas por periodo, clave = 'YYYY-MM-DD' (por día) o 'YYYY-MM' (por mes). Solo periodos con ventas: el service
-     * completa los vacíos.
-     */
     public Map<String, PeriodTotal> byPeriod(LocalDate from, LocalDate to, boolean monthly) {
         String key = monthly ? "substr(s.day, 1, 7)" : "s.day";
         return db.withConnection(c -> {
@@ -84,7 +72,6 @@ public class ReportRepository {
         });
     }
 
-    /** Ventas de productos (sin envío) por categoría actual del producto, de mayor a menor. */
     public List<CategoryRow> byCategory(LocalDate from, LocalDate to) {
         return db.withConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement("""
@@ -107,7 +94,6 @@ public class ReportRepository {
         });
     }
 
-    /** Ventas por producto (incluye recargos de diseño), de mayor a menor. Nombre y SKU actuales del producto. */
     public List<ProductRow> byProduct(LocalDate from, LocalDate to) {
         return db.withConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement("""

@@ -18,10 +18,6 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * El uniforme del maniquí ajustado a cada persona: conserva mallas y UV, queda por fuera de la piel (lo visible),
- * sin picos, las zapatillas cubren los pies y la piel tapada se oculta.
- */
 class OutfitFitterTest {
 
     private static final Map<Persona, Fitted> FITS = new EnumMap<>(Persona.class);
@@ -40,7 +36,6 @@ class OutfitFitterTest {
         }
     }
 
-    /** Persona sin texturas (las pruebas no inician JavaFX). */
     static HumanModel geometryOnly(Persona p) {
         ObjMtlReader.Result r = HumanModels.readGeometry(p);
         List<HumanModel.Part> parts = new ArrayList<>();
@@ -57,12 +52,8 @@ class OutfitFitterTest {
         return new HumanModel(p, parts, r.min()[1], r.height());
     }
 
-    /**
-     * Fracción de vértices a no menos de 0.5 mm por fuera de la piel y la mayor distancia de ellos a la piel.
-     */
     private static double[] stats(Fitted f, Zone zone) {
         TriangleIndex.Query q = f.skin().query();
-        // La manga nace dentro del hombro, tapada por el cuerpo de la camiseta: ahí no cuenta.
         TriangleIndex.Query body = TriangleIndex.of(f.dressed().outfit().zones().get(Zone.JERSEY_BODY).stream()
                 .map(ModelData.Part::mesh).toList(), 0.02).query();
         int outside = 0;
@@ -100,7 +91,6 @@ class OutfitFitterTest {
             for (int i = 0; i < parts.size(); i++) {
                 MeshData a = parts.get(i).mesh();
                 MeshData b = f.dressed().outfit().zones().get(zone).get(i).mesh();
-                // Las bastas (ruedo de camiseta y short) agregan puntos y caras al final: lo original queda igual.
                 assertThat(b.pointCount()).as("%s puntos", zone).isGreaterThanOrEqualTo(a.pointCount());
                 assertThat(b.texCoords()).as("%s UV", zone).isEqualTo(a.texCoords());
                 if (zone == Zone.JERSEY_BODY || zone == Zone.SHORTS_BASE) {
@@ -108,7 +98,6 @@ class OutfitFitterTest {
                     assertThat(java.util.Arrays.copyOf(b.faces(), a.faces().length)).as("%s caras", zone)
                             .isEqualTo(a.faces());
                 } else if (zone.garment() == Garment.SOCKS) {
-                    // La punta de la media, dentro de la zapatilla, se quita.
                     assertThat(b.faceCount()).isLessThanOrEqualTo(a.faceCount()).isGreaterThan(a.faceCount() / 2);
                 } else {
                     assertThat(b.faces()).as("%s caras", zone).isEqualTo(a.faces());
@@ -126,12 +115,6 @@ class OutfitFitterTest {
                 continue;
             }
             double[] s = stats(f, z);
-            // La cara interior de la pelvis del short va dentro del cuerpo a propósito (como en el maniquí): para
-            // el short cuenta la prueba de rayos de abajo.
-            // El cuerpo se suaviza sin volver a empujarlo fuera de la piel (marcaría pezones y columna): puede pasar
-            // por debajo de algún relieve pequeño, cuya piel se oculta. La prueba de rayos comprueba que no se vea.
-            // La manga es un tubo que sigue por el eje dentro del hombro y bajo la axila (entre brazo y torso): esa
-            // parte no se ve. Medido: 96.6–98.5 % de sus vértices quedan fuera de la piel o bajo el cuerpo.
             double min = z == Zone.JERSEY_BODY ? 0.99 : z == Zone.JERSEY_SLEEVES ? 0.95 : 0.995;
             if (z != Zone.SHORTS_BASE) {
                 assertThat(s[0]).as("%s %s: vértices por fuera de la piel", p, z).isGreaterThanOrEqualTo(min);
@@ -140,10 +123,6 @@ class OutfitFitterTest {
         }
     }
 
-    /**
-     * Mirando de frente y de espaldas (±50°), un rayo horizontal que llega desde afuera a la altura del short o de la
-     * camiseta toca primero la tela, no la piel. (De costado los brazos y las manos taparían el torso.)
-     */
     @ParameterizedTest
     @EnumSource(Persona.class)
     void laPielNoAsomaPorLaRopa(Persona p) {
@@ -182,7 +161,6 @@ class OutfitFitterTest {
         assertThat((double) skinFirst / rays).as("%s: rayos que ven piel antes que tela", p).isLessThan(0.01);
     }
 
-    /** Del ruedo del short al cuello de la camiseta (alto mínimo de la camiseta en el pecho: hasta la axila). */
     private static double[] heightRange(List<ModelData.Part> shorts, List<ModelData.Part> jersey) {
         double lo = -Double.MAX_VALUE;
         for (var part : shorts) {
@@ -200,7 +178,6 @@ class OutfitFitterTest {
                 hi = Math.max(hi, -pts[i + 1]);
             }
         }
-        // Hasta un 80 % del alto: por encima el escote en V deja ver piel a propósito.
         return new double[]{lo, lo + (hi - lo) * 0.8};
     }
 
@@ -246,7 +223,6 @@ class OutfitFitterTest {
         assertThat((b.crotch - b.floor) / h).isBetween(0.40, 0.52);
         assertThat((b.armpit - b.floor) / h).isBetween(0.68, 0.80);
         assertThat(b.neck).isBetween(b.armpit + 0.03 * h, b.top - 0.12 * h);
-        // Brazos en pose A: hacia afuera y hacia abajo.
         assertThat(b.armDirection(1, 0).x()).isGreaterThan(0.3);
         assertThat(b.armDirection(-1, 0).x()).isLessThan(-0.3);
         assertThat(b.armDirection(1, 0).y()).isLessThan(-0.3);

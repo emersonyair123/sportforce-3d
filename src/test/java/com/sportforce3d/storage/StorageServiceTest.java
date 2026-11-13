@@ -19,7 +19,7 @@ class StorageServiceTest {
 
     @Test
     void detectsTypeByContentNotByExtension() throws Exception {
-        Path jpeg = tempDir.resolve("foto.png"); // extensión engañosa
+        Path jpeg = tempDir.resolve("foto.png");
         Files.write(jpeg, new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0, 0, 0});
         Path svg = tempDir.resolve("escudo.svg");
         Files.writeString(svg, "<?xml version=\"1.0\"?><svg xmlns=\"http://www.w3.org/2000/svg\"></svg>");

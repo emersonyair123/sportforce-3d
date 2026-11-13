@@ -45,7 +45,6 @@ class ProceduralModelTest {
         });
         assertThat(model.mannequin()).extracting(ModelData.Part::name)
                 .contains("mannequin_torso", "mannequin_head", "mannequin_arm_l", "mannequin_leg_r");
-        // Suficientes segmentos para normales suaves (no "cilindros básicos").
         assertThat(model.totalFaces()).isGreaterThan(250_000);
         assertThat(model.focus().keySet()).contains(Garment.values());
     }
@@ -95,7 +94,6 @@ class ProceduralModelTest {
         int front = 0;
         int back = 0;
         for (int i = 0; i < f.length; i += MeshData.FACE_STRIDE) {
-            // Centro de la cara en coordenadas del modelo (+Z = frente; JavaFX invierte Z).
             double z = -(p[f[i] * 3 + 2] + p[f[i + 3] * 3 + 2] + p[f[i + 6] * 3 + 2]) / 3;
             double u = (t[f[i + 2] * 2] + t[f[i + 5] * 2] + t[f[i + 8] * 2]) / 3;
             if (z > 0.03) {

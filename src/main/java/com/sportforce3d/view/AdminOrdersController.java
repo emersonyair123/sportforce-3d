@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-/** Administración → Pedidos: lista filtrable por estado y texto. Parámetro opcional: estado inicial. */
 public class AdminOrdersController implements Router.Routable {
 
     private final AppContext context;

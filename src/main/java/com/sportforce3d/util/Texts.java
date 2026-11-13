@@ -10,7 +10,6 @@ public final class Texts {
     private Texts() {
     }
 
-    /** Minúsculas y sin tildes, igual que la columna products.search_key ("Fútbol" → "futbol"). */
     public static String searchKey(String text) {
         if (text == null) {
             return "";
@@ -23,7 +22,6 @@ public final class Texts {
         return text == null ? "" : text.toUpperCase(ES_PE);
     }
 
-    /** "SF-CAM-001" a partir de un texto libre: mayúsculas, sin tildes, solo letras, números y guiones. */
     public static String skuPart(String text) {
         return searchKey(text).toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9-]", "");
     }

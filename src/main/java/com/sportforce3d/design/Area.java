@@ -8,11 +8,6 @@ import com.sportforce3d.three.model.Zone;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * Zonas donde se puede colocar un nombre, número, emblema o logo. Cada una es una isla UV de la textura de su
- * prenda y conoce su tamaño físico aproximado en la prenda (m), para que lo que se dibuja no se deforme aunque la
- * isla tenga otra proporción en la textura. "Izquierda" y "derecha" son las del jugador.
- */
 public enum Area {
     JERSEY_FRONT("Pecho", Garment.JERSEY, Zone.JERSEY_BODY, UvLayout.JERSEY_FRONT, 0.47, 0.58),
     JERSEY_BACK("Espalda", Garment.JERSEY, Zone.JERSEY_BODY, UvLayout.JERSEY_BACK, 0.47, 0.58),
@@ -64,7 +59,6 @@ public enum Area {
         return heightMeters;
     }
 
-    /** Píxeles por metro en horizontal y vertical para una textura de {@code size} px. */
     public double pxPerMeterX(int size) {
         return (rect.u1() - rect.u0()) * size / widthMeters;
     }
@@ -77,7 +71,6 @@ public enum Area {
         return u >= rect.u0() && u <= rect.u1() && v >= rect.v0() && v <= rect.v1();
     }
 
-    /** Coordenada UV de textura → posición local 0..1 dentro de la zona (sin recortar). */
     public double[] toLocal(double u, double v) {
         return new double[]{(u - rect.u0()) / (rect.u1() - rect.u0()), (v - rect.v0()) / (rect.v1() - rect.v0())};
     }

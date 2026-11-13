@@ -3,15 +3,10 @@ package com.sportforce3d.design;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Tipografías para nombre y número: Barlow Condensed 800 (predeterminada) y tres alternativas, todas incluidas
- * en la aplicación (licencia OFL), así el diseño se ve igual en cualquier computadora.
- */
 public final class DesignFonts {
 
     public static final String DEFAULT = "BARLOW_CONDENSED_800";
 
-    /** clave → etiqueta para el selector. */
     public static final Map<String, String> LABELS = labels();
 
     private DesignFonts() {
@@ -26,7 +21,6 @@ public final class DesignFonts {
         return java.util.Collections.unmodifiableMap(m);
     }
 
-    /** Familia registrada en JavaFX y si va en negrita (ver app/Fonts). */
     public static String family(String key) {
         return switch (key == null ? DEFAULT : key) {
             case "BARLOW_CONDENSED_700" -> "Barlow Condensed";
@@ -36,7 +30,6 @@ public final class DesignFonts {
         };
     }
 
-    /** Archivo TTF en /fonts (el compositor de texturas dibuja con Java2D y carga la fuente él mismo). */
     public static String file(String key) {
         return switch (key == null ? DEFAULT : key) {
             case "BARLOW_CONDENSED_700" -> "BarlowCondensed-Bold.ttf";

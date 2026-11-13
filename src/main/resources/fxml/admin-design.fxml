@@ -11,7 +11,6 @@
 <HBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.sportforce3d.view.AdminDesignController" styleClass="sf-page">
 
-    <!-- Vista realista o visor 3D, de solo lectura -->
     <StackPane fx:id="stage" HBox.hgrow="ALWAYS" styleClass="sf-designer-stage">
         <HBox fx:id="toolbar" styleClass="sf-designer-toolbar" StackPane.alignment="TOP_CENTER"
               maxWidth="-Infinity" maxHeight="-Infinity">

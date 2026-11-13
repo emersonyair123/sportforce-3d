@@ -32,10 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/** Productos, variantes, imágenes e inventario. Sin reglas de permisos (eso es de la capa service). */
 public class ProductRepository {
-
-    /** Stock disponible, número de variantes, variante única y color principal de cada producto. */
     private static final String STOCK_JOIN = """
             LEFT JOIN (
                 SELECT v.product_id,
@@ -73,8 +70,6 @@ public class ProductRepository {
     public ProductRepository(Database db) {
         this.db = db;
     }
-
-    // ------------------------------------------------------------------ Catálogo público
 
     public Page<ProductSummary> search(ProductQuery query) {
         StringBuilder where = new StringBuilder();
@@ -171,8 +166,6 @@ public class ProductRepository {
         });
     }
 
-    /** Ficha completa, incluidas variantes inactivas. La capa service decide qué mostrar. */
-    /** Vista realista guardada del producto (modelo, colores por zona y diseño), si tiene. */
     public Optional<RealisticLook> findLook(long productId) {
         return db.withConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement(
@@ -282,7 +275,6 @@ public class ProductRepository {
         }
     }
 
-    /** Lo que el carrito necesita saber de una variante para agregarla. */
     public record VariantInfo(long variantId, long productId, String productName, String sizeName,
                               long unitPriceCents, int available, boolean purchasable) {
     }
@@ -312,8 +304,6 @@ public class ProductRepository {
             }
         });
     }
-
-    // ------------------------------------------------------------------ Administración
 
     public List<AdminProductRow> findForAdmin(String text, boolean includeDeleted) {
         StringBuilder sql = new StringBuilder("""
@@ -357,7 +347,6 @@ public class ProductRepository {
         });
     }
 
-    /** Variantes activas con disponible ≤ umbral, agrupadas por producto y ordenadas por talla. */
     private static Map<Long, List<LowStockVariant>> lowStockVariants(Connection c) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement("""
                 SELECT v.product_id, s.name AS size_name, v.color_name,
@@ -400,7 +389,6 @@ public class ProductRepository {
         });
     }
 
-    /** Crea o actualiza el producto con sus materiales y variantes en una sola transacción. Devuelve el id. */
     public long save(ProductForm form) {
         return db.inTransaction(c -> {
             long id;
@@ -529,7 +517,6 @@ public class ProductRepository {
         }
     }
 
-    /** Borrado lógico: el producto deja de verse en la tienda pero los pedidos antiguos lo conservan. */
     public void softDelete(long productId, Instant when) {
         db.withConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement(
@@ -550,7 +537,6 @@ public class ProductRepository {
         });
     }
 
-    /** Reemplaza los colores por zona de la foto realista (JSON zona → #rrggbb). */
     public void updateZoneColors(long productId, Map<String, String> zoneColors) {
         String json;
         try {
@@ -594,7 +580,6 @@ public class ProductRepository {
         });
     }
 
-    /** Borra el registro y devuelve la ruta del archivo para que el service lo elimine del disco. */
     public Optional<String> removeImage(long productId, long imageId) {
         return db.inTransaction(c -> {
             String path = null;
@@ -617,8 +602,6 @@ public class ProductRepository {
             return Optional.ofNullable(path);
         });
     }
-
-    // ------------------------------------------------------------------ Inventario
 
     public List<InventoryRow> findInventory(String text, boolean lowStockOnly) {
         StringBuilder sql = new StringBuilder("""
@@ -672,8 +655,6 @@ public class ProductRepository {
         });
     }
 
-    // ------------------------------------------------------------------ Mapeo
-
     private static ProductSummary mapSummary(ResultSet rs) throws SQLException {
         return new ProductSummary(
                 rs.getLong("id"),
@@ -697,7 +678,6 @@ public class ProductRepository {
     private static final TypeReference<LinkedHashMap<String, String>> ZONE_COLORS = new TypeReference<>() {
     };
 
-    /** Vista realista del producto; null si no tiene modelo (o su JSON de colores es inválido). */
     private static RealisticLook look(ResultSet rs) throws SQLException {
         String model = rs.getString("model_key");
         if (model == null || model.isBlank()) {

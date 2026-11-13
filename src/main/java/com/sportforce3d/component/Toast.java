@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Locale;
 
-/** Notificación breve abajo a la derecha. Se cierra sola a los 4 s (6 s si es error) o con clic. */
 public final class Toast {
 
     private static final Logger log = LoggerFactory.getLogger(Toast.class);

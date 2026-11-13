@@ -15,17 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-/**
- * Recolorea las fotos de {@link RealisticModelRepository} con la fórmula de {@link Recolor}, más diseños y textos
- * ({@link DesignOverlay}). Guarda los resultados en una caché LRU por (modelo + colores + diseño + texto) y
- * genera miniaturas para las tarjetas.
- * <p>
- * Los métodos {@code render…}/{@code thumbnail…} sincrónicos se llaman en segundo plano; los {@code …Async} usan
- * un {@link Task} ({@link Async#run}) y entregan la imagen en el hilo de JavaFX.
- */
 public final class RecolorService {
-
-    /** Memoria de la caché de imágenes recoloreadas (≈ 2.6 MB por foto completa de 720 × 900). */
     public static final long DEFAULT_CACHE_BYTES = 96L * 1024 * 1024;
 
     private final RealisticModelRepository models;
@@ -44,7 +34,6 @@ public final class RecolorService {
         return models;
     }
 
-    /** Foto recoloreada en tamaño completo (cualquier hilo; usa la caché). */
     public ArgbImage renderPixels(RecolorRequest req) {
         String key = req.cacheKey();
         ArgbImage cached = cache.get(key);
@@ -64,14 +53,12 @@ public final class RecolorService {
         return Recolor.compose(layers, colors, DesignOverlay.draw(model, req));
     }
 
-    /** Miniatura de {@code width} px de ancho con la proporción de la foto (cualquier hilo; usa la caché). */
     public ArgbImage thumbnailPixels(RecolorRequest req, int width) {
         String key = req.cacheKey() + "@" + width;
         ArgbImage cached = cache.get(key);
         if (cached != null) {
             return cached;
         }
-        // Si la foto completa no está en la caché, se calcula sin guardarla: las tarjetas solo necesitan la miniatura.
         ArgbImage full = cache.get(req.cacheKey());
         if (full == null) {
             full = compose(req);
@@ -99,18 +86,15 @@ public final class RecolorService {
         return Async.run(() -> thumbnail(req, width), onSuccess, onError);
     }
 
-    /** La miniatura si ya está en la caché (para mostrarla sin esperar a un Task); si no, null. */
     public Image cachedThumbnail(RecolorRequest req, int width) {
         ArgbImage cached = cache.get(req.cacheKey() + "@" + width);
         return cached == null ? null : toImage(cached);
     }
 
-    /** ¿Ya está en la caché? (para no mostrar un indicador de carga si la imagen sale al instante). */
     public boolean isCached(RecolorRequest req) {
         return cache.containsKey(req.cacheKey());
     }
 
-    /** Guarda la imagen como PNG (Java2D, cualquier hilo). */
     public static void writePng(ArgbImage img, Path file) throws IOException {
         BufferedImage out = new BufferedImage(img.width(), img.height(), BufferedImage.TYPE_INT_ARGB);
         out.setRGB(0, 0, img.width(), img.height(), img.pixels(), 0, img.width());
@@ -123,7 +107,6 @@ public final class RecolorService {
         }
     }
 
-    /** Copia los píxeles a una imagen de JavaFX nueva (cada llamada devuelve una imagen propia). */
     public static WritableImage toImage(ArgbImage img) {
         WritableImage out = new WritableImage(img.width(), img.height());
         out.getPixelWriter().setPixels(0, 0, img.width(), img.height(), PixelFormat.getIntArgbInstance(),

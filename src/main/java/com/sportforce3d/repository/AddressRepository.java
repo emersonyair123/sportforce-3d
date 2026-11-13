@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/** Direcciones de envío. Todas las consultas filtran por el usuario dueño. */
 public class AddressRepository {
 
     private static final String SELECT = """
@@ -55,7 +54,6 @@ public class AddressRepository {
         }
     }
 
-    /** Inserta o actualiza. Si es predeterminada (o la primera), las demás dejan de serlo. Devuelve el id. */
     public long save(long userId, Address a) {
         return db.inTransaction(c -> {
             long customerId = ensureCustomer(c, userId);
@@ -109,7 +107,6 @@ public class AddressRepository {
         });
     }
 
-    /** Crea la ficha de cliente si el usuario (p. ej. un ADMIN) aún no tiene una. */
     static long ensureCustomer(Connection c, long userId) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement("INSERT OR IGNORE INTO customers (user_id) VALUES (?)")) {
             ps.setLong(1, userId);
@@ -142,7 +139,6 @@ public class AddressRepository {
         }
     }
 
-    /** Si no queda ninguna predeterminada, marca la más antigua. */
     private static void ensureOneDefault(Connection c, long customerId) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement("""
                 UPDATE addresses SET is_default = 1

@@ -41,27 +41,16 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Lector SVG mínimo para emblemas y logos simples: path, circle, ellipse, rect, polygon, polyline, line, text
- * (con tspan) y g, con fill, stroke, opacidad y transformaciones básicas. No ejecuta scripts ni carga recursos
- * externos (XXE desactivado). Si un logo usa algo no soportado (degradados, filtros), se ignora esa parte;
- * para logos complejos conviene subir un PNG.
- */
 public final class SvgLoader {
-
-    /** Una figura ya resuelta (estilos heredados aplicados). */
     public record SvgShape(String kind, Map<String, String> attrs, String fill, String stroke, double strokeWidth,
                            double opacity, String transform, List<SvgShape> spans) {
     }
 
-    /** Documento: caja de vista y figuras en orden de dibujo. */
     public record SvgDoc(double minX, double minY, double width, double height, List<SvgShape> shapes) {
     }
 
     private SvgLoader() {
     }
-
-    // ---------------------------------------------------------------- Lectura (sin JavaFX)
 
     public static SvgDoc parse(InputStream in) {
         try {
@@ -112,7 +101,6 @@ public final class SvgLoader {
                         out.add(new SvgShape(tag, attrs(child), s.fill, s.stroke, s.strokeWidth, s.opacity, t, List.of()));
                 case "text" -> out.add(text(child, s, t));
                 default -> {
-                    // defs, style, title, metadata, linearGradient…: no se dibujan.
                 }
             }
         }
@@ -190,12 +178,6 @@ public final class SvgLoader {
         return Double.parseDouble(s.trim().replaceAll("(px|pt|%)$", ""));
     }
 
-    // ---------------------------------------------------------------- Dibujo (hilo de JavaFX)
-
-    /**
-     * Figuras de JavaFX del SVG. {@code recolor} reemplaza colores exactos (HEX en mayúsculas), p. ej. para pintar
-     * un emblema con los colores del uniforme.
-     */
     public static Group toNode(SvgDoc doc, Map<String, String> recolor) {
         Group g = new Group();
         for (SvgShape s : doc.shapes()) {
@@ -207,7 +189,6 @@ public final class SvgLoader {
         return g;
     }
 
-    /** Imagen del SVG con fondo transparente; el lado mayor mide {@code px}. */
     public static Image render(SvgDoc doc, int px, Map<String, String> recolor) {
         Group shapes = toNode(doc, recolor);
         double k = px / Math.max(doc.width(), doc.height());

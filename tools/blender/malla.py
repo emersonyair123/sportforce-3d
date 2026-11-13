@@ -1,11 +1,9 @@
-"""Malla en construcción (espacio del modelo) con zonas, UV por esquina y grupos de vértices."""
 import bmesh
 import bpy
 import numpy as np
 
 from cuerpo import a_blender
 
-# Islas UV de UvLayout.java (u0, v0, u1, v1), v hacia abajo como en la app.
 ISLAS = {
     "frente": (0.02, 0.02, 0.48, 0.54),
     "espalda": (0.52, 0.02, 0.98, 0.54),
@@ -33,7 +31,6 @@ ISLAS = {
 
 
 def isla(nombre, u, v):
-    """(u, v) locales 0..1 de una isla → UV de la textura (se recorta al borde para no pintar fuera)."""
     r = ISLAS[nombre]
     u = min(max(u, 0.0), 1.0)
     v = min(max(v, 0.0), 1.0)
@@ -47,9 +44,9 @@ def smoothstep(a, b, x):
 
 class Malla:
     def __init__(self, zonas):
-        self.zonas = list(zonas)  # nombres de objeto (jersey_body…) = materiales
+        self.zonas = list(zonas)
         self.v = []
-        self.caras = []  # (índices, uvs, zona)
+        self.caras = []
         self.grupos = {}
 
     def vert(self, p):
@@ -74,7 +71,6 @@ class Malla:
         return ady
 
     def empujar_afuera(self, cuerpo, holgura, fijos=()):
-        """Saca de la piel (más ``holgura``) todo vértice que quede dentro o demasiado cerca."""
         movidos = 0
         fijos = set(fijos)
         for i, p in enumerate(self.v):
@@ -88,7 +84,6 @@ class Malla:
         return movidos
 
     def orientar(self, cuerpo):
-        """Da vuelta las caras cuya normal apunta hacia el cuerpo (la tela siempre mira hacia afuera)."""
         vueltas = 0
         for k, (idx, uvs, zona) in enumerate(self.caras):
             pts = [self.v[i] for i in idx]
@@ -103,12 +98,7 @@ class Malla:
         return vueltas
 
     def relajar(self, solo, pasadas, factor=0.5, rectas=None):
-        """Reparte los vértices de ``solo`` sobre la superficie actual (suavizado tangencial: cada paso se vuelve a
-        llevar a la superficie de partida), para igualar la densidad sin cambiar la forma.
 
-        ``rectas``: vértices de un borde que solo se deslizan por una polilínea, {vértice: (puntos, anterior,
-        siguiente)}; se acomodan entre sus dos vecinos del borde.
-        """
         rectas = rectas or {}
 
         def sobre(pol, q):
@@ -155,10 +145,7 @@ class Malla:
             self.v = nuevo
 
     def crear(self, nombre, cuerpo=None):
-        """Objeto de Blender: un material por zona (índice = zona), UV "UVMap" y grupos de vértices.
 
-        Con ``cuerpo``, las caras quedan orientadas de forma coherente y hacia afuera (por mayoría frente a la piel).
-        """
         me = bpy.data.meshes.new(nombre)
         bm = bmesh.new()
         bv = [bm.verts.new(a_blender(p)) for p in self.v]

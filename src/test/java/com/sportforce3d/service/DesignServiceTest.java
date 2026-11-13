@@ -101,7 +101,6 @@ class DesignServiceTest {
         designs.delete(copy.id());
         assertThat(designs.myDesigns()).extracting(DesignSummary::id).containsExactly(mine.id());
 
-        // Un ADMIN puede abrir el diseño de un cliente (para revisar pedidos), no borrarlo.
         auth.logout();
         auth.login("admin@sportforce3d.pe", "Admin123!".toCharArray());
         assertThat(designs.open(mine.id()).summary().name()).isEqualTo("Mío");

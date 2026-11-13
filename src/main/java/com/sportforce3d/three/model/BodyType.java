@@ -1,6 +1,5 @@
 package com.sportforce3d.three.model;
 
-/** Tipos de maniquí del diseñador. {@code key} se usa para buscar modelos OBJ (resources/models/{key}.obj). */
 public enum BodyType {
     ADULTO_HOMBRE("adulto-hombre", "Adulto hombre"),
     ADULTO_MUJER("adulto-mujer", "Adulto mujer"),

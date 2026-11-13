@@ -3,7 +3,6 @@ package com.sportforce3d.component;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-/** Iconos Feather (trazo fino) de Ikonli. El color lo pone el CSS con -fx-icon-color. */
 public final class Icons {
 
     public static final int SM = 16;

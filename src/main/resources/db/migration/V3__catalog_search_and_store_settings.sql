@@ -1,6 +1,3 @@
--- SPORTFORCE 3D · Etapa 2: búsqueda sin tildes y configuración de la tienda.
-
--- Configuración editable de la tienda (montos en céntimos).
 CREATE TABLE store_settings (
     key        TEXT PRIMARY KEY,
     value      TEXT NOT NULL,
@@ -8,10 +5,9 @@ CREATE TABLE store_settings (
 );
 
 INSERT INTO store_settings (key, value) VALUES
-    ('shipping_flat_cents', '1500'),          -- envío a todo el Perú: S/ 15.00
-    ('free_shipping_from_cents', '29900');    -- gratis desde S/ 299.00
+    ('shipping_flat_cents', '1500'),
+    ('free_shipping_from_cents', '29900');
 
--- Texto de búsqueda normalizado (minúsculas, sin tildes). Lo mantiene ProductRepository con Texts.searchKey().
 ALTER TABLE products ADD COLUMN search_key TEXT NOT NULL DEFAULT '';
 
 UPDATE products SET search_key = lower(

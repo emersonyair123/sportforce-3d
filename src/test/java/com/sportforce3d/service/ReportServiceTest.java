@@ -23,7 +23,6 @@ import java.time.LocalDate;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Reportes de ventas por rango, categoría y producto; exportación a PDF y Excel; solo ADMIN. */
 class ReportServiceTest {
 
     private static final LocalDate OCT_17 = LocalDate.of(2026, 10, 17);
@@ -42,15 +41,11 @@ class ReportServiceTest {
         proof = tempDir.resolve("captura.png");
         Files.write(proof, new byte[]{(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0});
 
-        // 17/10 (Lima): 2 camisetas Pro (S/ 79.90) + envío S/ 15.00, aprobado a las 10:00 de Lima.
         sell("SF-CAM-001-M", 2, PaymentMethod.YAPE);
-        // Aprobado el 18/10 a las 04:30 UTC = 17/10 23:30 en Lima: también cuenta el 17.
         f.clock.advance(Duration.ofHours(13).plusMinutes(30));
         sell("SF-UFU-001-M", 1, PaymentMethod.PLIN);
-        // 18/10 a las 09:00 de Lima.
         f.clock.advance(Duration.ofHours(9).plusMinutes(30));
         sell("SF-CAM-001-L", 1, PaymentMethod.TRANSFERENCIA);
-        // Pedido sin pagar: no es venta.
         f.loginClient();
         f.cart.add(f.variantId("SF-CAM-002-M"), 3);
         f.orders.placeOrder(f.addresses.list().get(0).id(), PaymentMethod.YAPE, null);
@@ -136,9 +131,8 @@ class ReportServiceTest {
         String raw = new String(bytes, StandardCharsets.ISO_8859_1);
         assertThat(raw).contains("Barlow", "JetBrainsMono", "Reporte de ventas");
         try (var files = Files.list(pdf.getParent())) {
-            assertThat(files).containsExactly(pdf); // sin temporales a medias
+            assertThat(files).containsExactly(pdf);
         }
-        // Rango sin ventas: también se genera, con el aviso.
         assertThat(Files.size(f.reports.exportPdf(f.reports.sales(OCT_17.minusDays(3), OCT_17.minusDays(2)),
                 tempDir.resolve("vacio.pdf")))).isPositive();
     }

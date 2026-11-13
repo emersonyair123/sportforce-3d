@@ -39,7 +39,6 @@ public class RegisterViewModel {
             return;
         }
         clearErrors();
-        // Aviso inmediato; la validación que manda es la del service.
         fullNameError.set(orEmpty(Validators.fullName(fullName.get())));
         emailError.set(orEmpty(Validators.email(email.get())));
         phoneError.set(orEmpty(Validators.phone(phone.get())));

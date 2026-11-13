@@ -10,10 +10,6 @@ import javafx.scene.shape.StrokeLineJoin;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Ilustración plana de la prenda en el color del producto, para cuando aún no hay foto.
- * Las siluetas son originales (sin marcas de terceros) y se dibujan en una caja de 100 × 120.
- */
 public class GarmentArt extends StackPane {
 
     private static final String JERSEY = "M32 12 L43 7 Q50 15 57 7 L68 12 L92 28 L82 47 L72 41 L72 112 L28 112 L28 41 L18 47 L8 28 Z";
@@ -27,12 +23,7 @@ public class GarmentArt extends StackPane {
     private static final String SOCK_BAND = "M38 8 L62 8 L62 24 L38 24 Z";
     private static final String SHOE = "M6 82 Q8 62 26 58 L46 48 Q54 60 70 62 Q92 66 95 80 L95 88 L6 88 Z";
     private static final String SHOE_SOLE = "M5 88 L96 88 L96 96 Q96 99 92 99 L9 99 Q5 99 5 96 Z";
-    /**
-     * Ojales del cordón sobre el empeine. Antes eran tres trazos paralelos inclinados, que se parecían a una marca
-     * registrada; un zigzag se leía como una letra.
-     */
     private static final String SHOE_EYELETS = dots(new double[][]{{35, 60}, {40.5, 57}, {46, 54}, {52, 57.5}}, 1.9);
-    /** Refuerzo del talón (diseño propio). */
     private static final String SHOE_HEEL = "M6 82 Q7 68 16 62 L19 88 L6 88 Z";
     private static final String HOODIE = "M36 14 Q50 -2 64 14 L72 17 L95 72 L84 76 L72 46 L72 112 L28 112 L28 46 L16 76 L5 72 L28 17 Z";
     private static final String HOODIE_ZIP = "M49 22 L51 22 L51 112 L49 112 Z";
@@ -55,7 +46,6 @@ public class GarmentArt extends StackPane {
                 parts.add(path(JERSEY_CUFF_R, detail, null));
             }
             case KIT -> {
-                // Camiseta arriba y short debajo, más pequeños.
                 SVGPath jersey = path(JERSEY, base, outline);
                 SVGPath collar = path(JERSEY_COLLAR, detail, null);
                 SVGPath shorts = path(SHORTS, detail.deriveColor(0, 1, 1, 1), outline);
@@ -102,7 +92,6 @@ public class GarmentArt extends StackPane {
         setAccessibleText(garment.label());
     }
 
-    /** Círculos de radio {@code r} como un solo trazado SVG. */
     private static String dots(double[][] centers, double r) {
         StringBuilder sb = new StringBuilder();
         for (double[] c : centers) {
@@ -132,13 +121,12 @@ public class GarmentArt extends StackPane {
         return p;
     }
 
-    /** Detalles (cuello, pretina, suela) en un tono que contraste con el color base. */
     static Color contrastDetail(Color base) {
         if (base.getBrightness() > 0.85 && base.getSaturation() < 0.2) {
-            return Color.web("#1f5fff"); // prenda blanca: detalle azul de la marca
+            return Color.web("#1f5fff");
         }
         if (base.getBrightness() < 0.25) {
-            return Color.web("#39ff88"); // prenda negra: detalle verde de la marca
+            return Color.web("#39ff88");
         }
         return base.getBrightness() > 0.6 ? base.deriveColor(0, 1, 0.55, 1) : Color.web("#f2f5f8");
     }

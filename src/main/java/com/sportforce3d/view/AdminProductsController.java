@@ -125,7 +125,6 @@ public class AdminProductsController {
     }
 
     private Node stockCell(AdminProductRow r) {
-        // Total disponible de las variantes activas; el aviso dice qué variante lo provoca.
         Label units = text(r.stock() + " u.", "body-s");
         units.setTooltip(new Tooltip(r.variantCount() + " variantes activas · " + r.stock() + " unidades disponibles"));
         if (!r.lowStock() || r.deleted()) {

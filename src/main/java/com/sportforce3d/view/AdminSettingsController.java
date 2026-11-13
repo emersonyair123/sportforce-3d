@@ -23,10 +23,6 @@ import org.kordamp.ikonli.feather.Feather;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Administración → Configuración: datos de pago (Yape, Plin y transferencia). Valida y guarda en
- * {@code StoreSettingsService}, que exige el rol ADMIN; la vista previa muestra el texto que leerá el cliente.
- */
 public class AdminSettingsController {
 
     private final AppContext context;

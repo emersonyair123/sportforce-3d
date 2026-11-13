@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-/** Datos del usuario para la barra superior y el menú lateral. */
 public class ShellViewModel {
 
     private final Session session;
@@ -24,7 +23,6 @@ public class ShellViewModel {
         refresh();
     }
 
-    /** Vuelve a leer el usuario de la sesión (p. ej. tras editar el perfil). */
     public void refresh() {
         User user = session.requireUser();
         displayName.set(user.firstName());
@@ -49,7 +47,6 @@ public class ShellViewModel {
         return initials.getReadOnlyProperty();
     }
 
-    /** Solo decide qué menús se muestran; los permisos reales se verifican en la capa service. */
     public ReadOnlyBooleanProperty adminProperty() {
         return admin.getReadOnlyProperty();
     }

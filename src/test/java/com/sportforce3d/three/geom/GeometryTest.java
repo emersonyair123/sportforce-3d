@@ -15,7 +15,6 @@ public class GeometryTest {
         assertThat(c.at(0)).isEqualTo(0);
         assertThat(c.at(1)).isEqualTo(1);
         assertThat(c.at(2)).isEqualTo(1);
-        // Entre dos claves iguales una curva monótona no forma un bulto por encima de 1.
         for (double x = 0; x <= 3; x += 0.01) {
             assertThat(c.at(x)).isBetween(0.0, 1.0);
         }
@@ -67,10 +66,6 @@ public class GeometryTest {
         assertThat(maxPoint).isEqualTo(15);
     }
 
-    /**
-     * Toda cara debe tener su normal geométrica (regla de la mano derecha, en coordenadas JavaFX) del mismo lado
-     * que las normales suaves de sus vértices, y cada normal debe medir 1.
-     */
     public static void assertOutward(MeshData m) {
         float[] p = m.points();
         float[] n = m.normals();

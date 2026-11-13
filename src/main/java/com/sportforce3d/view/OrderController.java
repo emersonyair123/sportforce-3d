@@ -164,7 +164,6 @@ public class OrderController implements Router.Routable {
         content.getChildren().setAll(header, timelineCard, columns, historyCard(o));
     }
 
-    /** Captura del diseño congelado (líneas personalizadas) o el color del producto. */
     private Node itemMarker(OrderItem i) {
         if (i.hasDesign()) {
             javafx.scene.image.ImageView view = ProductImages.designCapture(context.storage(), i.designFrontPath(), 48, 60);
@@ -227,7 +226,6 @@ public class OrderController implements Router.Routable {
         return l;
     }
 
-    /** Instrucciones de pago + código de operación + comprobante. El pedido queda "Pago en verificación". */
     private Node paymentForm(OrderDetail o) {
         Label amount = new Label("Monto a pagar: " + Money.format(o.totalCents()));
         amount.getStyleClass().addAll("body", "ink", "sf-strong");
@@ -276,7 +274,6 @@ public class OrderController implements Router.Routable {
                         }
                     });
         });
-        // Para pruebas de interfaz: el archivo se puede fijar sin el diálogo del sistema.
         send.getProperties().put("proof", (java.util.function.Consumer<File>) f -> {
             chosen[0] = f;
             fileLabel.setText(f.getName());

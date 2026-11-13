@@ -10,13 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Consultas del dashboard. Una venta es un pago APROBADO: cuenta el día en que el ADMIN lo verificó, en hora de
- * Lima (UTC−5 todo el año, sin horario de verano).
- */
 public class DashboardRepository {
-
-    /** Pedidos que ya se pagaron (para "más vendidos"). */
     private static final String PAID = "('PAGADO', 'EN_PRODUCCION', 'ENVIADO', 'ENTREGADO')";
 
     public record Total(long cents, int count) {
@@ -31,7 +25,6 @@ public class DashboardRepository {
         this.db = db;
     }
 
-    /** Ventas con fecha de Lima en [from, to] (ambos incluidos). */
     public Total salesBetween(LocalDate from, LocalDate to) {
         return db.withConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement("""
@@ -48,7 +41,6 @@ public class DashboardRepository {
         });
     }
 
-    /** Ventas por día de Lima en [from, to]; los días sin ventas aparecen con 0. */
     public Map<LocalDate, Long> dailySales(LocalDate from, LocalDate to) {
         Map<LocalDate, Long> map = new LinkedHashMap<>();
         for (LocalDate d = from; !d.isAfter(to); d = d.plusDays(1)) {
@@ -73,7 +65,6 @@ public class DashboardRepository {
         return map;
     }
 
-    /** Productos con más unidades vendidas en pedidos pagados. */
     public List<TopProduct> topProducts(int limit) {
         return db.withConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement("""

@@ -7,7 +7,6 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** La ficha técnica incluye la vista realista con los colores por zona en HEX. */
 class TechSheetTest {
 
     @Test
@@ -36,7 +35,6 @@ class TechSheetTest {
         assertThat(sheet.cut().sleeve()).isEqualTo(GarmentCut.Sleeve.LARGA);
         assertThat(sheet.toCsv("x")).contains("CORTE;Manga;Larga", ";Largo del short;Medio (sobre la rodilla)",
                 ";Largo de las medias;Media pierna (a media pantorrilla)");
-        // Un diseño anterior a la Etapa 10 lleva el corte de siempre.
         assertThat(TechSheet.of(DesignDefaults.document(BodyType.ADULTO_HOMBRE), Map.of(), Map.of()).toCsv("x"))
                 .contains("CORTE;Manga;Corta", ";Largo de las medias;Larga (bajo la rodilla)");
     }

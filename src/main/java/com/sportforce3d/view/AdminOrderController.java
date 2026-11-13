@@ -44,7 +44,6 @@ import org.kordamp.ikonli.feather.Feather;
 import java.time.Instant;
 import java.util.List;
 
-/** Administración → Pedidos → detalle: líneas (con uniforme 3D), cliente y envío, pagos, estado e historial. */
 public class AdminOrderController implements Router.Routable {
 
     private final AppContext context;
@@ -105,8 +104,6 @@ public class AdminOrderController implements Router.Routable {
         content.getChildren().setAll(header, card("Recorrido", timeline), columns);
     }
 
-    // ---------------------------------------------------------------- Productos
-
     private Node itemsBox(OrderDetail o) {
         VBox items = new VBox(12);
         for (OrderItem i : o.items()) {
@@ -166,8 +163,6 @@ public class AdminOrderController implements Router.Routable {
                 totalRow);
     }
 
-    // ---------------------------------------------------------------- Pagos
-
     private Node paymentsBox(OrderDetail o) {
         VBox box = new VBox(16);
         Label method = new Label(o.paymentMethod().label() + " · verificación manual");
@@ -215,8 +210,6 @@ public class AdminOrderController implements Router.Routable {
         row.getStyleClass().add("sf-payment-row");
         return row;
     }
-
-    // ---------------------------------------------------------------- Estado
 
     private Node statusBox(OrderDetail o) {
         List<OrderStatus> next = AdminOrderService.nextStates(o.status());
@@ -295,8 +288,6 @@ public class AdminOrderController implements Router.Routable {
         }
         return rows;
     }
-
-    // ---------------------------------------------------------------- Utilidades
 
     private static Label label(String text, String... styles) {
         Label l = new Label(text);

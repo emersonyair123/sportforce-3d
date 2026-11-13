@@ -10,7 +10,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-/** Gestión de usuarios. Cada método exige rol ADMIN en la sesión, aunque la vista ya oculte el menú. */
 public class UserAdminService {
 
     private static final Logger log = LoggerFactory.getLogger(UserAdminService.class);

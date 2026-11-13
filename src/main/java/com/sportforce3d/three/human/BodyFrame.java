@@ -7,12 +7,6 @@ import com.sportforce3d.three.procedural.ProceduralModelProvider;
 
 import java.util.Arrays;
 
-/**
- * "Esqueleto" de un cuerpo para trasladar prendas de uno a otro, en espacio del modelo (metros, Y arriba, +Z
- * frente, +X = izquierda): alturas de referencia (entrepierna, axila, cuello, coronilla), eje del torso y de cada
- * pierna por altura, y eje de cada brazo. {@link #measure} lo mide en una malla cualquiera (las personas de
- * MakeHuman, en pose A); {@link #of(BodyShape, double[])} lo toma del maniquí procedural, que lo conoce exacto.
- */
 abstract class BodyFrame {
 
     final double floor;
@@ -33,25 +27,16 @@ abstract class BodyFrame {
         return top - floor;
     }
 
-    /** Centro del torso a la altura y (x = 0). */
     abstract Vec3 torsoCenter(double y);
 
-    /** Centro de la pierna ({@code sign} −1 derecha, +1 izquierda) a la altura y. */
     abstract Vec3 legCenter(int sign, double y);
 
-    /** Punto del eje del brazo a {@code s} metros desde donde cruza la altura de la axila (positivo = hacia la mano). */
     abstract Vec3 armPoint(int sign, double s);
 
-    /** Dirección del eje del brazo (hacia la mano) en {@code s}. */
     abstract Vec3 armDirection(int sign, double s);
 
-    /** Parámetro {@code s} del punto del eje del brazo más cercano a p. */
     abstract double armProject(int sign, Vec3 p);
 
-    /**
-     * Radio exacto de la piel desde el eje en la dirección horizontal {@code dir}: solo lo sabe el maniquí
-     * procedural (sus piezas se solapan, así que un rayo contra su malla choca con paredes internas). NaN = medirlo.
-     */
     double torsoRadius(double y, Vec3 dir) {
         return Double.NaN;
     }
@@ -60,25 +45,17 @@ abstract class BodyFrame {
         return Double.NaN;
     }
 
-    /**
-     * Distancia desde {@code origin} (dentro del torso) hasta donde sale el rayo de la superficie del torso, en
-     * cualquier dirección (hombros y cuello). NaN = medirlo con la malla.
-     */
     double torsoExit(Vec3 origin, Vec3 dir) {
         return Double.NaN;
     }
 
-    /** Radio del brazo en {@code s} en la dirección {@code dir} (perpendicular al eje). */
     double armRadius(int sign, double s, Vec3 dir) {
         return Double.NaN;
     }
 
-    /** true si el punto está dentro del torso (solo lo sabe el maniquí procedural). */
     boolean insideTorso(Vec3 p) {
         return false;
     }
-
-    // ================================================================ Maniquí procedural
 
     static BodyFrame of(BodyShape shape, double[] mannequinVertices) {
         return new Procedural(shape, mannequinVertices);
@@ -87,15 +64,12 @@ abstract class BodyFrame {
     private static final class Procedural extends BodyFrame {
         private final BodyShape b;
         private final double scale;
-        /** Escala horizontal (x, z) de diseño a modelo. */
         private final double girth;
-        /** Eje de cada brazo muestreado: [lado][muestra] y su longitud acumulada. */
         private final Vec3[][] arm = new Vec3[2][];
         private final double[][] armLen = new double[2][];
         private final double[] armpitS = new double[2];
 
         Procedural(BodyShape b, double[] v) {
-            // Entrepierna = la del short (su costura de entrepierna se lleva a la de la persona).
             super(0, ProceduralModelProvider.SHORTS_CROTCH * b.height() / 1.812, ProceduralModelProvider.ARMPIT * b.height() / 1.812,
                     neckBase(v, ProceduralModelProvider.ARMPIT * b.height() / 1.812, b.height()), b.height());
             this.b = b;
@@ -219,7 +193,6 @@ abstract class BodyFrame {
             return r < b.torsoRadius(Math.atan2(dx, dz), yd) * girth;
         }
 
-        /** Radio de la sección elíptica del tubo en la dirección {@code dir}. */
         private static double ellipse(Tube t, double f, Vec3 dir) {
             double a = dir.dot(t.frontAxis(f));
             double c = dir.dot(t.sideAxis(f));
@@ -253,9 +226,6 @@ abstract class BodyFrame {
         }
     }
 
-    // ================================================================ Malla medida (MakeHuman)
-
-    /** Mide una persona en pose A sobre los vértices de su piel (espacio del modelo). */
     static BodyFrame measure(double[] v, int[] tri, double floor, double height) {
         Slices s = new Slices(v, tri);
         return new Measured(s, floor, height, s.armpit(floor, height));
@@ -297,8 +267,6 @@ abstract class BodyFrame {
         }
 
         private void fitArm(Slices s, int k, int sign, double h) {
-            // Brazo (sin el torso) entre la axila y el codo. La sección horizontal de un brazo inclinado es una
-            // elipse centrada en su eje: se ajusta una recta x(y), z(y) a los centros de esas secciones.
             int n = 0;
             double sy = 0;
             double syy = 0;
@@ -327,7 +295,6 @@ abstract class BodyFrame {
             }
             double det = n * syy - sy * sy;
             if (n < 4 || Math.abs(det) < 1e-12) {
-                // Sin brazo separado del torso: dirección del maniquí (casi vertical, un poco hacia afuera).
                 armOrigin[k] = new Vec3(sign * 0.11 * h, armpit, 0);
                 armDir[k] = new Vec3(sign * 0.25, -1, 0).normalize();
                 return;
@@ -336,7 +303,6 @@ abstract class BodyFrame {
             double ax = (sx - bx * sy) / n;
             double bz = (n * szy - sz * sy) / det;
             double az = (sz - bz * sy) / n;
-            // Origen: donde el eje cruza la altura de la axila; dirección hacia la mano (y decreciente).
             armOrigin[k] = new Vec3(ax + bx * armpit, armpit, az + bz * armpit);
             armDir[k] = new Vec3(-bx, -1, -bz).normalize();
         }
@@ -384,9 +350,6 @@ abstract class BodyFrame {
         }
     }
 
-    // ================================================================ Mediciones
-
-    /** Vértices ordenados por altura para consultar franjas horizontales. */
     private static final class Slices {
         final double[] v;
         final int[] tri;
@@ -421,11 +384,6 @@ abstract class BodyFrame {
             return i;
         }
 
-        /**
-         * Caja [minX, maxX, minZ, maxZ] del contorno de la malla en el plano y (puntos donde las aristas lo cruzan)
-         * con x en [x0, x1]; null si no hay. A diferencia de los vértices de una franja, el contorno no tiene
-         * huecos aunque la malla sea gruesa.
-         */
         double[] contour(double y, double x0, double x1) {
             double[] b = {Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE};
             boolean any = false;
@@ -454,7 +412,6 @@ abstract class BodyFrame {
             return any ? b : null;
         }
 
-        /** Caja [minX, maxX, minZ, maxZ] de los vértices de la franja y ± half con x en [x0, x1]; null si vacía. */
         double[] box(double y, double half, double x0, double x1, double z0, double z1) {
             double[] b = {Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE};
             boolean any = false;
@@ -473,11 +430,6 @@ abstract class BodyFrame {
             return any ? b : null;
         }
 
-        /**
-         * Medio ancho del torso a la altura y: el contorno de la malla en ese plano (un segmento por triángulo que
-         * lo cruza) se une en tramos de |x|; si el primero (el torso) termina y hay otro más afuera (el brazo)
-         * separado por más de 8 mm, devuelve dónde termina el torso. NaN si el brazo está unido o no hay brazo.
-         */
         double torsoHalfWidth(double y, int sign) {
             double[] start = new double[64];
             double[] end = new double[64];
@@ -546,7 +498,6 @@ abstract class BodyFrame {
             return torsoEnd;
         }
 
-        /** Agrega la x donde la arista a–b cruza la altura y. */
         private int cross(int a, int b, double y, double[] xs, int k) {
             double ya = v[a + 1];
             double yb = v[b + 1];
@@ -558,11 +509,6 @@ abstract class BodyFrame {
             return k + 1;
         }
 
-        /**
-         * Altura de la axila: bajando desde el cuello, la primera franja donde ambos brazos se separan del torso y
-         * siguen separados al menos 6 % de la altura más abajo (cerca de los hombros hay huecos cortos que no son
-         * la axila).
-         */
         double armpit(double floor, double h) {
             double step = 0.003;
             int need = (int) Math.ceil(0.06 * h / step);
@@ -584,7 +530,6 @@ abstract class BodyFrame {
         }
     }
 
-    /** Punto más bajo del cuerpo en el centro (|x| < 1.2 cm) por encima de los pies: la entrepierna. */
     static double lowestCenter(double[] v, double top) {
         double best = Double.MAX_VALUE;
         for (int i = 0; i < v.length; i += 3) {
@@ -596,7 +541,6 @@ abstract class BodyFrame {
         return best == Double.MAX_VALUE ? 0.47 * top : best;
     }
 
-    /** Base del cuello: subiendo desde la axila, donde el ancho cae por debajo del 45 % del de los hombros. */
     static double neckBase(double[] v, double armpit, double top) {
         double h = top;
         double step = 0.004;

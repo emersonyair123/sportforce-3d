@@ -3,7 +3,6 @@ package com.sportforce3d.component;
 import com.sportforce3d.model.OrderStatus;
 import org.kordamp.ikonli.feather.Feather;
 
-/** Badge del estado de un pedido con texto e icono (no solo color). */
 public final class OrderStatusBadge {
 
     private OrderStatusBadge() {

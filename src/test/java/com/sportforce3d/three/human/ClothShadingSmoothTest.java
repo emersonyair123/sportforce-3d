@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
-/** Etapa 10D: el normal map horneado se suaviza para las telas lisas (sin escalones dentados). */
 class ClothShadingSmoothTest {
 
     private static final int FLAT = 0xFF8080FF;
@@ -25,7 +24,6 @@ class ClothShadingSmoothTest {
         double jumpBefore = maxJump(sharp, v, size);
         double jumpAfter = maxJump(smooth, v, size);
         assertThat(jumpAfter).isLessThan(jumpBefore / 4);
-        // Lejos del escalón no cambia.
         assertThat(smooth.normalAt(2.5 / size, v)[0]).isCloseTo(sharp.normalAt(2.5 / size, v)[0], within(0.02));
 
         int[] flat = new int[size * size];
@@ -37,7 +35,6 @@ class ClothShadingSmoothTest {
                 .normals()).isNull();
     }
 
-    /** Mayor salto de la componente x entre texeles vecinos de una fila. */
     private static double maxJump(ClothShading s, double v, int size) {
         double max = 0;
         for (int x = 0; x < size - 1; x++) {

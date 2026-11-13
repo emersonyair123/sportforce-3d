@@ -32,10 +32,6 @@ import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.util.List;
 
-/**
- * Reporte de ventas en PDF (A4) con OpenPDF, en el tema claro de la guía de marca: fuentes Barlow incrustadas,
- * tablas con cabecera {@code label} en {@code ink-muted}, bordes {@code line} y el gráfico en {@code brand}.
- */
 public class PdfReportWriter {
 
     private static final float MARGIN = 40;
@@ -87,8 +83,6 @@ public class PdfReportWriter {
         }
     }
 
-    // ------------------------------------------------------------------ Bloques
-
     private void header(Document doc, SalesReport report) throws DocumentException {
         Paragraph logo = new Paragraph();
         logo.add(new Chunk("SPORTFORCE ", new Font(condensed, 20, Font.NORMAL, ink)));
@@ -123,7 +117,6 @@ public class PdfReportWriter {
 
     private void section(Document doc, String title) throws DocumentException {
         Paragraph p = paragraph(title, new Font(semibold, 13, Font.NORMAL, ink), 16);
-        // Interlineado mayor que el cuerpo para que los descendentes (g, p) no toquen lo que sigue.
         p.setLeading(20);
         p.setSpacingAfter(4);
         p.setKeepTogether(true);
@@ -158,7 +151,6 @@ public class PdfReportWriter {
             }
         }
         tpl.fill();
-        // Etiquetas: primer y último periodo, y el máximo arriba a la izquierda.
         Font small = new Font(regular, 7, Font.NORMAL, muted);
         ColumnText.showTextAligned(tpl, Element.ALIGN_LEFT, new Phrase(ReportText.period(report, rows.get(0).start()), small), left, 3, 0);
         ColumnText.showTextAligned(tpl, Element.ALIGN_RIGHT,
@@ -174,7 +166,7 @@ public class PdfReportWriter {
         boolean daily = r.grouping() == SalesReport.Grouping.DAY;
         for (PeriodRow p : r.periods()) {
             if (daily && p.orders() == 0) {
-                continue; // por día solo se listan los días con ventas; el gráfico muestra todos
+                continue;
             }
             t.addCell(text(ReportText.period(r, p.start())));
             t.addCell(number(String.valueOf(p.orders())));
@@ -223,14 +215,10 @@ public class PdfReportWriter {
         return t;
     }
 
-    // ------------------------------------------------------------------ Celdas
-
-    /** Las primeras {@code textColumns} columnas son texto (a la izquierda); las demás, números (a la derecha). */
     private PdfPTable table(float[] widths, int textColumns, String... headers) {
         PdfPTable t = new PdfPTable(widths);
         t.setWidthPercentage(100);
         t.setHeaderRows(1);
-        // El espacio va en la tabla: OpenPDF no aplica el spacingAfter del título antes de una tabla.
         t.setSpacingBefore(8);
         t.setSpacingAfter(4);
         for (int i = 0; i < headers.length; i++) {
@@ -294,7 +282,6 @@ public class PdfReportWriter {
         }
     }
 
-    /** Pie de cada página: marca y número de página. */
     private final class Footer extends PdfPageEventHelper {
         @Override
         public void onEndPage(PdfWriter writer, Document document) {

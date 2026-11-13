@@ -2,10 +2,6 @@ package com.sportforce3d.three;
 
 import com.sportforce3d.three.geom.Vec3;
 
-/**
- * Estado de la cámara orbital: giro horizontal (yaw, grados), inclinación (pitch, grados, positivo = desde
- * arriba), distancia al objetivo (m) y punto objetivo (espacio del modelo). Sin JavaFX: se prueba aparte.
- */
 public final class OrbitState {
 
     public static final double MIN_PITCH = -12;
@@ -52,7 +48,6 @@ public final class OrbitState {
         clamp();
     }
 
-    /** factor < 1 acerca, > 1 aleja. */
     public void zoom(double factor) {
         distance *= factor;
         clamp();
@@ -62,10 +57,6 @@ public final class OrbitState {
         target = target.add(new Vec3(0, dy, 0));
     }
 
-    /**
-     * Fija un nuevo destino. El yaw se ajusta a la vuelta más cercana al actual para que la cámara tome el
-     * camino corto (de 350° a 10° gira 20°, no 340°).
-     */
     public void aimAt(double newYaw, double newPitch, double newDistance, Vec3 newTarget) {
         double delta = ((newYaw - yaw) % 360 + 540) % 360 - 180;
         yaw += delta;
@@ -75,7 +66,6 @@ public final class OrbitState {
         clamp();
     }
 
-    /** Acerca este estado a {@code goal} una fracción {@code alpha} (0..1) del camino. */
     public void approach(OrbitState goal, double alpha) {
         yaw += (goal.yaw - yaw) * alpha;
         pitch += (goal.pitch - pitch) * alpha;
@@ -83,7 +73,6 @@ public final class OrbitState {
         target = target.lerp(goal.target, alpha);
     }
 
-    /** Fracción por fotograma para una aproximación exponencial con constante {@code rate} (1/s). */
     public static double alpha(double dtSeconds, double rate) {
         return 1 - Math.exp(-rate * dtSeconds);
     }

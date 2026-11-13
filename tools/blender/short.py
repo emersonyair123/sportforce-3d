@@ -1,13 +1,3 @@
-"""Short de fútbol: malla de tela de densidad uniforme sobre el cuerpo medido.
-
-Arriba, un anillo alrededor de la pelvis desde la cintura hasta la entrepierna (cae recto desde la cadera). En
-la entrepierna, una costura de atrás hacia adelante por debajo del cuerpo; cada pernera nace de media pelvis más
-esa costura (una "D") y en unos centímetros pasa al contorno del muslo, que cae recto hasta la basta.
-
-UV como el modelo procedural: una isla por pierna adelante y atrás (u = 0,5 en el centro de la pierna, el costado
-exterior en u = 1 adelante y u = 0 atrás en la pierna izquierda; al revés en la derecha), v por altura desde la
-cintura. La pretina y las franjas laterales tienen su propia isla.
-"""
 import math
 
 import numpy as np
@@ -16,13 +6,13 @@ from cuerpo import TablaPolar, hull2d, radio_polar
 from malla import Malla, isla, smoothstep
 
 ZONAS = ["shorts_base", "shorts_stripe", "shorts_waist"]
-AREA_H = 0.35  # Area.SHORTS_*: alto (m)
+AREA_H = 0.35
 
 
 class Corte:
     arista = 0.012
-    cintura = 0.056            # alto de la cintura sobre la entrepierna (fracción del alto)
-    largo_entrepierna = 0.21   # de la entrepierna a la basta (m, persona de 1,86 m)
+    cintura = 0.056
+    largo_entrepierna = 0.21
     holgura_cintura = 0.008
     holgura_cadera = 0.016
     holgura_pierna = 0.020
@@ -30,11 +20,8 @@ class Corte:
     caida = 0.85
     pretina = 0.04
     franja_columnas = 2
-    # Largos del short (Etapa 10): las variantes cambian largo_entrepierna y guardan aquí el del short medio de la
-    # persona. La UV queda anclada al ruedo con la escala del medio: el número del short (v 0,70) queda a la misma
-    # distancia de la basta y sin deformarse en los tres largos. None = como siempre (el medio).
     largo_ref = None
-    v_tope = 0.12             # en el largo, la cadera (bajo la camiseta) se comprime sobre esta v
+    v_tope = 0.12
 
 
 def construir(c, corte=Corte):
@@ -45,7 +32,6 @@ def construir(c, corte=Corte):
     y_h = c.entrepierna - corte.largo_entrepierna * k
     pelvis = TablaPolar(c, y_cr - 0.004, y_w + 0.01)
 
-    # ---------------------------------------------------------------- columnas (anillo de la cadera)
     y_hip = (y_w + y_cr) / 2
     densos = np.radians(np.arange(0.0, 360.25, 0.25))
     rr = pelvis.radio(np.full(len(densos), y_hip), densos)
@@ -72,7 +58,6 @@ def construir(c, corte=Corte):
     j90 = th_izq.index(min(th_izq, key=lambda t: abs(t - math.pi / 2)))
     mitad = n // 2
 
-    # ---------------------------------------------------------------- pelvis: cintura → entrepierna
     r_c = max(4, round((y_w - y_cr) / e))
     P = {}
 
@@ -93,7 +78,6 @@ def construir(c, corte=Corte):
     m = Malla(ZONAS)
     ids = {key: m.vert(q) for key, q in P.items()}
 
-    # ---------------------------------------------------------------- costura de la entrepierna
     F, B = P[(r_c, 0)], P[(r_c, mitad)]
     n_s = max(3, round(np.linalg.norm(F - B) / e) - 1)
     costura = []
@@ -104,12 +88,10 @@ def construir(c, corte=Corte):
         costura.append(m.vert(q))
     m.empujar_afuera(c, 0.006, fijos=set(range(len(m.v))) - set(costura))
 
-    # ---------------------------------------------------------------- perneras
     n_l = max(6, round((y_cr - y_h) / e))
     piernas = {}
     for lado in (1, -1):
         cols = list(range(0, mitad + 1)) if lado > 0 else [0] + list(range(n - 1, mitad - 1, -1))
-        # Orden del anillo: F → costado exterior → B → costura de B a F.
         anillo0 = [ids[(r_c, j)] for j in cols] + costura
         D = [m.v[i].copy() for i in anillo0]
         largo_d = np.concatenate(([0.0], np.cumsum([np.linalg.norm(D[(i + 1) % len(D)] - D[i])
@@ -127,7 +109,6 @@ def construir(c, corte=Corte):
             filas.append(fila)
         piernas[lado] = (cols, filas)
 
-    # ---------------------------------------------------------------- caras y UV
     m_lat = j90
     m_in = mitad + 1 + n_s // 2
     pelvis_pierna = {1: list(range(0, mitad + 1)), -1: [0] + list(range(n - 1, mitad - 1, -1))}
@@ -154,7 +135,7 @@ def construir(c, corte=Corte):
 
     v_esc = (y_w - y_h) / (0.97 * AREA_H)
     if corte.largo_ref is not None:
-        paso_v = (y_w - (c.entrepierna - corte.largo_ref * k)) / 0.97  # metros por unidad de v (short medio)
+        paso_v = (y_w - (c.entrepierna - corte.largo_ref * k)) / 0.97
         v_cint = 0.97 - (y_w - y_h) / paso_v
 
     def v_de(y):
@@ -181,7 +162,6 @@ def construir(c, corte=Corte):
     fc = corte.franja_columnas
     for lado in (1, -1):
         cols, filas = piernas[lado]
-        # Pelvis (media, del lado de la pierna): filas 0..r_c como listas de vértices F → B.
         todas = [[ids[(r, j)] for j in pelvis_pierna[lado]] for r in range(r_c)] + filas
         info = [arcos(f) for f in todas]
         for r in range(len(todas) - 1):
@@ -206,9 +186,8 @@ def construir(c, corte=Corte):
                 for rr_, ii in vs:
                     fila_ids = todas[rr_]
                     if zona == "shorts_waist":
-                        # Pretina: u alrededor desde el centro delantero hacia +x, v de abajo hacia el borde.
                         j = pelvis_pierna[lado][ii]
-                        u = 1.0 if (lado < 0 and j == 0) else j / n  # el lado derecho cierra la vuelta en u = 1
+                        u = 1.0 if (lado < 0 and j == 0) else j / n
                         uv.append(isla("pretina", u, (r_w - rr_) / r_w * 0.8))
                     elif zona == "shorts_stripe":
                         y = m.v[fila_ids[ii]][1]
@@ -232,8 +211,6 @@ def construir(c, corte=Corte):
 
 
 def _anillo_pierna(c, lado, y, y_cr, q_m, F, corte, t_basta):
-    """Contorno del muslo a la altura y (cae recto desde arriba) en las fracciones de arco q_m, empezando en la
-    dirección del centro delantero F y avanzando primero hacia afuera."""
     puntos = []
     for yy in np.arange(y, y_cr - 0.02, 0.01):
         p = c.pierna_corte(yy, lado)

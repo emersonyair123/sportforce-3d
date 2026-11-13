@@ -18,13 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Pedidos, historial de estados, pagos e inventario reservado.
- * Los métodos que reciben {@link Connection} se usan dentro de la transacción que abre OrderService.
- */
 public class OrderRepository {
-
-    /** Datos de un pedido nuevo, ya calculados y validados por el service. */
     public record NewOrder(long userId, PaymentMethod method, long subtotalCents, long surchargeCents,
                            long shippingCents, Address address, String notes, String placedAt) {
 
@@ -33,14 +27,12 @@ public class OrderRepository {
         }
     }
 
-    /** Línea nueva; las personalizadas llevan la copia del diseño (JSON + capturas ya copiadas a "orders/"). */
     public record NewItem(long productId, long variantId, String productName, String sku, String sizeCode,
                           String colorHex, int quantity, long unitPriceCents, long surchargeCents,
                           Long designId, String designName, Integer designVersion, String designJson,
                           String designFrontPath, String designBackPath) {
     }
 
-    /** Unidades reservadas por un pedido, para liberarlas al cancelar. */
     public record Reservation(long variantId, int quantity) {
     }
 
@@ -57,9 +49,6 @@ public class OrderRepository {
         this.db = db;
     }
 
-    // ------------------------------------------------------------------ Escritura (dentro de transacción)
-
-    /** Correlativo anual atómico: 1, 2, 3… por año. */
     public int nextSequence(Connection c, int year) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement("""
                 INSERT INTO order_counters (year, last_value) VALUES (?, 1)
@@ -132,7 +121,6 @@ public class OrderRepository {
         }
     }
 
-    /** Reserva unidades si hay disponibles. Devuelve false (sin cambiar nada) si no alcanzan. */
     public boolean reserveStock(Connection c, long variantId, int quantity) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement(
                 "UPDATE inventory SET reserved = reserved + ? WHERE variant_id = ? AND quantity - reserved >= ?")) {
@@ -143,10 +131,6 @@ public class OrderRepository {
         }
     }
 
-    /**
-     * Al aprobar el pago, la reserva se vuelve venta: baja la cantidad y la reserva a la vez. Devuelve false (sin
-     * cambiar nada) si la reserva no alcanza, lo que indicaría un inventario editado a mano.
-     */
     public boolean commitStock(Connection c, long variantId, int quantity) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement("""
                 UPDATE inventory SET quantity = quantity - ?, reserved = reserved - ?
@@ -180,7 +164,6 @@ public class OrderRepository {
         }
     }
 
-    /** Cambia el estado solo si sigue siendo {@code expected} (evita carreras). */
     public boolean updateStatus(Connection c, long orderId, OrderStatus expected, OrderStatus next) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement("UPDATE orders SET status = ? WHERE id = ? AND status = ?")) {
             ps.setString(1, next.name());
@@ -201,8 +184,6 @@ public class OrderRepository {
         }
     }
 
-    // ------------------------------------------------------------------ Lectura
-
     public List<OrderSummary> findByUser(long userId) {
         return db.withConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement(SUMMARY_SQL + " WHERE o.user_id = ? ORDER BY o.placed_at DESC, o.id DESC")) {
@@ -212,10 +193,6 @@ public class OrderRepository {
         });
     }
 
-    /**
-     * Pedidos para el ADMIN, del más reciente al más antiguo. {@code text} busca en número, nombre y correo del
-     * cliente (sin distinguir mayúsculas); {@code status} null = todos.
-     */
     public List<OrderSummary> findForAdmin(OrderStatus status, String text, int limit) {
         return db.withConnection(c -> {
             StringBuilder sql = new StringBuilder(SUMMARY_SQL).append(" WHERE 1 = 1");
@@ -240,7 +217,6 @@ public class OrderRepository {
         });
     }
 
-    /** Cantidad de pedidos por estado (para los filtros y el dashboard). */
     public java.util.Map<OrderStatus, Integer> countByStatus() {
         return db.withConnection(c -> {
             java.util.Map<OrderStatus, Integer> map = new java.util.EnumMap<>(OrderStatus.class);
@@ -257,7 +233,6 @@ public class OrderRepository {
         });
     }
 
-    /** Una línea con su pedido (para el visor de uniformes del ADMIN). */
     public record ItemWithOrder(long orderId, String orderNumber, long userId, OrderItem item) {
     }
 

@@ -19,10 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Grupo de tarjetas de opción única (direcciones, métodos de pago): indicador de radio, título, detalle y
- * un nodo opcional a la derecha. Las opciones no disponibles quedan deshabilitadas con texto "Próximamente".
- */
 public class ChoiceCards<T> extends VBox {
 
     private static final PseudoClass SELECTED = PseudoClass.getPseudoClass("selected");

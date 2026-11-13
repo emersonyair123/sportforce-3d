@@ -48,7 +48,6 @@ public class CartViewModel {
                 e -> {
                     busy.set(false);
                     onError.accept(ErrorMessages.of(e));
-                    // Recarga para que la pantalla refleje el estado real (p. ej. stock que cambió).
                     Async.run(cart::summary, summary::set, ignored -> { });
                 });
     }

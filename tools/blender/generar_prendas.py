@@ -1,22 +1,3 @@
-"""Genera las prendas pre-simuladas de una persona para la Vista 3D de SPORTFORCE 3D.
-
-Uso (desde la carpeta del proyecto, sin abrir Blender):
-
-    D:\\Blender\\blender.exe -b --factory-startup -P tools/blender/generar_prendas.py -- --persona hombre
-
-Opciones después de ``--``:
-    --persona hombre|mujer|nino|nina   persona de src/main/resources/models/humanos/<persona>/
-    --salida RUTA                      carpeta base (por defecto src/main/resources/models/prendas)
-    --cuadros N                        cuadros de la simulación (por defecto 45)
-    --vistas RUTA                      además guarda renders de revisión (frente, espalda, costado) en RUTA
-    --sin-hornear                      no hornea AO ni normal map (prueba rápida de la caída)
-
-Por cada prenda escribe <salida>/<persona>/<corte>/prenda.obj, ao.png y normal.png:
-    camiseta_futbol_v  → jersey_body, jersey_sleeves, jersey_collar, jersey_cuffs, jersey_sides
-    short_futbol       → shorts_base, shorts_stripe, shorts_waist
-    medias_futbol      → socks_leg, socks_band (elásticas: se arman pegadas a la pierna, no se simulan)
-Holgura y largo por persona: CORTES_PERSONA.
-"""
 import argparse
 import json
 import sys
@@ -26,22 +7,20 @@ from pathlib import Path
 AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
 
-import bpy  # noqa: E402
-from mathutils.bvhtree import BVHTree  # noqa: E402
+import bpy
+from mathutils.bvhtree import BVHTree
 
-import camiseta  # noqa: E402
-import cuerpo  # noqa: E402
-import hornear  # noqa: E402
-import medias  # noqa: E402
-import short  # noqa: E402
-import tela  # noqa: E402
-import vista  # noqa: E402
+import camiseta
+import cuerpo
+import hornear
+import medias
+import short
+import tela
+import vista
 
 RAIZ = AQUI.parent.parent
 CORTES = {"camiseta": "camiseta_futbol_v", "short": "short_futbol", "medias": "medias_futbol"}
 
-# Holgura y largo según el cuerpo (cambios sobre la clase Corte de cada prenda; los largos en metros se escalan
-# con la estatura). La camiseta de mujer es entallada: cae poco desde el busto y tiene menos holgura.
 CORTES_PERSONA = {
     "hombre": {},
     "mujer": {
@@ -64,11 +43,6 @@ CORTES_PERSONA = {
 def corte(modulo, persona, prenda, **extra):
     return type("Corte", (modulo.Corte,), {**CORTES_PERSONA[persona].get(prenda, {}), **extra})
 
-
-# Variantes de la Etapa 10 (carpetas junto a las de siempre). Short corto a medio muslo: 0,33 de la entrepierna a la
-# rodilla medida (Etapa 10D; el medio llega a ~0,52 en todas las personas: sobre la rodilla); largo: 0,86 (unos 3 cm
-# sobre el centro de la rodilla). Medias tobilleras sobre el tobillo y de media pierna a media pantorrilla (fracción
-# del alto).
 VARIANTES = {
     "camiseta": {"camiseta_futbol_v_larga": {"manga_larga": True}},
     "short": {"short_futbol_corto": ("rodilla", 0.33), "short_futbol_largo": ("rodilla", 0.86)},
@@ -92,7 +66,6 @@ def argumentos():
 
 
 class Superficies:
-    """Piel y prendas ya simuladas, para sacar de ellas la tela nueva antes de simular (espacio del modelo)."""
 
     def __init__(self, c):
         self.c = c
@@ -127,7 +100,6 @@ def main():
         variantes(args, c, piel, otros, sup, t0)
         return
 
-    # ------------------------------------------------------------ short (primero: la camiseta cae sobre él)
     ms, ds = short.construir(c, corte(short, args.persona, "short"))
     ms.orientar(c)
     ms.empujar_afuera(c, 0.006)
@@ -139,7 +111,6 @@ def main():
     tela.preparar_colision(obj_s, 0.0015)
     sup.agregar(obj_s)
 
-    # ------------------------------------------------------------ camiseta
     corte_c = corte(camiseta, args.persona, "camiseta")
     mc, dc = camiseta.construir(c, corte_c)
     mc.orientar(c)
@@ -152,7 +123,6 @@ def main():
     tela.alisar(obj_c, dc["esquinas_v"], 0.035 * c.alto / 1.86, piel)
     tela.ribete_cuello(obj_c, dc["escote"], corte_c.ribete * c.alto / 1.86)
 
-    # ------------------------------------------------------------ medias (elásticas: pegadas a la pierna, sin caída)
     mm, _ = medias.construir(c, corte(medias, args.persona, "medias"))
     mm.orientar(c)
     mm.empujar_afuera(c, 0.0025)
@@ -206,8 +176,6 @@ def main():
 
 
 def variantes(args, c, piel, otros, sup, t0):
-    """Etapa 10: manga larga, short corto y largo, medias tobillera y de media pierna. Las prendas de siempre no se
-    tocan; el short medio se vuelve a simular (sin exportarlo) para que la camiseta larga caiga sobre él."""
     k = c.alto / 1.86
     rodilla = c.rodilla()
     print("RODILLA %.4f (entrepierna %.4f)" % (rodilla, c.entrepierna))
@@ -224,7 +192,6 @@ def variantes(args, c, piel, otros, sup, t0):
               % (nombre, time.time() - t, tela.penetraciones(obj, piel), len(obj.data.vertices)))
         return obj
 
-    # Shorts: se simulan antes de que el medio tenga colisión (no chocan entre ellos).
     exportar = {}
     for carpeta, (base, f) in VARIANTES["short"].items():
         largo = f * base_short.largo_entrepierna if base == "medio" else f * (c.entrepierna - rodilla) / k
@@ -234,7 +201,6 @@ def variantes(args, c, piel, otros, sup, t0):
     tela.preparar_colision(obj_medio, 0.0015)
     sup.agregar(obj_medio)
 
-    # Camiseta de manga larga sobre el short medio.
     for carpeta, extra in VARIANTES["camiseta"].items():
         corte_c = corte(camiseta, args.persona, "camiseta", **extra)
         mc, dc = camiseta.construir(c, corte_c)
@@ -247,8 +213,6 @@ def variantes(args, c, piel, otros, sup, t0):
               % (carpeta, time.time() - t, tela.penetraciones(obj_c, piel), len(obj_c.data.vertices),
                  dc["escala_uv"]))
         tela.alisar(obj_c, dc["esquinas_v"], 0.035 * c.alto / 1.86, piel)
-        # Etapa 10D: la manga larga pesa más y en lo alto del hombro la tela se frunce (en la mujer se veía como un
-        # pliegue): se alisa alrededor del punto más alto de cada sisa.
         tela.alisar(obj_c, dc["sisa_tope"], 0.06 * k, piel, pasadas=20)
         tela.ribete_cuello(obj_c, dc["escote"], corte_c.ribete * c.alto / 1.86)
         exportar[carpeta] = (obj_c, "camiseta")
@@ -256,7 +220,6 @@ def variantes(args, c, piel, otros, sup, t0):
     if args.exportar_medio:
         exportar["short_futbol"] = (obj_medio, "short_medio")
 
-    # Medias (elásticas, sin simular).
     for carpeta, alto in VARIANTES["medias"].items():
         mm, _ = medias.construir(c, corte(medias, args.persona, "medias", alto_media=alto,
                                           alto_ref=medias.Corte.alto_media))
@@ -267,8 +230,6 @@ def variantes(args, c, piel, otros, sup, t0):
               % (carpeta, tela.penetraciones(obj_m, piel), len(obj_m.data.vertices)))
         exportar[carpeta] = (obj_m, "medias")
 
-    # La malla de alta resolución (3 subdivisiones) de cada prenda se crea solo para hornear su normal map y se
-    # borra enseguida: con seis prendas a la vez no alcanzaría la memoria.
     bases = {}
     for obj in {o for o, _ in exportar.values()} | {obj_medio}:
         bases[obj.name] = obj.data.copy()
@@ -282,7 +243,6 @@ def variantes(args, c, piel, otros, sup, t0):
         return alta
 
     def solo(visibles):
-        """Deja visibles en el render solo las prendas indicadas (más el cuerpo)."""
         for o in {o for o, _ in exportar.values()} | {obj_medio}:
             o.hide_render = o not in visibles
 
@@ -297,7 +257,6 @@ def variantes(args, c, piel, otros, sup, t0):
     if not args.sin_hornear:
         hornear.preparar()
         for carpeta, (obj, clave) in exportar.items():
-            # Cada prenda hornea con las demás de su conjunto (no con sus otras variantes, que se superponen).
             if clave == "camiseta":
                 solo({obj, obj_medio})
             elif clave in ("short", "short_medio"):

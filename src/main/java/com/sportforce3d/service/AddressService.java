@@ -10,7 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Direcciones de envío del usuario conectado. Nadie puede ver ni editar direcciones ajenas. */
 public class AddressService {
 
     private final AddressRepository addresses;
@@ -25,7 +24,6 @@ public class AddressService {
         return addresses.findByUser(session.requireUser().id());
     }
 
-    /** Crea (id = 0) o actualiza. Devuelve la dirección guardada. */
     public Address save(Address form) {
         User me = session.requireUser();
         Address clean = new Address(form.id(), trim(form.label()), trim(form.recipient()), trim(form.phone()),

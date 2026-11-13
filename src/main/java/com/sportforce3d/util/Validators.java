@@ -3,14 +3,13 @@ package com.sportforce3d.util;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
-/** Reglas de validación compartidas por service (autoridad) y viewmodel (aviso inmediato). */
 public final class Validators {
 
     private static final Pattern EMAIL = Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
     private static final Pattern PHONE = Pattern.compile("^\\+?[0-9 ]{6,20}$");
 
     public static final int PASSWORD_MIN = 8;
-    public static final int PASSWORD_MAX = 72; // límite de BCrypt
+    public static final int PASSWORD_MAX = 72;
 
     private Validators() {
     }
@@ -19,7 +18,6 @@ public final class Validators {
         return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
     }
 
-    /** Devuelve el mensaje de error o null si es válido. */
     public static String email(String email) {
         String value = normalizeEmail(email);
         if (value.isEmpty()) {
@@ -39,7 +37,6 @@ public final class Validators {
         return plainText(value, false);
     }
 
-    /** Teléfono opcional. */
     public static String phone(String phone) {
         if (phone == null || phone.isBlank()) {
             return null;
@@ -51,7 +48,6 @@ public final class Validators {
         if (password == null || password.length < PASSWORD_MIN) {
             return "Usa al menos " + PASSWORD_MIN + " caracteres.";
         }
-        // BCrypt usa como mucho 72 bytes: con tildes o ñ cada letra ocupa 2 bytes en UTF-8.
         if (password.length > PASSWORD_MAX || utf8Length(password) > PASSWORD_MAX) {
             return "Usa como máximo " + PASSWORD_MAX + " caracteres (menos si llevan tildes o ñ).";
         }
@@ -69,7 +65,6 @@ public final class Validators {
         return letter && digit ? null : "Combina letras y números.";
     }
 
-    /** Bytes que ocupa en UTF-8, sin crear un String (las contraseñas no deben quedar en memoria). */
     public static int utf8Length(char[] chars) {
         int bytes = 0;
         for (int i = 0; i < chars.length; i++) {
@@ -88,10 +83,6 @@ public final class Validators {
         return bytes;
     }
 
-    /**
-     * Texto libre sin caracteres de control (los que no se ven y pueden romper archivos exportados o la pantalla).
-     * Con {@code multiline} se permiten saltos de línea y tabulaciones. Devuelve el mensaje de error o null.
-     */
     public static String plainText(String value, boolean multiline) {
         if (value == null) {
             return null;

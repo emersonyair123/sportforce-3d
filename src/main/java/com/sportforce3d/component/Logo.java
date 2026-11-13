@@ -12,10 +12,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 
-/**
- * Logotipo tipográfico provisional: "SPORTFORCE" en Barlow Condensed 800 (ink) + "3D" en accent-text.
- * El monograma "SF" se usa como icono de ventana.
- */
 public class Logo extends HBox {
 
     public static final String WORDMARK = "SPORTFORCE";
@@ -33,10 +29,6 @@ public class Logo extends HBox {
         setAccessibleText("SPORTFORCE 3D");
     }
 
-    /**
-     * Monograma "SF" (casi negro, S en blanco y F en verde) como imagen para el icono de la ventana.
-     * Los colores son los fijos de design/emblemas/monograma-sf.svg. Debe llamarse en el hilo de JavaFX.
-     */
     public static Image monogram(int size) {
         Rectangle bg = new Rectangle(size, size);
         bg.setArcWidth(size * 0.3);

@@ -107,7 +107,6 @@ public class ProductController implements Router.Routable {
     }
 
     private void render(ProductDetail d) {
-        // Galería
         media.getStyleClass().setAll("sf-product-media", "sf-product-hero");
         media.setMinSize(MEDIA_W, MEDIA_H);
         media.setPrefSize(MEDIA_W, MEDIA_H);
@@ -137,7 +136,6 @@ public class ProductController implements Router.Routable {
         }
         VBox gallery = new VBox(12, media, thumbs);
 
-        // Información
         Label category = new Label(Texts.upper(d.categoryName() + (d.sportName() == null ? "" : " · " + d.sportName())));
         category.getStyleClass().addAll("label-text", "ink-muted");
         Label name = new Label(d.name());
@@ -172,7 +170,6 @@ public class ProductController implements Router.Routable {
         description.getStyleClass().addAll("body", "ink-muted");
         description.setWrapText(true);
 
-        // Colores
         HBox swatches = new HBox(8);
         Map<String, String> colors = viewModel.colors();
         colors.forEach((hex, colorName) -> {
@@ -222,7 +219,6 @@ public class ProductController implements Router.Routable {
     private void showImage(ProductDetail d, ProductImage image) {
         Image full = image == null ? null : ProductImages.load(context.storage(), image.path(), MEDIA_W, MEDIA_H);
         if (full == null && viewModel.look() != null) {
-            // Sin foto subida: la foto realista (como en la tarjeta); si no se puede dibujar, la ilustración.
             media.getChildren().clear();
             ProductImages.realistic(context.recolorService(), viewModel.look(), img -> {
                 if (viewModel.detailProperty().get() != d || !media.getChildren().isEmpty()) {
@@ -261,7 +257,7 @@ public class ProductController implements Router.Routable {
         String hex = viewModel.colorHexProperty().get();
         colorLabel.setText(viewModel.colors().getOrDefault(hex, "") + (hex == null ? "" : "  ·  " + hex));
         if (d.images().isEmpty() && viewModel.look() == null) {
-            showImage(d, null); // la ilustración toma el color elegido; la foto realista no cambia
+            showImage(d, null);
         }
         ToggleGroup group = new ToggleGroup();
         sizePane.getChildren().clear();
@@ -271,7 +267,6 @@ public class ProductController implements Router.Routable {
             chip.setToggleGroup(group);
             chip.setSelected(viewModel.variantProperty().get() != null && viewModel.variantProperty().get().id() == v.id());
             if (v.available() == 0) {
-                // Agotado se dice con texto, no solo atenuando.
                 chip.setText(v.sizeName() + " · agotado");
                 chip.setDisable(true);
             }
@@ -289,7 +284,6 @@ public class ProductController implements Router.Routable {
         priceLabel.setText(Money.format(viewModel.unitPrice()));
         stockLabel.getStyleClass().setAll("body-s");
         List<ProductVariant> forColor = viewModel.variantsFor(viewModel.colorHexProperty().get());
-        // Sin color elegido aún (la ficha se está cargando) no hay nada que decir como agotado.
         boolean allSoldOut = !forColor.isEmpty() && forColor.stream().allMatch(x -> x.available() == 0);
         if (v == null && allSoldOut) {
             stockLabel.setText("Agotado en todas las tallas de este color.");
@@ -312,7 +306,6 @@ public class ProductController implements Router.Routable {
             stockLabel.getStyleClass().add("success-text");
             stepper.setMax(Math.min(v.available(), 99));
         }
-        // Marca el chip de la variante elegida (p. ej. tras cambiar de color).
         for (var node : sizePane.getChildren()) {
             if (node instanceof FilterChip chip) {
                 chip.setSelected(v != null && Objects.equals(chip.getUserData(), v.id()));
@@ -320,7 +313,6 @@ public class ProductController implements Router.Routable {
         }
     }
 
-    /** Prenda que el diseñador enfoca al abrirlo desde un producto. */
     static com.sportforce3d.model.Garment designerFocus(com.sportforce3d.model.Garment g) {
         return switch (g) {
             case SHORTS, SOCKS, SHOES, ACCESSORY -> g;

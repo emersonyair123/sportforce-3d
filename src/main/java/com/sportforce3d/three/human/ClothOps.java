@@ -9,17 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.IntPredicate;
 
-/**
- * Operaciones de malla para la ropa ajustada a una persona: vecindad, bordes, suavizado de Taubin, piezas que
- * siguen a otra (ribetes, puños, pretina) y la basta doblada hacia adentro. Las posiciones van en arreglos
- * {@code double[]} de tres en tres (espacio del modelo) indexados por vértice soldado.
- */
 final class ClothOps {
 
     private ClothOps() {
     }
 
-    /** Vecinos de cada vértice soldado (por las aristas de las caras), sin repetir. */
     static int[][] neighbors(MeshData mesh, int[] canon, int m) {
         List<java.util.Set<Integer>> sets = new ArrayList<>(m);
         for (int i = 0; i < m; i++) {
@@ -44,7 +38,6 @@ final class ClothOps {
         return out;
     }
 
-    /** Vértices soldados de borde: los de una arista que usa una sola cara. */
     static boolean[] boundary(MeshData mesh, int[] canon, int m) {
         Map<Long, Integer> count = new HashMap<>();
         int[] f = mesh.faces();
@@ -71,12 +64,6 @@ final class ClothOps {
         return ((long) lo << 32) | (hi & 0xFFFFFFFFL);
     }
 
-    /**
-     * Suavizado de Taubin (λ = 0.5, μ = −0.53): alterna un paso que suaviza y otro que infla, así quita relieves
-     * pequeños (pezones, columna, músculos) sin encoger la prenda. Los vértices {@code fixed} (bordes: ruedo, escote)
-     * solo se suavizan a lo largo del borde, con sus vecinos también de borde: el borde se redondea sin cambiar de
-     * altura. Solo se promedian vecinos con el mismo {@code side}.
-     */
     static void taubin(double[] pos, int[][] nb, boolean[] fixed, boolean[] side, int iterations) {
         int m = nb.length;
         double[] next = new double[pos.length];
@@ -109,15 +96,6 @@ final class ClothOps {
         }
     }
 
-    /**
-     * Desplazamiento de cada punto de una pieza secundaria (ribete, panel, puño, pretina, banda): el promedio,
-     * ponderado por cercanía, del de los 12 puntos más cercanos de su prenda base en el maniquí. Así la pieza queda
-     * pegada a la base ya ajustada, como una tira continua, y conserva su separación de unos milímetros.
-     *
-     * @param baseSrc posiciones de la base en el maniquí
-     * @param baseDst las mismas, ya ajustadas a la persona
-     * @param pts     puntos de la pieza secundaria en el maniquí (se devuelven trasladados)
-     */
     static double[] follow(double[] baseSrc, double[] baseDst, double[] pts) {
         double cell = 0.02;
         Map<Long, List<Integer>> grid = new HashMap<>();
@@ -181,14 +159,6 @@ final class ClothOps {
         return out;
     }
 
-    /**
-     * Traslada una pieza que va sobre un borde de su prenda base (el ribete sobre el escote). Para cada punto del
-     * borde ({@code edge}, índices de punto de {@code src}) se arma un marco local: normal de la tela, "arriba"
-     * (desde los vecinos interiores hacia el borde) y la tangente del borde. Cada punto de la pieza guarda sus
-     * coordenadas en el marco de los dos puntos del borde más cercanos del maniquí y se reconstruye con los marcos
-     * de la prenda ajustada {@code dst} (misma topología). {@code thickness} escala la separación de la tela,
-     * {@code height} el ancho de la tira y {@code lower} la baja (m). Coordenadas de JavaFX en entrada y salida.
-     */
     static float[] followEdge(MeshData src, MeshData dst, IntPredicate edge, float[] pts, double thickness,
                               double height, double lower) {
         int n = src.pointCount();
@@ -271,7 +241,6 @@ final class ClothOps {
         return out;
     }
 
-    /** Marco del punto i del borde: {origen x3, normal x3, arriba x3, tangente x3}. */
     private static double[] frame(MeshData m, int i, int[] normalOf, List<List<Integer>> adj, boolean[] onEdge) {
         float[] p = m.points();
         float[] nr = m.normals();
@@ -314,7 +283,6 @@ final class ClothOps {
         return new double[]{p[i * 3], p[i * 3 + 1], p[i * 3 + 2], nx, ny, nz, ux, uy, uz, tx, ty, tz};
     }
 
-    /** Coordenadas de pts[p] en el marco {@code a}, reconstruidas en el marco {@code b}. */
     private static double[] carry(float[] pts, int p, double[] a, double[] b, double thickness, double height,
                                   double lower) {
         double dx = pts[p] - a[0];
@@ -349,18 +317,12 @@ final class ClothOps {
         return ((long) (x & 0x1FFFFF) << 42) | ((long) (y & 0x1FFFFF) << 21) | (z & 0x1FFFFF);
     }
 
-    /**
-     * Agrega la basta doblada hacia adentro en los bordes que cumplen {@code hem} (índice de punto): un labio de
-     * {@code thickness} hacia la piel y una franja interior de {@code depth} que sube por dentro. Así el borde tiene
-     * grosor y no parece una lámina. Toma la textura del punto del borde (mismo color que la prenda).
-     */
     static MeshData hemFold(MeshData mesh, IntPredicate hem, double thickness, double depth) {
         float[] p = mesh.points();
         float[] nrm = mesh.normals();
         float[] tex = mesh.texCoords();
         int[] f = mesh.faces();
         int n = mesh.pointCount();
-        // Aristas de borde (por índice de punto) y, para cada punto, su texcoord y un vecino interior.
         Map<Long, int[]> edgeUse = new HashMap<>();
         int[] texOf = new int[n];
         int[] normalOf = new int[n];
@@ -392,7 +354,6 @@ final class ClothOps {
         if (edges.isEmpty()) {
             return mesh;
         }
-        // Nuevos puntos: labio (a) y franja interior (b) para cada punto del borde.
         int[] lip = new int[n];
         int[] inner = new int[n];
         Arrays.fill(lip, -1);
@@ -408,7 +369,6 @@ final class ClothOps {
             double nx = nrm[ni];
             double ny = nrm[ni + 1];
             double nz = nrm[ni + 2];
-            // "Arriba" sobre la tela: hacia los vecinos que no están en el borde.
             double ux = 0;
             double uy = 0;
             double uz = 0;
@@ -422,7 +382,7 @@ final class ClothOps {
             double ul = Math.sqrt(ux * ux + uy * uy + uz * uz);
             if (ul < 1e-9) {
                 ux = 0;
-                uy = -1; // arriba en JavaFX
+                uy = -1;
                 uz = 0;
                 ul = 1;
             }
@@ -434,8 +394,6 @@ final class ClothOps {
             float az = (float) (p[i * 3 + 2] - nz * thickness);
             lip[i] = pointBase + newPts.size();
             newPts.add(new float[]{ax, ay, az});
-            // La franja interior sigue la tela hacia arriba (fila a fila) y queda por dentro de ella: en una zona
-            // curva, una recta tangente se asomaría por fuera.
             int at = i;
             double walked = 0;
             while (walked < depth) {
@@ -477,15 +435,12 @@ final class ClothOps {
         for (int[] e : edges) {
             int a = e[0];
             int b = e[1];
-            // Índice de normal de cada punto nuevo: el labio y la franja tienen la suya (2 por punto del borde).
             int lipNa = normalBase + (lip[a] - pointBase);
             int lipNb = normalBase + (lip[b] - pointBase);
             int inNa = lipNa + 1;
             int inNb = lipNb + 1;
-            // Labio: borde exterior → borde interior.
             w = face(faces2, w, a, lipNa, texOf[a], b, lipNb, texOf[b], lip[b], lipNb, texOf[b]);
             w = face(faces2, w, a, lipNa, texOf[a], lip[b], lipNb, texOf[b], lip[a], lipNa, texOf[a]);
-            // Franja interior, mirando hacia la piel.
             w = face(faces2, w, lip[a], inNa, texOf[a], lip[b], inNb, texOf[b], inner[b], inNb, texOf[b]);
             w = face(faces2, w, lip[a], inNa, texOf[a], inner[b], inNb, texOf[b], inner[a], inNa, texOf[a]);
         }

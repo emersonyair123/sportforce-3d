@@ -12,10 +12,6 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Imágenes de emblemas (SVG de la biblioteca, recoloreados) y logos subidos (PNG o SVG), con caché.
- * Se usa en el hilo de JavaFX (los SVG se dibujan con snapshot).
- */
 public class ElementImages {
 
     private static final Logger log = LoggerFactory.getLogger(ElementImages.class);
@@ -34,7 +30,6 @@ public class ElementImages {
         this.storage = storage;
     }
 
-    /** Emblema con sus dos colores reemplazados (null = colores originales). */
     public Image emblem(String key, String primary, String accent) {
         String id = "e|" + key + "|" + primary + "|" + accent;
         Image cached = cache.get(id);
@@ -54,7 +49,6 @@ public class ElementImages {
         return img;
     }
 
-    /** Logo subido por el cliente; null si el archivo ya no existe o no se puede leer. */
     public Image logo(String storedPath) {
         if (storedPath == null || storage == null) {
             return null;

@@ -1,21 +1,5 @@
 package com.sportforce3d.design;
 
-/**
- * Elemento colocado sobre una prenda: nombre, número, emblema de la biblioteca o logo subido.
- *
- * @param u, v         posición del centro dentro de su zona (0..1)
- * @param scale        tamaño relativo (0.2 = 20 % … 2.0 = 200 %)
- * @param rotation     giro en grados (-180..180)
- * @param height       alto base en metros sobre la prenda (antes de {@code scale})
- * @param text         texto del nombre (máx. 12) o número (0–99)
- * @param font         familia tipográfica (ver {@link DesignFonts})
- * @param color        color de relleno del texto, o color principal del emblema
- * @param accentColor  contorno del texto, o color de acento del emblema
- * @param outline      grosor del contorno en metros (0 = sin contorno)
- * @param emblem       clave del emblema de la biblioteca (p. ej. "escudo-clasico")
- * @param assetId      id de design_assets del logo subido
- * @param assetPath    ruta del logo en el almacenamiento
- */
 public record DesignElement(String id, ElementType type, Area area, double u, double v, double scale,
                             double rotation, boolean visible, boolean locked, double height,
                             String text, String font, String color, String accentColor, double outline,
@@ -91,7 +75,6 @@ public record DesignElement(String id, ElementType type, Area area, double u, do
                 color, accentColor, outline, emblem, assetId, assetPath);
     }
 
-    /** Nombre corto para la lista de capas. */
     public String displayName() {
         return switch (type) {
             case NAME -> "Nombre · " + (text == null || text.isBlank() ? "(vacío)" : text);

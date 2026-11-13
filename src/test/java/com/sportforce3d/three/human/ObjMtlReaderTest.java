@@ -32,7 +32,6 @@ class ObjMtlReaderTest {
             map_Kd -s 1 1 1 textures\\ojo.png
             """;
 
-    /** Un cuadrado (dos materiales: un cuadro de piel y un triángulo de ojos), sin normales como MakeHuman. */
     private static final String OBJ = """
             mtllib modelo.mtl
             v 0 0 0
@@ -76,7 +75,6 @@ class ObjMtlReaderTest {
     void convierteACoordenadasDeJavaFxEInvierteV() throws IOException {
         ObjMtlReader.Result r = read(OBJ, Map.of("modelo.mtl", MTL));
         MeshData piel = r.groups().get(0).mesh();
-        // Vértice 3 (1, 2, 0) → (1, -2, -0); su vt (1, 1) → (1, 0).
         int corner = 2;
         int p = piel.faces()[corner * 3];
         int t = piel.faces()[corner * 3 + 2];
@@ -93,7 +91,6 @@ class ObjMtlReaderTest {
     @Test
     void calculaNormalesSuavesUnitariasCuandoElObjNoTrae() throws IOException {
         MeshData piel = read(OBJ, Map.of("modelo.mtl", MTL)).groups().get(0).mesh();
-        // Cuadro plano en z = 0 con caras antihorarias vistas desde +Z (el frente): normal (0, 0, 1) → JavaFX (0, 0, -1).
         for (int c = 0; c < 6; c++) {
             int n = piel.faces()[c * 3 + 1];
             assertThat(piel.normals()[n * 3]).isCloseTo(0f, within(1e-6f));
@@ -104,7 +101,6 @@ class ObjMtlReaderTest {
 
     @Test
     void lasNormalesSePromedianEntreCarasVecinas() throws IOException {
-        // Dos caras en ángulo recto que comparten la arista 1–2: la normal suave del vértice compartido queda a 45°.
         String obj = """
                 v 0 0 0
                 v 0 1 0
@@ -122,7 +118,6 @@ class ObjMtlReaderTest {
         float[] nn = m.normals();
         double len = Math.sqrt(nn[n * 3] * nn[n * 3] + nn[n * 3 + 1] * nn[n * 3 + 1] + nn[n * 3 + 2] * nn[n * 3 + 2]);
         assertThat(len).isCloseTo(1, within(1e-6));
-        // OBJ: (0,0,1) y (-1,0,0) → promedio (-0.707, 0, 0.707) → JavaFX (-0.707, 0, -0.707).
         assertThat(nn[n * 3]).isCloseTo(-0.7071f, within(1e-3f));
         assertThat(nn[n * 3 + 1]).isCloseTo(0f, within(1e-6f));
         assertThat(nn[n * 3 + 2]).isCloseTo(-0.7071f, within(1e-3f));

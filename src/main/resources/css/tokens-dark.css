@@ -1,8 +1,3 @@
-/*
- * SPORTFORCE 3D · Tokens de color, tema oscuro (predeterminado).
- * Valores copiados sin cambios de design/tokens.json. JavaFX no soporta var():
- * cada token es un "looked-up color" definido en .root y usado por nombre en components.css.
- */
 .root {
     -sf-bg-000: #07080a;
     -sf-bg-100: #0e1014;
@@ -26,7 +21,6 @@
     -sf-focus: #5c9bff;
     -sf-scrim: rgba(0, 0, 0, 0.72);
 
-    /* Colores de las sombras (shadow-card, glow-brand, glow-accent). */
     -sf-shadow-card: rgba(0, 0, 0, 0.55);
     -sf-glow-brand: rgba(31, 95, 255, 0.45);
     -sf-glow-accent: rgba(57, 255, 136, 0.40);

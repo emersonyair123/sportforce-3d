@@ -22,7 +22,6 @@ class DesignDocumentTest {
 
         assertThat(back).isEqualTo(doc);
         assertThat(json).contains("\"schemaVersion\":4", "\"JERSEY_BODY\":\"#D7192A\"", "FRANJAS_VERTICALES", "QUISPE");
-        // El orden de capas se conserva.
         assertThat(back.elements()).extracting(DesignElement::id)
                 .containsExactlyElementsOf(doc.elements().stream().map(DesignElement::id).toList());
     }
@@ -37,7 +36,6 @@ class DesignDocumentTest {
         assertThat(DesignJson.read(json).cut()).isEqualTo(cut);
         assertThat(doc.withColor(Zone.JERSEY_BODY, "#000000").cut()).isEqualTo(cut);
 
-        // Esquema 2 (Etapa 7–9, sin "cut"): manga corta, short medio y media larga, y pasa a la versión actual.
         String v2 = DesignJson.write(SampleDesigns.halcones()).replace("\"schemaVersion\":4", "\"schemaVersion\":2")
                 .replaceAll(",?\"cut\":\\{[^}]*\\}", "");
         assertThat(v2).doesNotContain("\"cut\"");
@@ -61,7 +59,6 @@ class DesignDocumentTest {
         assertThat(corto.element(moved.id()).orElseThrow().v()).isEqualTo(0.8);
         DesignDocument largo = corto.withCut(corto.cut().withShorts(GarmentCut.ShortsLength.LARGO));
         assertThat(largo.element(auto.id()).orElseThrow().v()).isEqualTo(GarmentCut.ShortsLength.LARGO.numberV());
-        // Cambiar la manga no mueve nada.
         assertThat(largo.withCut(largo.cut().withSleeve(GarmentCut.Sleeve.LARGA)).elements()).isEqualTo(largo.elements());
         assertThat(DesignDefaults.shortsNumber("9", "#FFFFFF", "#000000", GarmentCut.ShortsLength.CORTO).v())
                 .isEqualTo(GarmentCut.ShortsLength.CORTO.numberV());
@@ -85,7 +82,6 @@ class DesignDocumentTest {
         assertThat(back.realistic().color("camiseta")).isEqualTo("#D7141E");
         assertThat(back.realistic().modelKey()).isEqualTo("voley_mujer_frente");
 
-        // Un diseño guardado antes de la Etapa 7 (esquema 1, sin "realistic") se abre y pasa a la versión actual.
         String v1 = "{\"schemaVersion\":1,\"bodyType\":\"JUVENIL\",\"productId\":4,"
                 + "\"colors\":{\"JERSEY_BODY\":\"#D7192A\"},\"patterns\":{},\"materials\":{},\"elements\":[]}";
         DesignDocument old = DesignJson.read(v1);

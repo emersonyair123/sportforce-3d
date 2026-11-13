@@ -100,15 +100,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Diseñador con dos vistas: la <b>vista realista</b> (principal, fotos recoloreadas: {@link RealisticDesigner}) y el
- * <b>visor 3D</b>: colores por zona, patrones y materiales; nombre, número, emblemas y logos que se arrastran sobre
- * el modelo; capas. Las dos comparten deshacer/rehacer, guardado y borrador automático; las capturas que se guardan
- * (y pasan al pedido) son las fotos realistas de frente y espalda.
- */
 public class DesignerController implements Router.Routable {
-
-    /** Máximo de texturas recompuestas por segundo mientras se edita. */
     private static final long FRAME_NANOS = 1_000_000_000L / 30;
     private static final Duration AUTOSAVE_EVERY = Duration.seconds(30);
     private static final List<Garment> GARMENTS = List.of(Garment.JERSEY, Garment.SHORTS, Garment.SOCKS, Garment.SHOES);
@@ -130,7 +122,6 @@ public class DesignerController implements Router.Routable {
     private final DesignRenderer renderer;
     private final RealisticDesigner realistic;
     private final BooleanProperty realisticMode = new SimpleBooleanProperty(true);
-    /** Botones de la barra que solo sirven en el visor 3D (vistas y zoom). */
     private final List<Node> viewerButtons = new ArrayList<>();
 
     @FXML private HBox root;
@@ -152,7 +143,6 @@ public class DesignerController implements Router.Routable {
     private Tab tab = Tab.DESIGN;
     private final ToggleGroup tabGroup = new ToggleGroup();
     private Zone zone = Zone.JERSEY_BODY;
-    /** Actualizadores de los controles visibles a partir del documento. */
     private final List<Runnable> syncers = new ArrayList<>();
     private boolean syncing;
     private String structureKey = "";
@@ -197,15 +187,12 @@ public class DesignerController implements Router.Routable {
         StackPane.setMargin(notices3d, new javafx.geometry.Insets(0, 16, 40, 16));
         stage.getChildren().add(2, notices3d);
         root.getProperties().put(RealisticDesigner.class, realistic);
-        // Para pruebas de interfaz (TestFX): el estado se lee del ViewModel, no de los controles.
         root.getProperties().put(DesignerViewModel.class, viewModel);
         buildToolbar();
         buildViewTabs();
         buildTabs();
         buildFooter();
 
-        // La persona (o el maniquí de respaldo) se carga en segundo plano: el aviso solo se ve en el visor 3D (o al
-        // guardar).
         BooleanBinding loading3d = Bindings.when(viewModel.personFallbackProperty())
                 .then(viewModel.loadingProperty()).otherwise(viewModel.personLoadingProperty());
         loadingBox.visibleProperty().bind(loading3d.and(realisticMode.not()).or(viewModel.savingProperty()));
@@ -237,14 +224,12 @@ public class DesignerController implements Router.Routable {
         viewModel.documentProperty().addListener((obs, old, doc) -> {
             refreshPanel();
             updateNotices3d();
-            // Manga o largos distintos: otra prenda simulada (la cámara no se mueve, ver Viewer3D.frame).
             if (!realisticMode.get() && old != null && !old.cut().equals(doc.cut())) {
                 viewModel.loadPerson();
             }
         });
         viewModel.selectedIdProperty().addListener((obs, old, id) -> {
             updateHighlight(old, id);
-            // Un nombre o número elegido (en la persona, en Capas o recién agregado) abre su tarjeta en Texto.
             viewModel.selected().map(TextSlot::of).ifPresent(openText::add);
             refreshPanel();
         });
@@ -267,7 +252,6 @@ public class DesignerController implements Router.Routable {
         viewModel.totalCentsProperty().addListener((obs, old, t) -> updatePrice());
 
         viewer.setPickDrag(new PickDragHandler());
-        // Cámara fija mientras se edita: solo la mueven el arrastre, la rueda y Frente/Espalda/Costado/Reiniciar.
         viewer.autoRotateProperty().set(false);
         root.addEventHandler(KeyEvent.KEY_PRESSED, this::onKey);
         root.sceneProperty().addListener((obs, old, scene) -> {
@@ -294,7 +278,6 @@ public class DesignerController implements Router.Routable {
     public void onRoute(Object param) {
         Routes.DesignerParams p = param instanceof Routes.DesignerParams d ? d : new Routes.DesignerParams(null, null, null);
         initialFocus = p.focus() != null && GARMENTS.contains(p.focus()) ? p.focus() : null;
-        // La vista realista no tiene medias sueltas ni zapatillas: esas prendas se abren en el visor 3D.
         if (initialFocus == Garment.SHOES || initialFocus == Garment.SOCKS) {
             realisticMode.set(false);
         }
@@ -314,9 +297,6 @@ public class DesignerController implements Router.Routable {
                 .ifPresent(this::showDraftBanner);
     }
 
-    // ---------------------------------------------------------------- Visor
-
-    /** Maniquí procedural: solo si la persona no está disponible (respaldo). */
     private void showModel(ModelData model) {
         if (model == null || !viewModel.personFallbackProperty().get()) {
             return;
@@ -324,7 +304,6 @@ public class DesignerController implements Router.Routable {
         viewer.setModel(model);
         renderer.applyAll(viewModel.doc(), viewModel.materialsProperty().get());
         applied = viewModel.doc();
-        // Al abrir se ve el cuerpo completo (como "Reiniciar"); solo un producto de zapatillas o medias enfoca su prenda.
         if (initialFocus != null) {
             viewer.focus(initialFocus);
         }
@@ -332,10 +311,6 @@ public class DesignerController implements Router.Routable {
         viewer.requestFocus();
     }
 
-    /**
-     * Persona de MakeHuman con el uniforme puesto: sus prendas son zonas como las del maniquí, así que el mismo
-     * {@link DesignRenderer} les aplica colores, patrones, textos, logos y telas, y se actualizan en vivo.
-     */
     private void showPerson(DressedPerson person) {
         if (person == null || viewModel.personFallbackProperty().get()) {
             return;
@@ -352,7 +327,6 @@ public class DesignerController implements Router.Routable {
         }
     }
 
-    /** Lleva al 3D lo que cambió desde la última vez (solo las prendas afectadas). Máx. 30 veces por segundo. */
     private void flushRender() {
         DesignDocument doc = viewModel.doc();
         if (doc == applied || viewer.getModel() == null) {
@@ -366,7 +340,6 @@ public class DesignerController implements Router.Routable {
         applied = doc;
     }
 
-    /** Arrastre de elementos sobre la prenda con la coordenada de textura del punto tocado. */
     private final class PickDragHandler implements Viewer3D.PickDrag {
         @Override
         public boolean press(Zone z, double u, double v) {
@@ -403,7 +376,6 @@ public class DesignerController implements Router.Routable {
                 return;
             }
             DesignElement e = viewModel.doc().element(dragId).orElse(null);
-            // El elemento no sale de su zona: si el cursor sale, queda en el último punto válido.
             if (e == null || z.garment() != e.area().garment() || !e.area().contains(u, v)) {
                 return;
             }
@@ -437,12 +409,9 @@ public class DesignerController implements Router.Routable {
         e.consume();
     }
 
-    // ---------------------------------------------------------------- Barra flotante
-
     private void buildToolbar() {
         toolbar.setAlignment(Pos.CENTER);
         toolbar.setSpacing(4);
-        // Costado: cada clic pasa al otro lado (derecha ↔ izquierda de la persona).
         boolean[] left = {false};
         Map<String, Runnable> views = new LinkedHashMap<>();
         views.put("Frente", () -> viewer.showView(ViewPreset.FRONT));
@@ -486,8 +455,6 @@ public class DesignerController implements Router.Routable {
         viewerButtons.addAll(List.of(zoomSep, zoomOut, zoomIn, resetView, historySep));
     }
 
-    // ---------------------------------------------------------------- Vista realista / visor 3D
-
     private void buildViewTabs() {
         ToggleGroup group = new ToggleGroup();
         for (boolean real : new boolean[]{true, false}) {
@@ -515,7 +482,6 @@ public class DesignerController implements Router.Routable {
         });
     }
 
-    /** Muestra la vista elegida: escenario, botones de la barra, pestañas del 3D y panel. */
     private void applyMode() {
         boolean real = realisticMode.get();
         realistic.stageNode().setVisible(real);
@@ -537,7 +503,6 @@ public class DesignerController implements Router.Routable {
         }
     }
 
-    /** Avisos de la Vista 3D: lo que el diseño tiene y el 3D muestra con lo más parecido. */
     private final Label notices3d = new Label();
 
     private void updateNotices3d() {
@@ -627,8 +592,6 @@ public class DesignerController implements Router.Routable {
         }
     }
 
-    // ---------------------------------------------------------------- Encabezado, pestañas y pie
-
     private void updateTitle() {
         String n = viewModel.nameProperty().get();
         StringBuilder sb = new StringBuilder(n == null || n.isBlank() ? "Diseño nuevo" : n);
@@ -680,9 +643,6 @@ public class DesignerController implements Router.Routable {
         cartButton.disableProperty().bind(viewModel.savingProperty());
     }
 
-    // ---------------------------------------------------------------- Resaltado del elemento elegido
-
-    /** Redibuja las prendas del elemento que deja de estar elegido y del nuevo, con el contorno de foco. */
     private void updateHighlight(String oldId, String newId) {
         renderer.composer().setHighlight(newId);
         if (viewer.getModel() == null) {
@@ -698,7 +658,6 @@ public class DesignerController implements Router.Routable {
         renderer.applyGarments(viewModel.doc(), garments);
     }
 
-    /** Captura sin el contorno de selección (capturas guardadas, del pedido o PNG). */
     private <T> T cleanCapture(java.util.function.Supplier<T> shot) {
         flushRender();
         String selected = renderer.composer().highlight();
@@ -713,12 +672,6 @@ public class DesignerController implements Router.Routable {
         }
     }
 
-    // ---------------------------------------------------------------- Agregar al carrito
-
-    /**
-     * El carrito guarda una referencia al diseño guardado: si hay cambios sin guardar (o el diseño es nuevo) primero
-     * se guarda, y luego se elige producto, talla y cantidad.
-     */
     private void addToCart() {
         if (viewModel.designIdProperty().get() == null || viewModel.dirtyProperty().get()) {
             save(this::openCartDialog);
@@ -886,9 +839,6 @@ public class DesignerController implements Router.Routable {
         return row;
     }
 
-    // ---------------------------------------------------------------- Guardar
-
-    /** Guarda con nombre; {@code after} (opcional) corre cuando el guardado terminó bien. */
     private void save(Runnable after) {
         if (viewModel.savingProperty().get()) {
             return;
@@ -909,12 +859,6 @@ public class DesignerController implements Router.Routable {
                 n -> saveAs(n, after));
     }
 
-    /**
-     * Las capturas que se guardan (y que el pedido copia) son las fotos realistas de frente y espalda, dibujadas en
-     * segundo plano con la vista realista del documento. Los buzos no tienen foto de espalda: se guarda solo el frente.
-     * Si el diseño tiene otro corte o tela (que las fotos realistas no muestran), las fotos salen de la Vista 3D: el
-     * taller recibe lo que se compró.
-     */
     private void saveAs(String name, Runnable after) {
         if (!viewModel.doc().realisticPhotosMatch()) {
             capture3d(paths -> store(name, paths, after));
@@ -935,14 +879,8 @@ public class DesignerController implements Router.Routable {
         }, paths -> store(name, paths, after), e -> Toast.error(stage, ErrorMessages.of(e)));
     }
 
-    /** Proporción (ancho/alto) de las fotos del diseño tomadas en la Vista 3D: retrato, persona completa. */
     private static final double PHOTO_ASPECT = 0.75;
 
-    /**
-     * Fotos de frente y espalda desde la Vista 3D con la persona vestida con el corte del diseño (se carga si hace
-     * falta, también desde la Vista realista), cuerpo completo y fondo oscuro, sin el contorno de selección. La cámara
-     * del cliente no cambia. Con el maniquí de respaldo no se guarda: no mostraría el corte elegido.
-     */
     private void capture3d(java.util.function.Consumer<Path[]> done) {
         if (viewModel.personMatchesDocument() && viewer.getModel() != null) {
             shoot3d(done);
@@ -961,7 +899,6 @@ public class DesignerController implements Router.Routable {
                     return;
                 }
                 viewModel.personLoadingProperty().removeListener(this);
-                // showPerson ya vistió el visor (mismo cambio de propiedad); se espera un pulso para el render.
                 javafx.application.Platform.runLater(() -> {
                     if (viewModel.personMatchesDocument() && viewer.getModel() != null) {
                         shoot3d(done);
@@ -993,7 +930,6 @@ public class DesignerController implements Router.Routable {
         }, done, e -> Toast.error(stage, ErrorMessages.of(e)));
     }
 
-    /** Recorte vertical centrado (la persona completa queda en el centro del visor). */
     private static WritableImage portrait(WritableImage img) {
         int w = (int) img.getWidth();
         int h = (int) img.getHeight();
@@ -1005,7 +941,6 @@ public class DesignerController implements Router.Routable {
     private void store(String name, Path[] paths, Runnable after) {
         viewModel.save(name, paths[0], paths[1], summary -> {
             deleteQuietly(paths);
-            // Guardar borra el borrador: el aviso de recuperarlo ya no aplica.
             draftBanner.setVisible(false);
             draftBanner.setManaged(false);
             Toast.success(stage, "Diseño guardado (versión " + summary.version() + ").");
@@ -1026,17 +961,10 @@ public class DesignerController implements Router.Routable {
             try {
                 Files.deleteIfExists(p);
             } catch (java.io.IOException ignored) {
-                // Archivo temporal: el sistema lo limpiará.
             }
         }
     }
 
-    // ---------------------------------------------------------------- Panel
-
-    /**
-     * Reconstruye los controles cuando cambia la estructura (pestaña, prenda, elemento elegido, lista de
-     * elementos); si no, solo actualiza sus valores para no interrumpir un deslizador o un campo en uso.
-     */
     private void refreshPanel() {
         if (realisticMode.get()) {
             String key = realistic.structureKey();
@@ -1050,7 +978,6 @@ public class DesignerController implements Router.Routable {
             return;
         }
         DesignDocument doc = viewModel.doc();
-        // En Texto cada tarjeta tiene su editor: elegir otro elemento no reconstruye el panel (no se pierde el foco).
         String key = tab == Tab.TEXT ? tab + "|" + textStructureKey(doc)
                 : tab + "|" + viewModel.personFallbackProperty().get() + "|" + viewModel.garmentProperty().get() + "|"
                 + viewModel.selectedIdProperty().get() + "|" + doc.elements().stream().map(e -> e.id() + e.area()).toList()
@@ -1110,8 +1037,6 @@ public class DesignerController implements Router.Routable {
         }
     }
 
-    // ---------------------------------------------------------------- Pestaña Diseño
-
     private void buildDesignTab() {
         Garment garment = viewModel.garmentProperty().get();
         GarmentPicker picker = new GarmentPicker(GARMENTS);
@@ -1124,7 +1049,6 @@ public class DesignerController implements Router.Routable {
         panel.getChildren().add(section("PRENDA", picker));
 
         if (!viewModel.personFallbackProperty().get()) {
-            // Persona: la misma categoría que la vista realista.
             FlowPane persons = new FlowPane(6, 6);
             ToggleGroup personGroup = new ToggleGroup();
             for (Persona p : Persona.values()) {
@@ -1143,7 +1067,6 @@ public class DesignerController implements Router.Routable {
 
         panel.getChildren().add(buildCutSection());
 
-        // Maniquí (respaldo si falta el modelo de la persona)
         FlowPane bodies = new FlowPane(6, 6);
         ToggleGroup bodyGroup = new ToggleGroup();
         for (BodyType type : BodyType.values()) {
@@ -1160,7 +1083,6 @@ public class DesignerController implements Router.Routable {
             panel.getChildren().add(section("MANIQUÍ", bodies));
         }
 
-        // Colores por zona: se elige la zona y la paleta la colorea.
         VBox zones = new VBox(4);
         ToggleGroup zoneGroup = new ToggleGroup();
         for (Zone z : Zone.values()) {
@@ -1221,7 +1143,6 @@ public class DesignerController implements Router.Routable {
         panel.getChildren().add(reset);
     }
 
-    /** Manga corta o larga, largo del short y de las medias (Etapa 10C): prendas simuladas de cada largo. */
     private VBox buildCutSection() {
         VBox rows = new VBox(10);
         rows.getChildren().add(cutRow("Manga", GarmentCut.Sleeve.values(), GarmentCut.Sleeve::label,
@@ -1317,16 +1238,9 @@ public class DesignerController implements Router.Routable {
         return section("PATRÓN", chips, options);
     }
 
-    /** Telas del uniforme (sección TELA), en este orden; son materiales del catálogo con su recargo. */
     static final List<String> FABRICS = List.of("DRY_FIT", "POLIESTER_LISO", "ALGODON", "MALLA");
-    /** La tela elegida se aplica a la camiseta y al short a la vez. */
     static final List<MaterialSlot> FABRIC_SLOTS = List.of(MaterialSlot.JERSEY, MaterialSlot.SHORTS);
 
-    /**
-     * Sección TELA: Dry-fit, Poliéster liso, Algodón y Malla deportiva para camiseta y short. Cada una cambia relieve,
-     * brillo (y en la malla, agujeros) en la Vista 3D; se guarda como el material de las dos ranuras del documento, así
-     * el precio usa los recargos del catálogo y la ficha técnica del ADMIN la muestra por prenda.
-     */
     private VBox buildFabricSection() {
         Map<String, Material> all = viewModel.materialsProperty().get();
         List<Material> list = FABRICS.stream().map(all::get).filter(Objects::nonNull)
@@ -1360,7 +1274,6 @@ public class DesignerController implements Router.Routable {
             boolean same = Objects.equals(jersey, shorts) && FABRICS.contains(jersey);
             picker.setSelected(same ? all.get(jersey) : null);
             picker.sampleColorProperty().set(color(doc.color(Zone.JERSEY_BODY)));
-            // Diseños anteriores pueden tener otra tela (Jacquard, Licra) o una distinta en cada prenda.
             other.setText(same ? "" : "Tela actual: camiseta " + materialName(jersey) + ", short " + materialName(shorts)
                     + ". Elige una para usarla en las dos prendas.");
             other.setVisible(!same);
@@ -1376,7 +1289,6 @@ public class DesignerController implements Router.Routable {
     }
 
     private VBox buildMaterialSection(MaterialSlot slot) {
-        // El material de serie de la ranura va incluido en el precio (DesignPricing): su tarjeta dice "Incluido".
         List<Material> list = viewModel.materialsProperty().get().values().stream()
                 .filter(slot::accepts)
                 .map(m -> m.code().equals(slot.defaultCode()) ? included(m) : m)
@@ -1411,9 +1323,6 @@ public class DesignerController implements Router.Routable {
                 m.roughness(), m.sheen(), m.metalness(), m.previewPattern());
     }
 
-    // ---------------------------------------------------------------- Pestaña Texto
-
-    /** Tarjetas de texto abiertas (con su editor a la vista). */
     private final Set<TextSlot> openText = java.util.EnumSet.noneOf(TextSlot.class);
 
     private String textStructureKey(DesignDocument doc) {
@@ -1441,10 +1350,6 @@ public class DesignerController implements Router.Routable {
         }
     }
 
-    /**
-     * Tarjeta de una opción de texto: el botón la agrega (o abre y cierra su editor) y el editor (texto, tipografía,
-     * color, contorno, tamaño y giro) aparece justo debajo, con su botón para quitarla.
-     */
     private VBox textCard(TextSlot slot, DesignElement element) {
         VBox card = new VBox(4);
         card.getStyleClass().add("sf-text-card");
@@ -1492,7 +1397,6 @@ public class DesignerController implements Router.Routable {
             editor.getStyleClass().add("sf-text-card-editor");
             elementControls(element, editor, false);
             card.getChildren().add(editor);
-            // Usar el editor elige el elemento: se resalta en la persona (sin reconstruir el panel).
             editor.addEventFilter(javafx.scene.input.MouseEvent.MOUSE_PRESSED, x -> select(id));
             editor.lookupAll(".text-field").forEach(n -> n.focusedProperty().addListener((obs, was, now) -> {
                 if (now) {
@@ -1509,19 +1413,14 @@ public class DesignerController implements Router.Routable {
         }
     }
 
-    /** Blanco o negro, lo que más contraste con el color de fondo. */
     private static String contrast(String hex) {
         Color c = color(hex);
         double lum = 0.2126 * c.getRed() + 0.7152 * c.getGreen() + 0.0722 * c.getBlue();
         return lum > 0.55 ? "#0B0E13" : "#FFFFFF";
     }
 
-    // ---------------------------------------------------------------- Pestaña Logos
-
     private void buildLogosTab() {
         DesignDocument doc = viewModel.doc();
-        // Escudo del color del cuello (el acento del uniforme) con detalle en blanco o negro; si el cuello es del
-        // mismo color que el cuerpo, escudo en blanco/negro con detalle del color del cuerpo.
         String body = doc.color(Zone.JERSEY_BODY);
         String collar = doc.color(Zone.JERSEY_COLLAR);
         String primary = Objects.equals(collar, body) ? contrast(body) : collar;
@@ -1605,8 +1504,6 @@ public class DesignerController implements Router.Routable {
         }, e -> { });
     }
 
-    // ---------------------------------------------------------------- Pestaña Capas
-
     private void buildLayersTab() {
         List<DesignElement> elements = viewModel.doc().elements();
         if (elements.isEmpty()) {
@@ -1615,7 +1512,6 @@ public class DesignerController implements Router.Routable {
             return;
         }
         VBox list = new VBox(4);
-        // La capa de arriba (la última que se dibuja) va primero.
         for (int i = elements.size() - 1; i >= 0; i--) {
             list.getChildren().add(layerRow(elements.get(i), i, elements.size()));
         }
@@ -1662,8 +1558,6 @@ public class DesignerController implements Router.Routable {
         return row;
     }
 
-    // ---------------------------------------------------------------- Inspector del elemento elegido
-
     private VBox buildInspector(DesignElement e) {
         String id = e.id();
         VBox box = new VBox(16);
@@ -1687,7 +1581,6 @@ public class DesignerController implements Router.Routable {
         return box;
     }
 
-    /** Controles de un elemento (texto, tipografía, zona, colores, tamaño y giro) dentro de {@code box}. */
     private void elementControls(DesignElement e, VBox box, boolean withArea) {
         String id = e.id();
         if (e.type().isText()) {

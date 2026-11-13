@@ -25,7 +25,6 @@ import static com.sportforce3d.ui.UiTestSupport.type;
 import static com.sportforce3d.ui.UiTestSupport.waitUntil;
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Flujo completo con la interfaz real: iniciar sesión → catálogo → ficha → carrito → checkout → pedido. */
 @ExtendWith(ApplicationExtension.class)
 class ShopFlowUiTest {
 
@@ -41,7 +40,6 @@ class ShopFlowUiTest {
 
     @Test
     void clientBuysAShirtFromLoginToPendingOrder(FxRobot robot) {
-        // Contraseña incorrecta: mensaje amable y seguimos en el inicio de sesión.
         type(robot, "Correo", "cliente@sportforce3d.pe");
         type(robot, "Contraseña", "equivocada");
         click(robot, "Iniciar sesión");
@@ -52,7 +50,6 @@ class ShopFlowUiTest {
         click(robot, "Iniciar sesión");
         waitUntil("la tienda", () -> UiTestSupport.labeled(robot, "Catálogo").isPresent());
 
-        // Catálogo: buscar sin tildes y abrir la ficha.
         click(robot, "Catálogo");
         waitUntil("tarjetas del catálogo", () -> !robot.lookup(".sf-product-card").queryAll().isEmpty());
         UiTestSupport.clickNode(robot, robot.lookup(".sf-search .text-field").<Node>query());
@@ -60,14 +57,12 @@ class ShopFlowUiTest {
         waitUntil("la Camiseta Pro Dry-Fit", () -> card(robot, "Camiseta Pro Dry-Fit") != null);
         UiTestSupport.clickNode(robot, card(robot, "Camiseta Pro Dry-Fit").lookup(".title-s"));
 
-        // Ficha: elegir talla M y agregar 2 unidades.
         waitUntil("tallas", () -> size(robot, "M") != null);
         UiTestSupport.clickNode(robot, size(robot, "M"));
         UiTestSupport.clickNode(robot, robot.lookup((Predicate<Node>) n -> "Aumentar cantidad".equals(n.getAccessibleText())).<Node>query());
         click(robot, "Agregar al carrito");
         waitUntil("contador del carrito", () -> context.cartCountProperty().get() == 2);
 
-        // Carrito → checkout → confirmar con Yape.
         click(robot, "Carrito");
         waitUntil("resumen del carrito", () -> UiTestSupport.labeled(robot, "Continuar al pago").isPresent());
         assertThat(textShown(robot, t -> t.contains("Camiseta Pro Dry-Fit"))).isTrue();
@@ -76,7 +71,6 @@ class ShopFlowUiTest {
         click(robot, "Yape");
         click(robot, "Confirmar pedido");
 
-        // Pedido creado, pendiente de pago, con el formulario para registrar el pago.
         waitUntil("número de pedido", () -> textShown(robot, t -> t.matches("PED-\\d{4}-\\d{6}")));
         waitUntil("estado", () -> textShown(robot, t -> t.equalsIgnoreCase("Pendiente de pago")));
         assertThat(UiTestSupport.labeled(robot, "Enviar comprobante")).isPresent();

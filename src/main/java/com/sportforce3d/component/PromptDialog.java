@@ -12,10 +12,6 @@ import javafx.scene.layout.VBox;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-/**
- * Diálogo modal con un campo de texto (p. ej. el nombre de un diseño). {@code validate} devuelve el mensaje de
- * error o null; Enter confirma y Esc cancela.
- */
 public final class PromptDialog {
 
     private PromptDialog() {

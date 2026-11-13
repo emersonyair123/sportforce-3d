@@ -6,10 +6,6 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Optional;
 
-/**
- * Zonas personalizables con su nombre fijo (design/prendas-y-materiales.md). Un modelo de Blender reemplaza
- * al procedural si sus objetos se llaman exactamente así.
- */
 public enum Zone {
     JERSEY_BODY("jersey_body", Garment.JERSEY, "Cuerpo"),
     JERSEY_SLEEVES("jersey_sleeves", Garment.JERSEY, "Mangas"),
@@ -49,7 +45,6 @@ public enum Zone {
         return label;
     }
 
-    /** Busca por nombre de objeto de un OBJ: exacto o con sufijos de Blender ("jersey_body.001", "shoe_sole_L"). */
     public static Optional<Zone> fromMeshName(String name) {
         if (name == null) {
             return Optional.empty();
@@ -57,7 +52,6 @@ public enum Zone {
         String n = name.trim().toLowerCase(Locale.ROOT);
         return Arrays.stream(values())
                 .filter(z -> n.equals(z.meshName) || n.startsWith(z.meshName + ".") || n.startsWith(z.meshName + "_"))
-                // "shoe_sole_l" no debe confundirse con otra zona más corta: gana el nombre más largo.
                 .max((a, b) -> Integer.compare(a.meshName.length(), b.meshName.length()));
     }
 }

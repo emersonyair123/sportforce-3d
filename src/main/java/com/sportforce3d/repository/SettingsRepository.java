@@ -12,7 +12,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Configuración de la tienda (tabla store_settings, clave → valor en texto). */
 public class SettingsRepository {
 
     public static final String YAPE_PHONE = "yape_phone";
@@ -44,7 +43,6 @@ public class SettingsRepository {
                 "1".equals(m.get(PAYMENT_REVIEWED)));
     }
 
-    /** Guarda los datos de pago (ya validados) en una sola transacción y los marca como revisados. */
     public void savePaymentInstructions(PaymentInstructions p, String now) {
         Map<String, String> values = new LinkedHashMap<>();
         values.put(YAPE_PHONE, p.yapePhone());

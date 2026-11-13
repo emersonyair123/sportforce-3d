@@ -4,18 +4,11 @@ import com.sportforce3d.model.Garment;
 import com.sportforce3d.three.model.BodyType;
 import com.sportforce3d.three.model.Zone;
 
-/** Diseños de ejemplo (capturas de documentación y punto de partida para probar el diseñador). */
 public final class SampleDesigns {
 
     private SampleDesigns() {
     }
 
-    /**
-     * "Los Halcones": camiseta roja con franjas verticales blancas, detalles negros, short negro con franja roja,
-     * medias rojas con aros blancos, chimpunes negros; nombre y número en la espalda, número en el pecho y en el
-     * short, escudo en el pecho. En la vista realista: camiseta roja con rayas blancas, short y paneles negros,
-     * medias rojas, QUISPE 10.
-     */
     public static DesignDocument halcones() {
         String red = "#D7192A";
         String white = "#F2F5F8";
@@ -51,10 +44,6 @@ public final class SampleDesigns {
                 .addElement(DesignDefaults.emblem("escudo-clasico", black, white));
     }
 
-    /**
-     * Cuatro uniformes distintos para las capturas de las personas 3D (Etapa 8): 0 = Los Halcones; 1 = azul con
-     * diagonales; 2 = verde a cuadros con mangas amarillas; 3 = morado con degradado.
-     */
     public static DesignDocument forPerson(int i) {
         return switch (Math.floorMod(i, 4)) {
             case 0 -> halcones();

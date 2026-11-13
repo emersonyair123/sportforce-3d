@@ -8,7 +8,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
-/** Textos compartidos por la pantalla y los archivos exportados (fechas en español de Perú, hora de Lima). */
 public final class ReportText {
 
     public static final Locale ES_PE = Locale.forLanguageTag("es-PE");
@@ -32,7 +31,6 @@ public final class ReportText {
         return report.grouping() == Grouping.DAY ? "Día" : "Mes";
     }
 
-    /** "1 de octubre de 2026 al 18 de octubre de 2026" (o un solo día). */
     public static String range(SalesReport report) {
         return report.from().equals(report.to()) ? RANGE.format(report.from())
                 : RANGE.format(report.from()) + " al " + RANGE.format(report.to());

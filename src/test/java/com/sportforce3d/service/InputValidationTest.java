@@ -15,10 +15,6 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/**
- * Entradas fuera de rango o con caracteres invisibles: cada service responde con un mensaje amable
- * (ValidationException / AuthenticationException), nunca con un error genérico ni guardando datos a medias.
- */
 class InputValidationTest {
 
     private static final String CONTROL = "Equipo\u0000Halcones";
@@ -35,7 +31,7 @@ class InputValidationTest {
 
     @Test
     void passwordsLongerThanBcryptLimitAreRejectedPolitely() {
-        String longWithAccents = "ñ".repeat(40) + "1"; // 41 caracteres pero 81 bytes en UTF-8
+        String longWithAccents = "ñ".repeat(40) + "1";
         assertThatThrownBy(() -> f.auth.register("Lucía Rojas", "lucia@correo.pe", null,
                 longWithAccents.toCharArray(), longWithAccents.toCharArray()))
                 .isInstanceOfSatisfying(ValidationException.class, e -> assertThat(e.fieldErrors()).containsKey("password"));
@@ -73,7 +69,7 @@ class InputValidationTest {
         assertThatThrownBy(() -> f.orders.placeOrder(address, PaymentMethod.TARJETA, null))
                 .isInstanceOf(ValidationException.class).hasMessageContaining("próximamente");
         assertThatThrownBy(() -> f.orders.placeOrder(address, null, null)).isInstanceOf(ValidationException.class);
-        assertThat(f.cart.countUnits()).isEqualTo(1); // nada se perdió
+        assertThat(f.cart.countUnits()).isEqualTo(1);
 
         OrderDetail order = f.orders.placeOrder(address, PaymentMethod.YAPE, "Entregar por la tarde.\nGracias.");
         assertThatThrownBy(() -> f.orders.cancel(order.id(), "y".repeat(OrderService.NOTES_MAX + 1)))
@@ -99,7 +95,6 @@ class InputValidationTest {
                 Set.of(), null, null, false, false, ProductSort.RELEVANCE, 1, 12))).isInstanceOf(ValidationException.class);
         assertThatThrownBy(() -> f.catalog.search(new ProductQuery(null, null, null, Set.of(), -100L, null, false, false,
                 ProductSort.RELEVANCE, 1, 12))).isInstanceOf(ValidationException.class);
-        // Comillas y comodines de SQL se buscan como texto, no rompen la consulta.
         assertThat(f.catalog.search(new ProductQuery("' OR 1=1 --%_", null, null, Set.of(), null, null, false, false,
                 ProductSort.RELEVANCE, 1, 12)).items()).isEmpty();
         assertThat(f.catalog.search(null).items()).isNotEmpty();

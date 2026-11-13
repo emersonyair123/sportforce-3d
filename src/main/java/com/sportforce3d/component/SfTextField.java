@@ -11,10 +11,6 @@ import org.kordamp.ikonli.feather.Feather;
 
 import java.util.Locale;
 
-/**
- * Campo con etiqueta arriba (estilo label, mayúsculas), ayuda y error debajo.
- * Con {@code password=true} usa un PasswordField. Si hay error, la ayuda se oculta.
- */
 public class SfTextField extends VBox {
 
     private static final PseudoClass ERROR = PseudoClass.getPseudoClass("error");
@@ -95,7 +91,6 @@ public class SfTextField extends VBox {
         hint.setText(text);
     }
 
-    /** Texto de error; vacío lo oculta. Se puede enlazar a una propiedad del ViewModel. */
     public StringProperty errorProperty() {
         return error.textProperty();
     }
@@ -108,7 +103,6 @@ public class SfTextField extends VBox {
         error.setText(text == null ? "" : text);
     }
 
-    /** Contenido como char[] (para contraseñas): el service lo limpia después de usarlo. */
     public char[] getChars() {
         CharSequence chars = input.getCharacters();
         char[] out = new char[chars.length()];

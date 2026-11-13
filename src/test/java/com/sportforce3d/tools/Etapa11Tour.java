@@ -39,22 +39,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
-/**
- * Capturas de la Etapa 11 (docs/capturas/etapa11) con la aplicación real sobre una base temporal: la Vista realista y
- * la Vista 3D son un solo diseño ({@link com.sportforce3d.design.ViewSync}).
- * <ol>
- *   <li>Un diseño hecho en la Vista 3D (frente y espalda) se ve igual en la Vista realista.</li>
- *   <li>Un cambio hecho en la Vista realista (colores, nombre y número) aparece en la Vista 3D.</li>
- *   <li>Lo que la foto no puede mostrar (mujer con manga larga, short corto y medias tobilleras; polo) sale como aviso
- *   en la Vista realista y en la Vista 3D.</li>
- *   <li>Se guarda desde la Vista realista, se compra, se copian las fotos que quedaron en el pedido y el ADMIN abre el
- *   uniforme (Vista realista, ficha con la vista realista y Vista 3D).</li>
- * </ol>
- * Uso: {@code Etapa11Tour [carpeta]}. Sin el modelo de una persona la Vista 3D muestra el maniquí de respaldo.
- *
- * <p>Reconstruida el 2026-11-06 a partir de los nombres de las capturas, el README y CLAUDE.md (el original se perdió
- * con D:\tienda-virtual); mismas utilidades que {@link Etapa10Tour}.
- */
 public final class Etapa11Tour {
 
     private static final int W = 1440;
@@ -117,8 +101,6 @@ public final class Etapa11Tour {
         });
     }
 
-    // ---------------------------------------------------------------- 1. Un diseño, dos vistas
-
     private void sameDesign() throws Exception {
         fx(() -> {
             DesignDocument d = SampleDesigns.halcones();
@@ -141,8 +123,6 @@ public final class Etapa11Tour {
         pause(3000);
         shot("11-03-realista-mismo-diseno");
     }
-
-    // ---------------------------------------------------------------- 2. Cambiar en la realista
 
     private void realisticToThreeD() throws Exception {
         fx(() -> {
@@ -171,8 +151,6 @@ public final class Etapa11Tour {
         pause(1000);
         shot("11-06-3d-tras-cambiar-en-realista-espalda-textos");
     }
-
-    // ---------------------------------------------------------------- 3. Lo que la foto no muestra
 
     private void notices() throws Exception {
         GarmentCut cut = new GarmentCut(Sleeve.LARGA, ShortsLength.CORTO, SocksLength.TOBILLERA);
@@ -208,8 +186,6 @@ public final class Etapa11Tour {
         shot("11-10-3d-polo-aviso");
     }
 
-    // ---------------------------------------------------------------- 4. Pedido y visor del ADMIN
-
     private void orderAndAdmin() throws Exception {
         fx(() -> {
             toggle("Vista realista").fire();
@@ -220,8 +196,6 @@ public final class Etapa11Tour {
         pause(3000);
         shot("11-11-realista-antes-de-guardar");
         if (!com.sportforce3d.three.human.HumanModels.available(com.sportforce3d.three.human.Persona.HOMBRE)) {
-            // Con avisos en la Vista realista las fotos del pedido salen de la Vista 3D, y con el maniquí de respaldo
-            // el diseño no se guarda (README): sin las personas 3D no hay pedido ni visor del ADMIN que capturar.
             System.out.println("Sin las personas 3D (models/humanos): se omiten las capturas 11-12 a 11-16.");
             return;
         }
@@ -257,7 +231,6 @@ public final class Etapa11Tour {
         loginAs("admin@sportforce3d.pe", "Admin123!");
         var line = context.adminOrderService().order(order).items().stream().filter(i -> i.hasDesign())
                 .findFirst().orElseThrow();
-        // Las fotos que recibe el taller: la copia guardada en el pedido (realistas si la foto lo muestra todo).
         Files.copy(context.storage().resolve(line.designFrontPath()), out.resolve("11-12-foto-del-pedido-frente.png"),
                 StandardCopyOption.REPLACE_EXISTING);
         if (line.designBackPath() != null) {
@@ -290,8 +263,6 @@ public final class Etapa11Tour {
         pause(2500);
         shot("11-16-admin-vista-3d");
     }
-
-    // ---------------------------------------------------------------- Utilidades (como Etapa10Tour)
 
     private void scrollTo(String title) {
         Node label = find(stage.getScene().getRoot(), x -> x instanceof Labeled l && title.equals(l.getText())

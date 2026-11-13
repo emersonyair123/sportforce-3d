@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.Supplier;
 
-/** Registra cualquier excepción no capturada y muestra un Toast amable en lugar de cerrar la aplicación. */
 public final class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);

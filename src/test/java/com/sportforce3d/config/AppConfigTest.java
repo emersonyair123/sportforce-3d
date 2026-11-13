@@ -29,7 +29,6 @@ class AppConfigTest {
         assertThat(config.storageDir()).endsWithRaw(Path.of("SportForce3D", "data", "storage"));
         assertThat(config.logDir()).endsWithRaw(Path.of("SportForce3D", "data", "logs"));
 
-        // Una ruta explícita sigue mandando aunque esté instalada.
         assertThat(AppConfig.resolve(null, Map.of("APPDATA", "C:/x", AppConfig.DB_ENV, "D:/tienda.db"), true)
                 .databaseFile()).isEqualTo(Path.of("D:/tienda.db").toAbsolutePath().normalize());
     }

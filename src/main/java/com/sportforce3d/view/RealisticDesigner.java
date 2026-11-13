@@ -34,14 +34,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * Vista realista del diseñador: fotos de personas con la prenda recoloreada ({@link RealisticPreview}) y su
- * panel (categoría, corte, colores por zona, diseño, nombre y número). Lee y cambia la vista realista del
- * documento con {@link DesignerViewModel#editRealistic}, así deshacer, borrador y guardado funcionan igual que en 3D.
- * <p>
- * El recoloreado corre en segundo plano y como máximo 30 veces por segundo: si llega un cambio mientras se
- * dibuja, se dibuja solo el último cuando termina el anterior (nunca se acumulan tareas).
- */
 final class RealisticDesigner {
 
     private static final long FRAME_NANOS = 1_000_000_000L / 30;
@@ -91,24 +83,18 @@ final class RealisticDesigner {
         loop.stop();
     }
 
-    // ---------------------------------------------------------------- Modelos
-
-    /** Modelo de frente del diseño (si la clave guardada ya no existe, el predeterminado). */
     RealisticModel frontModel(RealisticSpec spec) {
         return RealisticPreview.frontModel(models, spec);
     }
 
-    /** El escudo del pecho del diseño, listo para dibujar en cualquier hilo. Hilo de JavaFX. */
     RealisticPreview.Crest crest(RealisticView view) {
         return RealisticPreview.crest(images, view.crest());
     }
 
-    /** Fotos de frente y espalda (null si el modelo no tiene espalda) en tamaño completo. Cualquier hilo. */
     ArgbImage[] renderPixels(RealisticView view, RealisticPreview.Crest crest) {
         return RealisticPreview.renderPixels(recolor, view, crest);
     }
 
-    /** El mismo diseño que la Vista 3D: se redibuja cuando cambia lo que muestra la foto (no más de 30 veces/s). */
     private void renderIfChanged() {
         RealisticView view = viewModel.realisticView();
         if (busy || view.equals(shown)) {
@@ -128,9 +114,6 @@ final class RealisticDesigner {
         });
     }
 
-    // ---------------------------------------------------------------- Panel
-
-    /** Clave de estructura: el panel se reconstruye solo si cambia el modelo (sus zonas). */
     String structureKey() {
         return "R|" + frontModel(viewModel.realistic()).key();
     }
@@ -143,7 +126,6 @@ final class RealisticDesigner {
             zone = model.zones().get(0);
         }
 
-        // Categoría
         FlowPane categories = new FlowPane(6, 6);
         ToggleGroup categoryGroup = new ToggleGroup();
         CATEGORIES.forEach((audience, label) -> {
@@ -158,7 +140,6 @@ final class RealisticDesigner {
         });
         panel.getChildren().add(section("CATEGORÍA", categories));
 
-        // Corte: solo los que existen para la categoría.
         FlowPane cuts = new FlowPane(6, 6);
         ToggleGroup cutGroup = new ToggleGroup();
         String audience = model.audience();
@@ -177,7 +158,6 @@ final class RealisticDesigner {
         });
         panel.getChildren().add(section("CORTE", cuts));
 
-        // Colores por zona del modelo.
         VBox zones = new VBox(4);
         ToggleGroup zoneGroup = new ToggleGroup();
         for (String z : model.zones()) {
@@ -218,7 +198,6 @@ final class RealisticDesigner {
             return;
         }
 
-        // Diseño de la camiseta con su color.
         FlowPane patterns = new FlowPane(6, 6);
         ToggleGroup patternGroup = new ToggleGroup();
         for (RealisticPattern p : RealisticPattern.values()) {
@@ -246,7 +225,6 @@ final class RealisticDesigner {
         });
         panel.getChildren().add(section("DISEÑO", patterns, patternOptions));
 
-        // Nombre (espalda) y número (frente y espalda).
         SfTextField name = new SfTextField("Nombre (espalda)");
         name.setPromptText("Máx. " + RealisticSpec.NAME_MAX + " letras");
         Inputs.limit(name.getInput(), RealisticSpec.NAME_MAX);
@@ -266,7 +244,6 @@ final class RealisticDesigner {
                 viewModel.editRealistic("Número", s -> s.withNumber(n), "realistic-number");
             }
         });
-        // Al salir del campo termina el gesto: lo escrito queda como un solo paso de deshacer.
         name.getInput().focusedProperty().addListener((obs, was, now) -> {
             if (!now) {
                 viewModel.seal();
@@ -295,10 +272,6 @@ final class RealisticDesigner {
                         + "espalda se ven en la Vista 3D.")));
     }
 
-    /**
-     * Cambia la categoría (la persona) conservando el corte si existe para ella; si no, fútbol. También lo usa el
-     * selector de persona de la Vista 3D, así las dos vistas muestran a la misma persona.
-     */
     void selectAudience(String audience, String label) {
         String cut = frontModel(viewModel.realistic()).cut();
         String key = models.find(key(cut, audience)).isPresent() ? key(cut, audience) : key("futbol", audience);
@@ -317,8 +290,6 @@ final class RealisticDesigner {
     private void sync(Runnable r) {
         syncers.add(r);
     }
-
-    // ---------------------------------------------------------------- Ayudas
 
     static String key(String cut, String audience) {
         return cut + "_" + audience + "_frente";
@@ -385,7 +356,6 @@ final class RealisticDesigner {
         }
     }
 
-    /** Frente y espalda lado a lado (para "Guardar captura"). */
     static ArgbImage sideBySide(ArgbImage a, ArgbImage b) {
         if (b == null) {
             return a;
@@ -394,7 +364,6 @@ final class RealisticDesigner {
         int w = a.width() + gap + b.width();
         int h = Math.max(a.height(), b.height());
         int[] px = new int[w * h];
-        // El espacio entre las fotos queda transparente.
         for (int y = 0; y < a.height(); y++) {
             System.arraycopy(a.pixels(), y * a.width(), px, y * w, a.width());
         }

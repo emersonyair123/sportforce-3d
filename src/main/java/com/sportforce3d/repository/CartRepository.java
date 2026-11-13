@@ -12,13 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Carrito persistido por usuario. Todas las consultas filtran por user_id: un usuario nunca puede leer
- * ni modificar líneas del carrito de otro.
- */
 public class CartRepository {
-
-    /** Línea existente de la misma variante sin diseño (se suma la cantidad en lugar de duplicarla). */
     public record ExistingItem(long itemId, int quantity) {
     }
 
@@ -104,7 +98,6 @@ public class CartRepository {
         });
     }
 
-    /** Línea de la misma variante con el mismo diseño (se suma la cantidad). */
     public Optional<ExistingItem> findDesignItem(long userId, long variantId, long designId) {
         return db.withConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement("""
@@ -137,7 +130,6 @@ public class CartRepository {
         });
     }
 
-    /** Recargo por unidad de una línea con diseño (se recalcula cuando cambia el diseño). */
     public void updateSurcharge(long userId, long itemId, long surchargeCents) {
         db.withConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement("""
@@ -170,7 +162,6 @@ public class CartRepository {
         });
     }
 
-    /** Cambia la cantidad solo si la línea es del usuario. Devuelve false si no existe. */
     public boolean updateQuantity(long userId, long itemId, int quantity, long unitPriceCents) {
         return db.withConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement("""

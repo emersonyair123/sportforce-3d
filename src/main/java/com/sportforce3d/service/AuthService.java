@@ -15,7 +15,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
-/** Inicio de sesión, registro y cierre de sesión. */
 public class AuthService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
@@ -67,7 +66,6 @@ public class AuthService {
         return fresh;
     }
 
-    /** Crea una cuenta CLIENTE (nunca ADMIN) e inicia sesión con ella. */
     public User register(String fullName, String email, String phone, char[] password, char[] confirmation) {
         String normalized = Validators.normalizeEmail(email);
         Map<String, String> errors = new LinkedHashMap<>();

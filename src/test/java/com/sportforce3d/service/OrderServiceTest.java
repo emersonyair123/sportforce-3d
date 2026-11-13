@@ -32,8 +32,8 @@ class OrderServiceTest {
     @Test
     void placesOrderFreezingPricesReservingStockAndClearingCart() {
         int availableBefore = f.quantity("SF-CAM-001-M") - f.reserved("SF-CAM-001-M");
-        f.cart.add(f.variantId("SF-CAM-001-M"), 2);           // 2 × 79.90
-        f.cart.add(f.variantId("SF-ACC-002-UNICA"), 1);       // 19.90
+        f.cart.add(f.variantId("SF-CAM-001-M"), 2);
+        f.cart.add(f.variantId("SF-ACC-002-UNICA"), 1);
 
         OrderDetail order = f.orders.placeOrder(clientAddress, PaymentMethod.YAPE, "  Tocar el timbre  ");
 
@@ -56,7 +56,6 @@ class OrderServiceTest {
         assertThat(f.cart.summary().isEmpty()).isTrue();
         assertThat(f.quantity("SF-CAM-001-M") - f.reserved("SF-CAM-001-M")).isEqualTo(availableBefore - 2);
 
-        // Un cambio de precio posterior no afecta al pedido.
         f.exec("UPDATE products SET base_price_cents = 1000 WHERE sku = 'SF-CAM-001'");
         assertThat(f.orders.order(order.id()).items().get(0).unitPriceCents()).isEqualTo(7990);
     }
@@ -68,7 +67,7 @@ class OrderServiceTest {
         f.cart.add(f.variantId("SF-ACC-002-UNICA"), 1);
         assertThat(f.orders.placeOrder(clientAddress, PaymentMethod.TRANSFERENCIA, null).orderNumber()).isEqualTo("PED-2026-000002");
 
-        f.clock.advance(Duration.ofDays(120)); // 2027
+        f.clock.advance(Duration.ofDays(120));
         f.cart.add(f.variantId("SF-ACC-002-UNICA"), 1);
         assertThat(f.orders.placeOrder(clientAddress, PaymentMethod.YAPE, null).orderNumber()).isEqualTo("PED-2027-000001");
     }

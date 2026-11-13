@@ -16,14 +16,7 @@ import static com.sportforce3d.three.geom.Curve.angularBell;
 import static com.sportforce3d.three.geom.Curve.bell;
 import static com.sportforce3d.three.geom.Curve.smoothstep;
 
-/**
- * Camiseta (cuerpo, mangas, cuello en V, puños, paneles laterales), short (base por pierna, pretina, franjas)
- * y medias (caña y banda). Todo en espacio de diseño de {@link BodyShape}; la holgura se aplica sobre la
- * normal real de la superficie base, así que también es uniforme en la pendiente de los hombros.
- */
 final class GarmentGenerator {
-
-    // ---------------------------------------------------------------- Camiseta
     static final double HEM_FRONT = 0.990;
     static final double HEM_BACK = 0.972;
     static final double NECK_SIDE = 1.533;
@@ -35,24 +28,19 @@ final class GarmentGenerator {
     static final double ARMPIT = 1.352;
     static final double SLEEVE_END = 0.235;
     static final double CUFF_WIDTH = 0.026;
-    /** La camiseta cae recta desde el pecho (DRAPE_TOP) hasta la cadera (DRAPE_BOTTOM). */
     static final double DRAPE_TOP = 1.29;
     static final double DRAPE_BOTTOM = 1.02;
 
-    // ---------------------------------------------------------------- Short
     static final double SHORTS_TOP = 0.962;
     static final double SHORTS_HEM = 0.615;
     static final double CROTCH = 0.825;
-    /** Debajo de esta altura la "D" de la pelvis conserva su forma (no se angosta hacia la entrepierna). */
     static final double HIP_FREEZE = 0.905;
     static final double WAIST_BOTTOM = 0.948;
     static final double WAIST_TOP = 0.992;
 
-    // ---------------------------------------------------------------- Medias
     static final double SOCK_TOP = 0.458;
     static final double SOCK_BAND_BOTTOM = 0.405;
 
-    /** Superficie paramétrica (u, v) → punto en espacio de diseño. */
     @FunctionalInterface
     interface Surface {
         Vec3 at(double u, double v);
@@ -61,7 +49,6 @@ final class GarmentGenerator {
     private GarmentGenerator() {
     }
 
-    /** Normal (espacio de diseño) por diferencias centrales, orientada según {@code hint}. */
     static Vec3 normal(Surface s, double u, double v, double du, double dv, Vec3 hint) {
         Vec3 pu = s.at(u + du, v).sub(s.at(u - du, v));
         Vec3 pv = s.at(u, v + dv).sub(s.at(u, v - dv));
@@ -72,20 +59,16 @@ final class GarmentGenerator {
         return n.dot(hint) < 0 ? n.mul(-1) : n;
     }
 
-    // ================================================================ Camiseta
-
     static double hemY(double phi) {
         return HEM_BACK + (HEM_FRONT - HEM_BACK) * (1 + Math.cos(phi)) / 2;
     }
 
-    /** Escote en V adelante, cuello redondo atrás. */
     static double necklineY(double phi) {
         double base = NECK_SIDE + (NECK_BACK - NECK_SIDE) * (1 - Math.cos(phi)) / 2;
         double k = Math.max(0, 1 - Math.abs(angleDiff(phi, 0)) / V_HALF);
         return base - V_DEPTH * Math.pow(k, 1.18);
     }
 
-    /** Superficie base de la camiseta: cae recta desde el pecho y descansa en la cadera. */
     static Vec3 jerseyBase(BodyShape b, double phi, double y) {
         double rb = b.torsoRadius(phi, y);
         double rChest = b.torsoRadius(phi, DRAPE_TOP) * 0.985;
@@ -94,7 +77,6 @@ final class GarmentGenerator {
         return new Vec3(r * Math.sin(phi), y, b.torsoCenterZ(y) + r * Math.cos(phi));
     }
 
-    /** Holgura de la camiseta (más suelta abajo para cubrir la pretina del short) más pliegues sutiles. */
     static double jerseyEase(double phi, double y) {
         double ease = 0.0065 + 0.0115 * smoothstep(1.10, 0.99, y) + 0.003 * smoothstep(1.47, 1.53, y);
         double hemFolds = (0.0030 * smoothstep(1.17, 0.99, y) + 0.0006)
@@ -114,7 +96,7 @@ final class GarmentGenerator {
 
     static MeshData jerseyBody(BodyShape b) {
         int rows = 130;
-        int cols = 160; // costuras de las islas en φ = ±π/2 (columnas 40 y 120)
+        int cols = 160;
         GridSurface g = new GridSurface(rows, cols, true);
         double[] ys = new double[rows * cols];
         for (int c = 0; c < cols; c++) {
@@ -138,7 +120,7 @@ final class GarmentGenerator {
                     double y = ys[r * cols + (c % cols)];
                     double v = (JERSEY_V_TOP - y) / (JERSEY_V_TOP - JERSEY_V_BOTTOM);
                     if (island == 0) {
-                        double a = angleDiff(phi, 0); // [-π/2, π/2]
+                        double a = angleDiff(phi, 0);
                         out[0] = UvLayout.JERSEY_FRONT.u(0.5 + a / Math.PI);
                         out[1] = UvLayout.JERSEY_FRONT.v(v);
                     } else {
@@ -148,11 +130,9 @@ final class GarmentGenerator {
                 });
     }
 
-    /** Cuello en V: tira con borde enrollado que sigue el escote. */
     static MeshData collar(BodyShape b) {
         int cols = 240;
         double[][] rowsDef = {
-                // {desplazamiento vertical respecto del escote, espesor extra}
                 {-0.0155, 0.0022},
                 {-0.0137, 0.0036},
                 {-0.003, 0.0040},
@@ -165,12 +145,9 @@ final class GarmentGenerator {
             double phi = 2 * Math.PI * c / cols;
             double top = necklineY(phi);
             for (int r = 0; r < rowsDef.length; r++) {
-                // El ancho se mide sobre la tela (longitud de arco), no en altura: en la pendiente del
-                // trapecio una tira medida en altura se ensancharía como un cuello de polo.
                 double dy = rowsDef[r][0];
                 double y = dy < 0 ? yBelowByArc(b, phi, top, -dy) : top + dy;
                 Vec3 p = jerseyPoint(b, phi, y, rowsDef[r][1]);
-                // Filas 0-2: cara exterior; 3: borde superior; 4-5: cara interior (mira hacia el cuello).
                 Vec3 radial = p.sub(b.torsoAxis(y)).normalize();
                 Vec3 hint = r <= 2 ? radial : r == 3 ? radial.add(new Vec3(0, 1.5, 0)) : radial.mul(-1).add(new Vec3(0, 0.3, 0));
                 g.set(r, c, b.out(p), hint);
@@ -183,7 +160,6 @@ final class GarmentGenerator {
         });
     }
 
-    /** Altura a la que se llega bajando {@code dist} metros sobre la superficie de la camiseta desde {@code top}. */
     static double yBelowByArc(BodyShape b, double phi, double top, double dist) {
         Vec3 start = jerseyPoint(b, phi, top, 0);
         double lo = top - dist;
@@ -199,7 +175,6 @@ final class GarmentGenerator {
         return (lo + hi) / 2;
     }
 
-    /** Paneles laterales desde el ruedo hasta la axila, un poco por encima de la tela del cuerpo. */
     static MeshData sides(BodyShape b) {
         List<MeshData> parts = new ArrayList<>();
         for (Side side : Side.values()) {
@@ -263,7 +238,6 @@ final class GarmentGenerator {
         double f1 = SLEEVE_END + 0.002;
         double f0 = f1 - CUFF_WIDTH / b.arm(Side.LEFT).length();
         double[][] rowsDef = {
-                // {fracción 0..1 dentro del puño, espesor extra sobre la manga}
                 {0.00, 0.0006}, {0.06, 0.0034}, {0.50, 0.0040}, {0.94, 0.0034}, {1.00, 0.0006}, {0.985, -0.0030},
         };
         for (Side side : Side.values()) {
@@ -278,7 +252,6 @@ final class GarmentGenerator {
                     double e = sleeveEase(Math.min(f, SLEEVE_END), angle, side.sign) + rowsDef[r][1];
                     Vec3 p = arm.point(f, angle, e);
                     Vec3 radial = p.sub(center).normalize();
-                    // La última fila es el labio interior del puño: su cara mira hacia el brazo.
                     Vec3 hint = r == rowsDef.length - 1 ? radial.mul(-1).add(arm.tangent(f).mul(0.3))
                             : r == rowsDef.length - 2 ? radial.add(arm.tangent(f).mul(1.5)) : radial;
                     g.set(r, c, b.out(p), hint);
@@ -293,17 +266,10 @@ final class GarmentGenerator {
         return MeshData.merge(parts);
     }
 
-    // ================================================================ Short
-
     static double shortsEase(double y) {
         return 0.013 + 0.009 * smoothstep(0.96, CROTCH, y) + 0.011 * smoothstep(CROTCH, SHORTS_HEM, y);
     }
 
-    /**
-     * Punto del short para una pierna. {@code q} recorre la sección: [0, 0.5] = de adelante hacia atrás por el
-     * lado exterior; [0.5, 1) = de atrás hacia adelante por el lado interior. Arriba de la entrepierna la sección
-     * es media pelvis (una "D"); abajo, un óvalo alrededor del muslo; en medio se mezclan suavemente.
-     */
     static Vec3 shortsPoint(BodyShape b, Side side, double q, double y, double extra) {
         double ease = shortsEase(y) + extra;
         double folds = 0.0028 * Math.sin(2 * Math.PI * q * 7 + side.sign * 1.3) * smoothstep(CROTCH, SHORTS_HEM, y);
@@ -323,16 +289,11 @@ final class GarmentGenerator {
         Vec3 p = d;
         if (blend > 0) {
             Vec3 o = leg.point(f, 2 * Math.PI * q, ease + folds);
-            // El óvalo de la pierna se toma a la misma altura para que las filas queden horizontales.
             p = d.lerp(new Vec3(o.x(), y, o.z()), blend);
         }
         return outsideLeg(leg, f, p, ease);
     }
 
-    /**
-     * Garantiza que el punto quede por fuera del muslo (más la holgura). Mezclar la "D" de la cadera con el
-     * óvalo de la pierna no conserva la correspondencia de ángulos, y sin esto el muslo atraviesa la tela.
-     */
     static Vec3 outsideLeg(Tube leg, double f, Vec3 p, double ease) {
         Vec3 c = leg.center(f);
         Vec3 d = new Vec3(p.x() - c.x(), 0, p.z() - c.z());
@@ -354,7 +315,7 @@ final class GarmentGenerator {
         List<MeshData> parts = new ArrayList<>();
         for (Side side : Side.values()) {
             int rows = 100;
-            int cols = 96; // costuras de islas en q = 0.25 (exterior) y 0.75 (interior)
+            int cols = 96;
             GridSurface g = new GridSurface(rows, cols, true);
             for (int r = 0; r < rows; r++) {
                 double t = (double) r / (rows - 1);
@@ -439,8 +400,6 @@ final class GarmentGenerator {
         return MeshData.merge(parts);
     }
 
-    // ================================================================ Medias
-
     static MeshData socks(BodyShape b) {
         List<MeshData> parts = new ArrayList<>();
         for (Side side : Side.values()) {
@@ -471,7 +430,6 @@ final class GarmentGenerator {
     static MeshData sockBands(BodyShape b) {
         List<MeshData> parts = new ArrayList<>();
         double[][] rowsDef = {
-                // {y, espesor}
                 {SOCK_BAND_BOTTOM, 0.0038}, {SOCK_BAND_BOTTOM + 0.002, 0.0056}, {SOCK_TOP - 0.004, 0.0060},
                 {SOCK_TOP, 0.0050}, {SOCK_TOP - 0.0015, 0.0012},
         };

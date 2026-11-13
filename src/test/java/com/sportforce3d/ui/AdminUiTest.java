@@ -21,7 +21,6 @@ import static com.sportforce3d.ui.UiTestSupport.type;
 import static com.sportforce3d.ui.UiTestSupport.waitUntil;
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Pantallas de administración con la interfaz real: Configuración, Reportes y acceso de un CLIENTE. */
 @ExtendWith(ApplicationExtension.class)
 class AdminUiTest {
 
@@ -57,7 +56,6 @@ class AdminUiTest {
         replace(robot, "Número de Yape", "912345678");
         replace(robot, "Titular de Yape", "María Quispe");
         replace(robot, "CCI (20 dígitos)", "00219100123456780123");
-        // La vista previa muestra lo que leerá el cliente mientras se escribe.
         assertThat(textShown(robot, t -> t.contains("Yapea al 912345678 (María Quispe)."))).isTrue();
         click(robot, "Guardar datos de pago");
         waitUntil("guardado", () -> textShown(robot, "Guardado. Los clientes ya ven estos datos."::equals));
@@ -78,7 +76,6 @@ class AdminUiTest {
         click(robot, "Este año");
         waitUntil("rango del año", () -> textShown(robot, t -> t.startsWith("1 de enero de 2026")));
 
-        // Fecha inicial posterior a la final: mensaje amable, sin trazas.
         robot.interact(() -> {
             lookupPicker(robot, "Fecha inicial del reporte").getEditor().setText("31/12/2026");
             lookupPicker(robot, "Fecha final del reporte").getEditor().setText("01/01/2026");
@@ -91,7 +88,6 @@ class AdminUiTest {
         waitUntil("error de formato", () -> textShown(robot, t -> t.startsWith("Escribe las fechas como dd/mm/aaaa")));
     }
 
-    /** Etapa 12B: el ADMIN cambia la suela de la zapatilla de running y "Guardar producto" la guarda. */
     @Test
     void adminChangesAZoneColorOfTheRealisticPhoto(FxRobot robot) {
         login(robot, "admin@sportforce3d.pe", "Admin123!");
@@ -111,7 +107,6 @@ class AdminUiTest {
         assertThat(look.zoneColors()).containsEntry("paneles", "#0b0e13").containsEntry("principal", "#1f5fff");
         assertThat(zoneHex(robot, "SUELA").getText()).as("el formulario recarga lo guardado").isEqualTo("#0B0E13");
 
-        // Buzos y accesorios: la casilla "Personalizable" queda apagada y desactivada.
         long casaca = productId("SF-BUZ-002");
         robot.interact(() -> context.router().go(Routes.ADMIN_PRODUCT_EDIT, casaca));
         waitUntil("aviso de no personalizable", () -> textShown(robot, t -> t.startsWith("Los buzos y accesorios no se personalizan")));
@@ -134,7 +129,6 @@ class AdminUiTest {
         });
     }
 
-    /** Campo HEX del color de una zona en la tarjeta "Foto realista". */
     private static SfTextField zoneHex(FxRobot robot, String zoneLabel) {
         javafx.scene.control.Label label = robot.lookup((java.util.function.Predicate<javafx.scene.Node>) n ->
                 n instanceof javafx.scene.control.Label l && zoneLabel.equals(l.getText()))
@@ -149,7 +143,6 @@ class AdminUiTest {
         assertThat(labeled(robot, "Configuración")).isEmpty();
         assertThat(labeled(robot, "Dashboard")).isEmpty();
 
-        // Aunque llegara a la ruta, la vista no se carga (y el service exigiría ADMIN igualmente).
         for (String route : new String[]{Routes.ADMIN_SETTINGS, Routes.ADMIN_REPORTS, Routes.ADMIN_PAYMENTS}) {
             robot.interact(() -> context.router().go(route, null));
             waitUntil("sin acceso", () -> textShown(robot, "Sin acceso"::equals));

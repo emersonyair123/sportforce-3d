@@ -6,7 +6,6 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
-/** Reloj controlable para probar bloqueos por tiempo. */
 final class MutableClock extends Clock {
 
     private Instant now;

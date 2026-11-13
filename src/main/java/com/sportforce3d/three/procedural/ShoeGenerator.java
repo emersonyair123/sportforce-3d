@@ -17,11 +17,6 @@ import java.util.Map;
 
 import static com.sportforce3d.three.geom.Curve.smoothstep;
 
-/**
- * Chimpunes de fútbol: capellada, puntera, contrafuerte con collarín, lengüeta, cordones, suela y 10 tacos.
- * Coordenadas locales del pie: {@code t} de 0 (talón) a 1 (punta) a lo largo, {@code x} lateral, {@code y}
- * altura sobre el piso. Sin marcas ni franjas de terceros.
- */
 final class ShoeGenerator {
 
     static final double LENGTH = 0.285;
@@ -30,25 +25,20 @@ final class ShoeGenerator {
     static final double SOLE_TOP = 0.027;
     static final double TOE_OUT_DEG = 6;
 
-    /** Medio ancho de la capellada a lo largo del pie. */
     static final Curve WIDTH = Curve.of(0, .000, .012, .022, .035, .034, .09, .041, .22, .044, .42, .045,
             .58, .048, .71, .0500, .83, .0465, .92, .0375, .965, .026, .99, .013, 1.0, .000);
-    /** Alto de la capellada sobre la suela. */
     static final Curve HEIGHT = Curve.of(0, .070, .03, .076, .10, .080, .20, .080, .30, .078, .42, .068,
             .55, .055, .68, .044, .80, .036, .90, .029, 1.0, .018);
-    /** Medio ancho de la suela (sobresale un poco). */
     static final Curve SOLE_WIDTH = Curve.of(-.022, .000, -.010, .022, .010, .036, .06, .043, .22, .048, .42, .049,
             .58, .052, .71, .0545, .83, .0510, .92, .0420, .97, .0300, 1.0, .018, 1.022, .000);
 
     private ShoeGenerator() {
     }
 
-    /** Elevación de la punta (toe spring). */
     static double toeSpring(double t) {
         return 0.013 * Math.pow(smoothstep(0.74, 1.04, t), 1.4);
     }
 
-    /** Marco del pie: origen en el piso bajo el tobillo, punta un poco hacia afuera. */
     record Foot(Vec3 origin, Vec3 forward, Vec3 lateral, int sign) {
 
         Vec3 at(double t, double x, double y) {
@@ -65,10 +55,7 @@ final class ShoeGenerator {
         return new Foot(new Vec3(ankle.x(), 0, ankle.z()), forward, lateral, side.sign);
     }
 
-    /** Punto de la sección de la capellada; {@code a} ∈ [0, 2π), arriba en π/2. */
     static Vec3 upperPoint(Foot foot, double t, double a, double extra, double heightCap) {
-        // Alrededor de la abertura del tobillo el tope es plano y más cuadrado: la pierna lo corta en un
-        // óvalo limpio que tapa el collarín. Hacia el empeine vuelve a ser redondeado.
         double opening = 1 - smoothstep(0.30, 0.46, t);
         double w = WIDTH.at(t) + extra;
         double h = Math.min(HEIGHT.at(t), OPENING_HEIGHT + 0.004 * (1 - opening)) + extra;
@@ -81,7 +68,6 @@ final class ShoeGenerator {
         return foot.at(t, x, SOLE_TOP + y + toeSpring(t));
     }
 
-    /** Altura del tope plano alrededor del tobillo (sobre la suela); el collarín se apoya ahí. */
     static final double OPENING_HEIGHT = 0.072;
 
     static Map<Zone, MeshData> build(BodyShape b) {
@@ -116,7 +102,7 @@ final class ShoeGenerator {
         GridSurface g = new GridSurface(rows, cols, true);
         for (int r = 0; r < rows; r++) {
             double u = (double) r / (rows - 1);
-            double t = 0.5 - 0.5 * Math.cos(Math.PI * u); // más filas en talón y punta
+            double t = 0.5 - 0.5 * Math.cos(Math.PI * u);
             for (int c = 0; c < cols; c++) {
                 double a = 2 * Math.PI * c / cols;
                 Vec3 p = upperPoint(foot, t, a, 0, 1);
@@ -131,7 +117,6 @@ final class ShoeGenerator {
         });
     }
 
-    /** Puntera o contrafuerte: un parche de la parte superior de la capellada, un poco por encima. */
     private static MeshData overlay(BodyShape b, Foot foot, double t0, double t1, double extra, double heightCap,
                                     UvRect rect) {
         int rows = 46;
@@ -155,13 +140,8 @@ final class ShoeGenerator {
         });
     }
 
-    /** Altura de diseño donde la pierna entra en la capellada (borde del collarín). */
     static final double COLLAR_Y = SOLE_TOP + OPENING_HEIGHT;
 
-    /**
-     * Collarín acolchado: un anillo alrededor de la pierna justo donde entra en la capellada. Tapa la línea de
-     * intersección entre la media y la zapatilla, que de otro modo se vería dentada.
-     */
     private static MeshData collar(BodyShape b, Foot foot, Side side) {
         Tube leg = b.leg(side);
         double f = 1.0;
@@ -193,7 +173,6 @@ final class ShoeGenerator {
         });
     }
 
-    /** Lengüeta que asoma sobre el empeine, delante del tobillo. */
     private static MeshData tongue(BodyShape b, Foot foot) {
         int rows = 12;
         int cols = 14;
@@ -216,7 +195,6 @@ final class ShoeGenerator {
         });
     }
 
-    /** Cinco cordones cruzados en diagonal sobre el empeine. */
     private static MeshData laces(BodyShape b, Foot foot) {
         List<MeshData> list = new ArrayList<>();
         double[] ts = {0.345, 0.395, 0.445, 0.495, 0.545};
@@ -239,7 +217,6 @@ final class ShoeGenerator {
                 double endTaper = 1 - 0.6 * Math.pow(Math.abs(2 * f - 1), 8);
                 for (int c = 0; c < cols; c++) {
                     double ang = 2 * Math.PI * c / cols;
-                    // Cordón plano: ancho sobre la capellada, delgado hacia arriba.
                     Vec3 up = lace.sideAxis(f);
                     Vec3 across = lace.frontAxis(f);
                     Vec3 p = lace.center(f).addScaled(across, 0.0034 * endTaper * Math.sin(ang))
@@ -257,7 +234,6 @@ final class ShoeGenerator {
         return MeshData.merge(list);
     }
 
-    /** Suela: perfil de rectángulo redondeado (superelipse n = 6) con la punta levantada. */
     private static MeshData sole(BodyShape b, Foot foot) {
         int rows = 120;
         int cols = 64;
@@ -289,7 +265,6 @@ final class ShoeGenerator {
         });
     }
 
-    /** Tacos cónicos (FG): 6 en la parte delantera y 4 en el talón. */
     private static MeshData studs(BodyShape b, Foot foot) {
         double[][] positions = {
                 {0.585, 0.60}, {0.585, -0.60}, {0.745, 0.62}, {0.745, -0.62}, {0.885, 0.36}, {0.885, -0.36},
@@ -306,7 +281,6 @@ final class ShoeGenerator {
             GridSurface g = new GridSurface(rows, cols, true);
             for (int r = 0; r < rows; r++) {
                 double v = (double) r / (rows - 1);
-                // Cono truncado con la base redondeada y la punta cerrada.
                 double radius = r == rows - 1 ? 0.0002 : 0.0068 - 0.0026 * v - (r == rows - 2 ? 0.0012 : 0);
                 double y = top - height * Math.min(1, v * 1.0);
                 for (int c = 0; c < cols; c++) {

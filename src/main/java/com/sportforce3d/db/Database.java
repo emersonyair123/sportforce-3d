@@ -1,6 +1,7 @@
 package com.sportforce3d.db;
 
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.exception.FlywayValidateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sqlite.SQLiteConfig;
@@ -13,10 +14,6 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-/**
- * Archivo SQLite local con claves foráneas activas y migraciones Flyway.
- * Cada operación abre su propia conexión: en SQLite es barato y evita compartir conexiones entre hilos.
- */
 public final class Database {
 
     private static final Logger log = LoggerFactory.getLogger(Database.class);
@@ -39,7 +36,6 @@ public final class Database {
         return file;
     }
 
-    /** Crea la carpeta si hace falta y aplica las migraciones pendientes. Devuelve cuántas se ejecutaron. */
     public int migrate() {
         try {
             Path parent = file.getParent();
@@ -49,12 +45,18 @@ public final class Database {
         } catch (IOException e) {
             throw new UncheckedIOException("No se pudo crear la carpeta de la base de datos: " + file.getParent(), e);
         }
-        int executed = Flyway.configure()
+        Flyway flyway = Flyway.configure()
                 .dataSource(dataSource)
                 .locations("classpath:db/migration")
-                .load()
-                .migrate()
-                .migrationsExecuted;
+                .load();
+        int executed;
+        try {
+            executed = flyway.migrate().migrationsExecuted;
+        } catch (FlywayValidateException e) {
+            log.warn("El historial de migraciones no coincide con los scripts actuales; se repara: {}", e.getMessage());
+            flyway.repair();
+            executed = flyway.migrate().migrationsExecuted;
+        }
         log.info("Base de datos lista en {} ({} migraciones aplicadas)", file, executed);
         return executed;
     }
@@ -63,7 +65,6 @@ public final class Database {
         return dataSource.getConnection();
     }
 
-    /** Ejecuta {@code work} con una conexión de solo una operación. */
     public <R> R withConnection(SqlFunction<Connection, R> work) {
         try (Connection connection = getConnection()) {
             return work.apply(connection);
@@ -72,7 +73,6 @@ public final class Database {
         }
     }
 
-    /** Ejecuta {@code work} dentro de una transacción; si lanza una excepción se revierte todo. */
     public <R> R inTransaction(SqlFunction<Connection, R> work) {
         try (Connection connection = getConnection()) {
             connection.setAutoCommit(false);
@@ -89,7 +89,6 @@ public final class Database {
         }
     }
 
-    /** Borra el archivo .db y sus archivos -wal / -shm. La siguiente llamada a {@link #migrate()} lo recrea con datos de prueba. */
     public static void deleteFiles(Path file) {
         try {
             for (String suffix : new String[]{"", "-wal", "-shm"}) {

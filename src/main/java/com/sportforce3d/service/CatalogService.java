@@ -16,7 +16,6 @@ import com.sportforce3d.repository.ProductRepository;
 import java.util.List;
 import java.util.Optional;
 
-/** Lecturas públicas del catálogo (no requieren sesión). Nunca muestra productos inactivos o eliminados. */
 public class CatalogService {
 
     public static final long DEFAULT_SHIPPING_CENTS = 1500;
@@ -66,7 +65,6 @@ public class CatalogService {
         return products.search(query);
     }
 
-    /** Ficha pública: solo variantes activas. */
     public ProductDetail detail(long productId) {
         ProductDetail d = products.findDetail(productId)
                 .filter(p -> p.active() && !p.deleted())
@@ -81,9 +79,7 @@ public class CatalogService {
         return catalog.findMaterials(scope);
     }
 
-    /** Productos personalizables que el diseñador 3D sabe dibujar (camiseta, short, medias, zapatillas, uniforme). */
     public List<ProductSummary> designableProducts() {
-        // Todas las páginas: con el catálogo realista hay más personalizables que una página (60).
         List<ProductSummary> out = new java.util.ArrayList<>();
         for (int page = 1; ; page++) {
             Page<ProductSummary> result = search(new ProductQuery(null, null, null, java.util.Set.of(), null, null,
@@ -95,12 +91,10 @@ public class CatalogService {
         }
     }
 
-    /** Modelo, colores y diseño de la vista realista del producto (para empezar a personalizarlo). */
     public Optional<RealisticLook> realisticLook(long productId) {
         return products.findLook(productId);
     }
 
-    /** Todos los materiales (textiles y de calzado) por código. */
     public java.util.Map<String, Material> materialsByCode() {
         java.util.Map<String, Material> map = new java.util.HashMap<>();
         for (Material.Scope scope : Material.Scope.values()) {
@@ -117,7 +111,6 @@ public class CatalogService {
         return catalog.findLongSetting("free_shipping_from_cents").orElse(DEFAULT_FREE_SHIPPING_FROM_CENTS);
     }
 
-    /** Envío del pedido: gratis desde el umbral; 0 si no hay nada que enviar. */
     public long shippingFor(long goodsCents) {
         if (goodsCents <= 0) {
             return 0;

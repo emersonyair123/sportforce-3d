@@ -27,15 +27,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
-/**
- * Capturas de la Etapa 12 (docs/capturas/etapa12): el catálogo completo (todas las páginas, la lista entera de cada
- * una) después de dar foto realista a los productos antiguos (A); en la 12B, el catálogo por categoría, la ficha de
- * tres productos con modelo nuevo, el arquero en el diseñador con nombre y número y la suela de la zapatilla de
- * running en ADMIN › Productos (B). Base temporal con todas las migraciones.
- * Modo C: en la ventana real, el ADMIN cambia la suela de la zapatilla de running y pulsa "Guardar producto"; se
- * comprueba en la base y en el catálogo y la ficha (como CLIENTE).
- * Uso: {@code Etapa12Tour [carpeta] [A|B|C]} (por defecto A).
- */
 public final class Etapa12Tour {
 
     private static final int W = 1440;
@@ -89,7 +80,6 @@ public final class Etapa12Tour {
             login("cliente@sportforce3d.pe", "Cliente123!");
         }
         if (mode.contains("C")) {
-            // hecho
         } else if (mode.contains("B")) {
             tourB();
         } else {
@@ -105,7 +95,6 @@ public final class Etapa12Tour {
         go(Routes.CATALOG, new Routes.CatalogParams(null, null));
         pause(3500);
         shot("12a-01-catalogo");
-        // Cada página del catálogo, con la lista entera (las fotos se recolorean en segundo plano).
         for (int page = 1; page <= 20; page++) {
             resultsShot(String.format("12a-%02d-catalogo-completo-pagina-%d", page + 1, page));
             SfButton next = fx(() -> nextPage());
@@ -120,7 +109,6 @@ public final class Etapa12Tour {
         }
     }
 
-    /** Etapa 12B: catálogo por categoría, fichas, diseñador del arquero y suela en el editor del ADMIN. */
     private void tourB() throws Exception {
         int n = 1;
         for (com.sportforce3d.model.Category c : fx(() -> context.catalogService().categories())) {
@@ -145,7 +133,6 @@ public final class Etapa12Tour {
             pause(3500);
             shot(String.format("12b-%02d-ficha-%s", n++, sku.toLowerCase(java.util.Locale.ROOT)));
         }
-        // Arquero en el diseñador (Vista realista) con nombre y número.
         go(Routes.DESIGNER, new Routes.DesignerParams(null, null, productId("SF-UFU-003")));
         pause(5000);
         fx(() -> {
@@ -163,7 +150,6 @@ public final class Etapa12Tour {
         });
         pause(3000);
         shot("12b-31-disenador-compresion");
-        // Suela de la zapatilla de running: editable por el ADMIN.
         fx(() -> {
             context.navigator().logout();
             return null;
@@ -175,7 +161,6 @@ public final class Etapa12Tour {
         nodeShot("#content", "12b-40-admin-zapatilla-running");
     }
 
-    /** "Guardar producto" con un color de zona cambiado, en la ventana real. */
     private void tourC() throws Exception {
         long id = productId("SF-ZAP-003");
         go(Routes.ADMIN_PRODUCT_EDIT, id);
@@ -261,7 +246,6 @@ public final class Etapa12Tour {
         }
     }
 
-    /** Botón de página siguiente habilitado, o null en la última página. */
     private SfButton nextPage() {
         for (Node n : stage.getScene().getRoot().lookupAll(".sf-btn")) {
             if (n instanceof SfButton b && !b.isDisabled() && b.isVisible()

@@ -8,15 +8,7 @@ import javafx.scene.paint.PhongMaterial;
 import java.util.EnumMap;
 import java.util.Map;
 
-/**
- * Materiales del visor. Los colores predeterminados reproducen el probador de referencia
- * (design/referencia/frente.png): camiseta azul con detalles verde neón, short negro con pretina y franja azul,
- * medias azules con banda blanca y chimpunes blancos. Son datos de la prenda (los elegirá el cliente en la
- * Etapa 4), no tokens de interfaz.
- */
 public final class Materials {
-
-    /** Gris satinado del maniquí, como en la referencia. */
     public static final Color MANNEQUIN = Color.web("#6b7482");
 
     public static final Map<Zone, Color> DEFAULT_COLORS = defaults();
@@ -48,7 +40,6 @@ public final class Materials {
         return m;
     }
 
-    /** Brillo especular según el tipo de superficie: tela mate, sintético satinado, caucho. */
     public static PhongMaterial forZone(Zone zone, Color color, Image bump) {
         PhongMaterial m = new PhongMaterial(color);
         switch (zone) {
@@ -65,7 +56,6 @@ public final class Materials {
                 m.setSpecularPower(8);
             }
             default -> {
-                // Tela deportiva (Dry-Fit): brillo suave y amplio.
                 m.setSpecularColor(Color.gray(0.15));
                 m.setSpecularPower(12);
                 if (bump != null) {

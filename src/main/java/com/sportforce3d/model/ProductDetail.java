@@ -2,7 +2,6 @@ package com.sportforce3d.model;
 
 import java.util.List;
 
-/** Producto completo para la ficha y el editor del ADMIN. Montos en céntimos. */
 public record ProductDetail(long id, long categoryId, String categoryName, Long sportId, String sportName,
                             String sku, String name, String description, Garment garment,
                             long basePriceCents, Long compareAtPriceCents, boolean customizable,
@@ -35,7 +34,6 @@ public record ProductDetail(long id, long categoryId, String categoryName, Long 
         return images.isEmpty() ? null : images.get(0).path();
     }
 
-    /** Color de la primera variante activa, para la ilustración cuando no hay foto. */
     public String primaryColorHex() {
         return activeVariants().isEmpty() ? null : activeVariants().get(0).colorHex();
     }

@@ -5,7 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.ToLongFunction;
 
-/** Caché LRU limitada por peso (bytes), segura entre hilos. */
 final class LruCache<K, V> {
 
     private final long maxWeight;
@@ -29,7 +28,6 @@ final class LruCache<K, V> {
         }
         weight += weigher.applyAsLong(value);
         Iterator<Map.Entry<K, V>> it = map.entrySet().iterator();
-        // Saca los menos usados; el recién agregado se queda aunque pese más que el límite.
         while (weight > maxWeight && map.size() > 1 && it.hasNext()) {
             Map.Entry<K, V> eldest = it.next();
             if (eldest.getKey().equals(key)) {

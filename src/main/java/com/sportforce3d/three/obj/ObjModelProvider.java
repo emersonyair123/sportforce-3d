@@ -27,12 +27,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Carga un modelo OBJ exportado desde Blender (resources/models/{tipo}.obj). Cada objeto ("o" o "g") se asigna
- * a una zona por su nombre ({@link Zone#fromMeshName}); los que empiezan con "mannequin" o "body" forman el
- * maniquí; el resto se ignora con un aviso en el log. Se espera: metros, Y arriba, frente hacia +Z, caras en
- * sentido antihorario. El archivo .mtl se ignora: los colores y telas los pone el diseñador.
- */
 public final class ObjModelProvider implements ModelProvider {
 
     private static final Logger log = LoggerFactory.getLogger(ObjModelProvider.class);
@@ -42,12 +36,10 @@ public final class ObjModelProvider implements ModelProvider {
         return "OBJ";
     }
 
-    /** Ruta del recurso para un tipo de cuerpo. */
     public static String resourceFor(BodyType type) {
         return "/models/" + type.key() + ".obj";
     }
 
-    /** true si hay un OBJ empaquetado para ese tipo de cuerpo. */
     public static boolean available(BodyType type) {
         return ObjModelProvider.class.getResource(resourceFor(type)) != null;
     }
@@ -64,7 +56,6 @@ public final class ObjModelProvider implements ModelProvider {
         }
     }
 
-    /** Objeto en construcción: caras con índices globales (v, vt, vn) ya resueltos (base 0, -1 = ausente). */
     private static final class ObjObject {
         final String name;
         final List<int[]> triangles = new ArrayList<>();
@@ -108,13 +99,11 @@ public final class ObjModelProvider implements ModelProvider {
                     for (int i = 0; i < n; i++) {
                         corners[i] = corner(t[i + 1], v.size(), vt.size(), vn.size(), lineNo);
                     }
-                    // Polígonos en abanico.
                     for (int i = 1; i < n - 1; i++) {
                         current.triangles.add(concat(corners[0], corners[i], corners[i + 1]));
                     }
                 }
                 default -> {
-                    // usemtl, mtllib, s, l… no se usan.
                 }
             }
         }
@@ -146,7 +135,6 @@ public final class ObjModelProvider implements ModelProvider {
         float[] normals = new float[count * 3];
         float[] tex = new float[count * 2];
         int[] faces = new int[o.triangles.size() * MeshData.FACE_STRIDE];
-        // Normales suaves por vértice si el OBJ no trae.
         Map<Integer, Vec3> smooth = new LinkedHashMap<>();
         boolean needSmooth = o.triangles.stream().anyMatch(tri -> tri[2] < 0 || tri[5] < 0 || tri[8] < 0);
         if (needSmooth) {
@@ -164,7 +152,6 @@ public final class ObjModelProvider implements ModelProvider {
         for (int[] tri : o.triangles) {
             for (int k = 0; k < 3; k++) {
                 double[] p = v.get(tri[k * 3]);
-                // Y arriba, +Z frente → JavaFX (Y abajo, frente hacia -Z): rotación de 180° en X.
                 points[i * 3] = (float) p[0];
                 points[i * 3 + 1] = (float) -p[1];
                 points[i * 3 + 2] = (float) -p[2];
@@ -176,7 +163,7 @@ public final class ObjModelProvider implements ModelProvider {
                 if (tri[k * 3 + 1] >= 0) {
                     double[] uv = vt.get(tri[k * 3 + 1]);
                     tex[i * 2] = (float) uv[0];
-                    tex[i * 2 + 1] = (float) (1 - uv[1]); // OBJ tiene V hacia arriba; JavaFX hacia abajo
+                    tex[i * 2 + 1] = (float) (1 - uv[1]);
                 }
                 int f = (i / 3) * MeshData.FACE_STRIDE + k * 3;
                 faces[f] = i;
@@ -188,7 +175,6 @@ public final class ObjModelProvider implements ModelProvider {
         return new MeshData(points, normals, tex, faces);
     }
 
-    /** Encuadres por prenda a partir de las cajas de sus zonas. */
     private static Map<Garment, Focus> focusFrom(Map<Zone, List<Part>> zones, double height) {
         Map<Garment, Focus> focus = new EnumMap<>(Garment.class);
         Map<Garment, double[]> boxes = new EnumMap<>(Garment.class);
@@ -228,7 +214,6 @@ public final class ObjModelProvider implements ModelProvider {
         return new int[]{vi, ti, ni};
     }
 
-    /** Índices OBJ: base 1; negativos cuentan desde el final. */
     private static int index(String s, int size, int lineNo) {
         int i = Integer.parseInt(s);
         int idx = i < 0 ? size + i : i - 1;

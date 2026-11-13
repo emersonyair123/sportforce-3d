@@ -21,13 +21,11 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** V6: los 44 productos de catalogo.json con modelo, colores por zona y diseño. */
 class RealisticCatalogMigrationTest {
 
     @TempDir
     Path tempDir;
 
-    /** V8 (Etapa 12A): los productos de V2 con dibujo pasan a foto realista; SF-BUZ-001 (duplicado) se oculta. */
     @Test
     void oldProductsGetARealisticPhotoAndTheDuplicateIsHidden() throws SQLException {
         Database db = TestDatabases.migrated(tempDir);
@@ -35,16 +33,11 @@ class RealisticCatalogMigrationTest {
             assertThat(text(st, "SELECT model_key FROM products WHERE sku = 'SF-UFU-002'")).isEqualTo("futbol_hombre_frente");
             assertThat(text(st, "SELECT pattern || ' ' || pattern_color FROM products WHERE sku = 'SF-UFU-002'"))
                     .isEqualTo("rayas #f2f5f8");
-            // Duplicado: borrado lógico, la fila sigue (pedidos y carritos anteriores).
             assertThat(text(st, "SELECT deleted_at IS NOT NULL FROM products WHERE sku = 'SF-BUZ-001'")).isEqualTo("1");
             assertThat(text(st, "SELECT deleted_at IS NULL FROM products WHERE sku = 'SF-037'")).isEqualTo("1");
         }
     }
 
-    /**
-     * V9 (Etapa 12B): fotos propias para los provisionales y los que tenían dibujo, con el color de su variante.
-     * Ningún producto visible queda con el dibujo antiguo.
-     */
     @Test
     void newModelsReplaceTheDrawingsAndTheProvisionalPhotos() throws SQLException {
         Database db = TestDatabases.migrated(tempDir);
@@ -64,7 +57,6 @@ class RealisticCatalogMigrationTest {
                 assertThat(text(st, "SELECT model_key || ' ' || zone_colors || ' ' || pattern FROM products WHERE sku = '"
                         + row[0] + "'")).as(row[0]).isEqualTo(row[1] + " " + row[2] + " liso");
             }
-            // Siguen provisionales (ningún modelo nuevo es su prenda).
             assertThat(text(st, "SELECT model_key FROM products WHERE sku = 'SF-CAM-003'")).isEqualTo("redondo_hombre_frente");
             assertThat(text(st, "SELECT model_key FROM products WHERE sku = 'SF-SHO-003'")).isEqualTo("futbol_hombre_frente");
         }
@@ -81,28 +73,21 @@ class RealisticCatalogMigrationTest {
             }
             assertThat(count(st, "SELECT count(*) FROM products p JOIN categories c ON c.id = p.category_id "
                     + "WHERE c.name = 'Niños'")).isEqualTo(7);
-            // Diseño y color van juntos.
             assertThat(count(st, "SELECT count(*) FROM products WHERE model_key IS NOT NULL "
                     + "AND (pattern = 'liso') <> (pattern_color IS NULL)")).isZero();
             assertThat(count(st, "SELECT count(*) FROM products WHERE pattern <> 'liso'")).as("8 de V6 + SF-UFU-002").isEqualTo(9);
-            // Cada producto tiene variantes con stock de ejemplo (salvo las Zapatillas Running Pulse, agotadas a
-            // propósito desde V2 para probar ese estado).
             assertThat(count(st, "SELECT count(*) FROM products p WHERE p.model_key IS NOT NULL AND p.sku <> 'SF-ZAP-003' "
                     + "AND NOT EXISTS "
                     + "(SELECT 1 FROM product_variants v JOIN inventory i ON i.variant_id = v.id "
                     + " WHERE v.product_id = p.id AND i.quantity > 0)")).isZero();
-            // Niños y niñas: tallas XS a L.
             assertThat(count(st, "SELECT count(*) FROM product_variants v JOIN products p ON p.id = v.product_id "
                     + "WHERE p.sku = 'SF-003'")).isEqualTo(4);
-            // Coincidencia por nombre: se actualiza y conserva su SKU y variantes.
             assertThat(text(st, "SELECT model_key FROM products WHERE sku = 'SF-ZAP-001'")).isEqualTo("producto_zapatilla_fg");
             assertThat(text(st, "SELECT DISTINCT color_hex FROM product_variants v JOIN products p ON p.id = v.product_id "
                     + "WHERE p.sku = 'SF-ZAP-001'")).isEqualTo("#1F5FFF");
             assertThat(text(st, "SELECT model_key FROM products WHERE sku = 'SF-ACC-001'")).isEqualTo("producto_canilleras");
         }
 
-        // Cada vista guardada se puede recolorear: el modelo existe y los colores valen. catalogo.json trae a veces
-        // una zona que el modelo no tiene (paneles en vóley mujer); el recoloreado la ignora.
         RealisticModelRepository models = new RealisticModelRepository();
         ProductRepository products = new ProductRepository(db);
         List<ProductSummary> all = new ArrayList<>();

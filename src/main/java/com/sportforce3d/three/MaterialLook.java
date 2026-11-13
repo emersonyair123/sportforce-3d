@@ -4,11 +4,6 @@ import com.sportforce3d.model.Material;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
-/**
- * Cómo se ve un material en JavaFX (Phong). Traduce los parámetros PBR del documento de materiales
- * (roughness, sheen, metalness) a brillo especular y agrega el relieve de la tela. {@code perforated}: la tela tiene
- * agujeros que se ven (malla deportiva) y se pintan en la textura ({@link Perforation}).
- */
 public record MaterialLook(Image bump, Color specular, double power, boolean perforated) {
 
     public static MaterialLook of(Material m) {

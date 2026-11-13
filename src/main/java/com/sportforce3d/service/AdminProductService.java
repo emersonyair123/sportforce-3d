@@ -29,13 +29,12 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/** Gestión de productos, imágenes e inventario. Todos los métodos exigen rol ADMIN. */
 public class AdminProductService {
 
     private static final Logger log = LoggerFactory.getLogger(AdminProductService.class);
     private static final Pattern SKU = Pattern.compile("^[A-Z0-9][A-Z0-9-]{2,39}$");
     private static final Pattern HEX = Pattern.compile("^#[0-9A-F]{6}$");
-    public static final long MAX_PRICE_CENTS = 9_999_999; // S/ 99,999.99
+    public static final long MAX_PRICE_CENTS = 9_999_999;
     public static final int MAX_STOCK = 99_999;
 
     private final ProductRepository products;
@@ -63,7 +62,6 @@ public class AdminProductService {
         return products.findDetail(productId).orElseThrow(() -> new ServiceException("El producto ya no existe."));
     }
 
-    /** Crea o actualiza. Devuelve el producto guardado. */
     public ProductDetail save(ProductForm form) {
         User admin = session.requireRole(Role.ADMIN);
         ProductDetail current = form.id() == null ? null : get(form.id());
@@ -101,16 +99,11 @@ public class AdminProductService {
         products.restore(productId);
     }
 
-    /** Foto realista del producto (modelo y colores por zona), si tiene. */
     public java.util.Optional<RealisticLook> look(long productId) {
         session.requireRole(Role.ADMIN);
         return products.findLook(productId);
     }
 
-    /**
-     * Cambia los colores por zona de la foto realista (p. ej. la suela de la zapatilla de running, zona
-     * {@code paneles}). Solo zonas que el producto ya tiene; el modelo no cambia.
-     */
     public RealisticLook updateZoneColors(long productId, Map<String, String> zoneColors) {
         User admin = session.requireRole(Role.ADMIN);
         get(productId);

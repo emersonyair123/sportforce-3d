@@ -1,6 +1,5 @@
 package com.sportforce3d.three;
 
-/** Vistas rápidas del visor. Izquierda/derecha son las del maniquí (su izquierda es +X). */
 public enum ViewPreset {
     FRONT("Frente", 0),
     BACK("Espalda", 180),

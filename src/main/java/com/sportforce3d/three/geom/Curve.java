@@ -2,11 +2,6 @@ package com.sportforce3d.three.geom;
 
 import java.util.Arrays;
 
-/**
- * Curva 1D por puntos clave con interpolación cúbica monótona (PCHIP, Fritsch–Carlson).
- * A diferencia de Catmull-Rom no se pasa de los valores clave, así que los perfiles del cuerpo
- * no forman bultos ni hundimientos falsos entre secciones. Fuera del rango devuelve el extremo.
- */
 public final class Curve {
 
     private final double[] xs;
@@ -19,7 +14,6 @@ public final class Curve {
         this.ms = slopes(xs, ys);
     }
 
-    /** {@code Curve.of(x0, y0, x1, y1, …)} con x estrictamente crecientes. */
     public static Curve of(double... pairs) {
         if (pairs.length < 4 || pairs.length % 2 != 0) {
             throw new IllegalArgumentException("Se necesitan al menos 2 pares (x, y)");
@@ -37,7 +31,6 @@ public final class Curve {
         return new Curve(xs, ys);
     }
 
-    /** Curva con los mismos x y los valores multiplicados por {@code k}. */
     public Curve scaled(double k) {
         double[] y2 = new double[ys.length];
         for (int i = 0; i < ys.length; i++) {
@@ -98,7 +91,6 @@ public final class Curve {
                 m[i] = (w1 + w2) / (w1 / d[i - 1] + w2 / d[i]);
             }
         }
-        // Extremos: evita que la pendiente final invierta el signo de la cuerda.
         if (n > 2) {
             m[0] = endSlope(h[0], h[1], d[0], d[1]);
             m[n - 1] = endSlope(h[n - 2], h[n - 3], d[n - 2], d[n - 3]);
@@ -117,20 +109,16 @@ public final class Curve {
         return m;
     }
 
-    // ---------------------------------------------------------------- Funciones de forma
-
     public static double smoothstep(double edge0, double edge1, double x) {
         double t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
         return t * t * (3 - 2 * t);
     }
 
-    /** Campana gaussiana con máximo 1 en {@code center}. */
     public static double bell(double x, double center, double sigma) {
         double d = (x - center) / sigma;
         return Math.exp(-0.5 * d * d);
     }
 
-    /** Diferencia angular envuelta a (-π, π]. */
     public static double angleDiff(double a, double b) {
         double d = (a - b) % (2 * Math.PI);
         if (d > Math.PI) {
@@ -141,7 +129,6 @@ public final class Curve {
         return d;
     }
 
-    /** Campana angular (envuelta) con máximo 1 en {@code center}. */
     public static double angularBell(double angle, double center, double sigma) {
         return bell(angleDiff(angle, center), 0, sigma);
     }

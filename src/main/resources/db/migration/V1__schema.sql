@@ -1,16 +1,3 @@
--- SPORTFORCE 3D · Esquema inicial (SQLite)
---
--- Convenciones:
---   * Montos en céntimos de sol (INTEGER). S/ 129.90 = 12990. Moneda única: PEN.
---   * Fechas en texto ISO-8601 UTC: 2026-10-17T21:05:33.120Z
---   * Booleanos como INTEGER 0/1 con CHECK.
---   * Las claves foráneas se activan en cada conexión (PRAGMA foreign_keys=ON, ver Database.java).
---   * updated_at se actualiza con triggers.
-
--- ---------------------------------------------------------------------------
--- Usuarios y roles
--- ---------------------------------------------------------------------------
-
 CREATE TABLE roles (
     id   INTEGER PRIMARY KEY,
     code TEXT    NOT NULL UNIQUE CHECK (code IN ('ADMIN', 'CLIENTE')),
@@ -61,12 +48,7 @@ CREATE TABLE addresses (
     updated_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 CREATE INDEX idx_addresses_customer ON addresses (customer_id);
--- Solo una dirección predeterminada por cliente.
 CREATE UNIQUE INDEX ux_addresses_default ON addresses (customer_id) WHERE is_default = 1;
-
--- ---------------------------------------------------------------------------
--- Catálogo
--- ---------------------------------------------------------------------------
 
 CREATE TABLE categories (
     id          INTEGER PRIMARY KEY,
@@ -158,7 +140,6 @@ CREATE TABLE materials (
     composition     TEXT,
     usage           TEXT    NOT NULL,
     scope           TEXT    NOT NULL CHECK (scope IN ('TEXTIL', 'CALZADO')),
-    -- Prendas (TEXTIL) o zonas de zapatilla (CALZADO) donde se ofrece, separadas por coma.
     suitable_for    TEXT    NOT NULL,
     surcharge_cents INTEGER NOT NULL DEFAULT 0 CHECK (surcharge_cents >= 0),
     roughness       REAL    NOT NULL CHECK (roughness BETWEEN 0 AND 1),
@@ -177,10 +158,6 @@ CREATE TABLE product_materials (
 );
 CREATE INDEX idx_product_materials_material ON product_materials (material_id);
 
--- ---------------------------------------------------------------------------
--- Diseños 3D
--- ---------------------------------------------------------------------------
-
 CREATE TABLE design_assets (
     id              INTEGER PRIMARY KEY,
     user_id         INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
@@ -189,7 +166,6 @@ CREATE TABLE design_assets (
     mime_type       TEXT    NOT NULL CHECK (mime_type IN ('image/png', 'image/svg+xml')),
     size_bytes      INTEGER NOT NULL CHECK (size_bytes > 0 AND size_bytes <= 5242880),
     sha256          TEXT    NOT NULL CHECK (length(sha256) = 64),
-    -- El cliente declara que tiene derecho a usar el logo.
     rights_declared INTEGER NOT NULL CHECK (rights_declared = 1),
     created_at      TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
@@ -238,10 +214,6 @@ CREATE TABLE design_elements (
 CREATE INDEX idx_design_elements_version ON design_elements (design_version_id, layer_order);
 CREATE INDEX idx_design_elements_asset ON design_elements (asset_id);
 
--- ---------------------------------------------------------------------------
--- Carrito
--- ---------------------------------------------------------------------------
-
 CREATE TABLE carts (
     id         INTEGER PRIMARY KEY,
     user_id    INTEGER NOT NULL UNIQUE REFERENCES users (id) ON DELETE CASCADE,
@@ -264,11 +236,6 @@ CREATE INDEX idx_cart_items_cart ON cart_items (cart_id);
 CREATE INDEX idx_cart_items_variant ON cart_items (variant_id);
 CREATE INDEX idx_cart_items_design ON cart_items (design_id);
 
--- ---------------------------------------------------------------------------
--- Pedidos y pagos
--- ---------------------------------------------------------------------------
-
--- Correlativo anual para PED-2026-000154.
 CREATE TABLE order_counters (
     year       INTEGER PRIMARY KEY CHECK (year BETWEEN 2000 AND 9999),
     last_value INTEGER NOT NULL DEFAULT 0 CHECK (last_value >= 0)
@@ -286,7 +253,6 @@ CREATE TABLE orders (
     shipping_cents      INTEGER NOT NULL DEFAULT 0 CHECK (shipping_cents >= 0),
     total_cents         INTEGER NOT NULL,
     currency            TEXT    NOT NULL DEFAULT 'PEN' CHECK (currency = 'PEN'),
-    -- Copia congelada de la dirección de envío.
     ship_recipient      TEXT    NOT NULL,
     ship_phone          TEXT    NOT NULL,
     ship_department     TEXT    NOT NULL,
@@ -309,7 +275,6 @@ CREATE TABLE order_items (
     product_id           INTEGER NOT NULL REFERENCES products (id) ON DELETE RESTRICT,
     variant_id           INTEGER REFERENCES product_variants (id) ON DELETE SET NULL,
     design_id            INTEGER REFERENCES designs (id) ON DELETE SET NULL,
-    -- Datos congelados al momento de la compra.
     product_name         TEXT    NOT NULL,
     sku                  TEXT    NOT NULL,
     size_code            TEXT    NOT NULL,
@@ -350,7 +315,6 @@ CREATE TABLE payments (
     rejection_reason   TEXT,
     created_at         TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
     updated_at         TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
-    -- Un pago aprobado siempre tiene quién y cuándo lo verificó.
     CHECK (status <> 'APROBADO' OR (verified_by IS NOT NULL AND verified_at IS NOT NULL)),
     CHECK (status <> 'RECHAZADO' OR rejection_reason IS NOT NULL)
 );
@@ -366,10 +330,6 @@ CREATE TABLE payment_proofs (
     created_at  TEXT    NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 CREATE INDEX idx_payment_proofs_payment ON payment_proofs (payment_id);
-
--- ---------------------------------------------------------------------------
--- Triggers updated_at
--- ---------------------------------------------------------------------------
 
 CREATE TRIGGER trg_users_updated AFTER UPDATE ON users FOR EACH ROW WHEN NEW.updated_at = OLD.updated_at
 BEGIN

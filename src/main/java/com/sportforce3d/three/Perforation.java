@@ -11,17 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Agujeros de la malla deportiva: el relieve solo sombrea, así que los agujeros se pintan en la textura (más oscuros:
- * se ve la sombra del interior) dentro de las islas UV de las zonas con malla. La rejilla es la misma del relieve
- * {@link FabricMaps} (celdas de {@link #CELL_PX} px en una textura de 2048 px, unos 3 mm en la camiseta). Hilo de
- * JavaFX; dos imágenes por prenda que se alternan, como el compositor.
- */
 final class Perforation {
-
-    /** Paso de la rejilla de agujeros en una textura de 2048 px. */
     static final double CELL_PX = 6.0;
-    /** Cuánto se oscurece el centro de un agujero. */
     private static final double DEPTH = 0.62;
 
     private final Map<String, float[]> masks = new HashMap<>();
@@ -29,7 +20,6 @@ final class Perforation {
     private final Map<Garment, Integer> next = new EnumMap<>(Garment.class);
     private int[] buf = new int[0];
 
-    /** 1 en el centro de un agujero y 0 fuera (borde suave); coordenadas en celdas, filas desplazadas media celda. */
     static double hole(double u, double v) {
         double row = Math.floor(v);
         double fu = u + (((long) row & 1) == 0 ? 0 : 0.5);
@@ -39,7 +29,6 @@ final class Perforation {
         return Math.max(0, Math.min(1, (0.27 - r) / 0.08));
     }
 
-    /** Copia de {@code texture} con los agujeros dentro de {@code rects}. */
     Image apply(Garment g, Image texture, List<UvRect> rects) {
         int w = (int) texture.getWidth();
         int h = (int) texture.getHeight();

@@ -1,9 +1,5 @@
 package com.sportforce3d.model;
 
-/**
- * Métodos de pago en soles. Yape, Plin y transferencia se verifican a mano por un ADMIN.
- * La tarjeta necesita un servidor que reciba los webhooks de la pasarela, por eso está deshabilitada.
- */
 public enum PaymentMethod {
     YAPE("Yape", true),
     PLIN("Plin", true),

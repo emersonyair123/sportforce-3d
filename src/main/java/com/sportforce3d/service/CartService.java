@@ -22,16 +22,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * Carrito del usuario conectado (cualquier rol). Valida stock y cantidades; los totales se calculan aquí.
- * Las líneas personalizadas llevan un diseño propio del usuario y el recargo de sus materiales
- * ({@link DesignPricing}), que se recalcula si el diseño cambia antes de comprar.
- */
 public class CartService {
 
     public static final int MAX_PER_LINE = 99;
 
-    /** Prendas que el diseñador 3D sabe dibujar ({@link Garment#DESIGNABLE}). */
     public static final Set<Garment> DESIGNABLE = Garment.DESIGNABLE;
 
     private final CartRepository carts;
@@ -65,7 +59,6 @@ public class CartService {
         return session.current().map(u -> carts.countUnits(u.id())).orElse(0);
     }
 
-    /** Agrega unidades de una variante; si ya está en el carrito, suma la cantidad. */
     public CartSummary add(long variantId, int quantity) {
         User me = session.requireUser();
         checkQuantity(quantity);
@@ -88,10 +81,6 @@ public class CartService {
         return summary();
     }
 
-    /**
-     * Agrega un producto personalizable con uno de tus diseños guardados. La talla es la variante; los colores y
-     * materiales salen del diseño. Si la misma talla con el mismo diseño ya está en el carrito, suma la cantidad.
-     */
     public CartSummary addDesign(long designId, long variantId, int quantity) {
         User me = session.requireUser();
         checkQuantity(quantity);
@@ -122,10 +111,6 @@ public class CartService {
         return summary();
     }
 
-    /**
-     * Recargo por unidad del diseño para ese producto. Exige que cada material elegido esté permitido para el
-     * producto (product_materials); si no, el cliente debe cambiarlo en el diseñador.
-     */
     long surchargeFor(DesignDocument doc, ProductDetail product) {
         Set<String> allowed = product.materials().stream().map(Material::code).collect(Collectors.toSet());
         Map<String, Material> all = catalog.materialsByCode();
@@ -140,10 +125,6 @@ public class CartService {
         return DesignPricing.surchargeCents(doc, all, product.garment());
     }
 
-    /**
-     * Las líneas con diseño toman el recargo de la versión actual del diseño (el cliente pudo cambiar de tela
-     * después de agregarlo). Si cambió, se guarda el nuevo valor.
-     */
     List<CartLine> refreshDesignSurcharges(long userId, List<CartLine> lines) {
         if (lines.stream().noneMatch(CartLine::hasDesign)) {
             return lines;

@@ -4,7 +4,6 @@ import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
 
-/** Usuario sin datos sensibles: el hash de la contraseña nunca sale de la capa repository/service. */
 public record User(long id, String email, String fullName, String phone, boolean active,
                    Set<Role> roles, String createdAt, String lastLoginAt) {
 
@@ -22,7 +21,6 @@ public record User(long id, String email, String fullName, String phone, boolean
         return hasRole(Role.ADMIN);
     }
 
-    /** Primer nombre para saludos ("Hola, Lucía"). */
     public String firstName() {
         String trimmed = fullName.trim();
         int space = trimmed.indexOf(' ');

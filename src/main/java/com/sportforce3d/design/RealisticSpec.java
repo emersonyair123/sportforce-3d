@@ -10,19 +10,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
-/**
- * Diseño de la vista realista (fotos recoloreadas, ver {@code render.RecolorService}): modelo, color por zona,
- * diseño de la camiseta, nombre y número. Inmutable; los cambios devuelven una copia.
- *
- * @param modelKey     modelo de frente de {@code models/realista/modelos.json} (la espalda se deduce)
- * @param zoneColors   zona ({@code camiseta}, {@code short}, {@code paneles}, {@code medias}, {@code principal}) →
- *                     {@code #RRGGBB}
- * @param pattern      código del diseño: {@code liso}, {@code rayas}, {@code franjas}, {@code dinamico},
- *                     {@code geometrico}, {@code minimal} o {@code banda}
- * @param patternColor color del diseño
- * @param name         nombre en la espalda (máx. 12) o null
- * @param number       número 0–99 o null
- */
 public record RealisticSpec(String modelKey, Map<String, String> zoneColors, String pattern, String patternColor,
                             String name, Integer number) {
 
@@ -44,7 +31,6 @@ public record RealisticSpec(String modelKey, Map<String, String> zoneColors, Str
         name = name == null || name.isBlank() ? null : name;
     }
 
-    /** Uniforme de fútbol de hombre azul con paneles verdes, como el diseñador 3D. */
     public static RealisticSpec defaults() {
         return new RealisticSpec(DEFAULT_MODEL, Map.of("camiseta", "#1F5FFF", "short", "#0B0E13",
                 "paneles", "#39FF88", "medias", "#1F5FFF", "principal", "#1F5FFF"), "liso", "#F2F5F8", null, null);
@@ -84,7 +70,6 @@ public record RealisticSpec(String modelKey, Map<String, String> zoneColors, Str
         return new RealisticSpec(modelKey, zoneColors, pattern, patternColor, name, value);
     }
 
-    /** Problemas para mostrar al usuario (vacío si está bien). */
     public List<String> problems() {
         List<String> out = new ArrayList<>();
         if (!modelKey.matches("[a-z]+(_[a-z]+)*")) {

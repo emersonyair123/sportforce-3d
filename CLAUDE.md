@@ -75,7 +75,8 @@ Recursos: `db/migration/` (Flyway), `css/`, `fxml/`, `fonts/` (OFL), `emblems/` 
 - **No hay botones decorativos**: lo no implementado se deshabilita con texto visible "Próximamente" (`SfButton.comingSoon()`, `SidebarNav.addItem(..., false)`). Los tooltips no aparecen en controles deshabilitados.
 - **No simular pagos** ni marcar pedidos como pagados sin verificación de un ADMIN.
 - **Sin marcas de terceros** (Puma, Adidas, Nike…). Al subir logos, el cliente declara tener derecho a usarlos (`design_assets.rights_declared = 1`).
-- Migraciones: **nunca editar** una migración aplicada; agregar `V4__…sql`, `V5__…sql`.
+- Migraciones: **nunca editar** una migración aplicada; agregar `V11__…sql`, `V12__…sql`. (Excepción 2026-11-12: se quitaron sus comentarios; `Database.migrate` atrapa `FlywayValidateException`, hace `repair()` y reintenta, así las BD creadas antes siguen abriendo. Probado en `DatabaseMigrationTest`.)
+- **Código sin comentarios** (pedido del docente): no agregar `//`, `/* */`, Javadoc, `#`, docstrings, `<!-- -->` ni `--` en Java, Python, CSS, FXML/XML ni SQL.
 - **Pedidos**: `OrderService.placeOrder` hace todo en una transacción (correlativo, pedido, líneas con precio congelado, reserva de stock con `quantity - reserved >= n`, historial, pago PENDIENTE, vaciar carrito). Cualquier excepción revierte todo. Cancelar libera `reserved`. Al aprobar un pago (Etapa 5) habrá que convertir la reserva en descuento de `quantity`.
 - **Stock** disponible = `inventory.quantity - inventory.reserved`. El ADMIN nunca puede dejar `quantity` por debajo de `reserved`.
 - **Envío**: `store_settings.shipping_flat_cents` (S/ 15.00) y `free_shipping_from_cents` (S/ 299.00), vía `CatalogService.shippingFor`.

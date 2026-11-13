@@ -16,10 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-/** Diseños, sus versiones (JSON), elementos normalizados (ficha técnica) y logos subidos. */
 public class DesignRepository {
-
-    /** Diseño con su dueño y el JSON de la versión actual. */
     public record StoredDesign(DesignSummary summary, long userId, String documentJson, boolean deleted) {
     }
 
@@ -34,7 +31,6 @@ public class DesignRepository {
         this.db = db;
     }
 
-    /** Crea el diseño con su versión 1. Devuelve el id. */
     public long create(long userId, Long productId, String name, int schemaVersion, String json,
                        List<DesignElement> elements, String front, String back) {
         return db.inTransaction(c -> {
@@ -55,7 +51,6 @@ public class DesignRepository {
         });
     }
 
-    /** Agrega una versión nueva y la marca como actual. Devuelve el número de versión. */
     public int addVersion(long designId, String name, Long productId, int schemaVersion, String json,
                           List<DesignElement> elements, String front, String back) {
         return db.inTransaction(c -> {
@@ -159,7 +154,6 @@ public class DesignRepository {
         });
     }
 
-    /** Cantidad de elementos normalizados de la versión actual (ficha técnica). */
     public int countElements(long designId) {
         return db.withConnection(c -> {
             try (PreparedStatement ps = c.prepareStatement("""
@@ -186,8 +180,6 @@ public class DesignRepository {
             }
         });
     }
-
-    // ---------------------------------------------------------------- Logos subidos
 
     public DesignAsset insertAsset(long userId, String originalName, String path, String mime, long size, String sha256) {
         long id = db.withConnection(c -> {

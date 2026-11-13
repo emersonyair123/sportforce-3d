@@ -11,23 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Diseño completo e inmutable. Se guarda como JSON versionado ({@link #schemaVersion}) en design_versions;
- * cada cambio produce un documento nuevo, lo que hace trivial deshacer y rehacer.
- *
- * <p>Los elementos están en orden de capa: el último se dibuja encima. {@code realistic} es el diseño de la vista
- * realista (puede ser null en diseños anteriores a la Etapa 7). {@code cut} es el largo de manga, short y medias de
- * la Vista 3D (nunca null: los diseños anteriores a la Etapa 10 abren con {@link GarmentCut#DEFAULT}).
- */
 public record DesignDocument(int schemaVersion, BodyType bodyType, Long productId, Map<Zone, String> colors,
                              Map<Garment, PatternSpec> patterns, Map<MaterialSlot, String> materials,
                              List<DesignElement> elements, RealisticSpec realistic, GarmentCut cut) {
-
-    /**
-     * 1: diseño 3D. 2: agrega {@link #realistic} (vista realista). 3: agrega {@link #cut} (manga y largos).
-     * 4: las dos vistas son un solo diseño ({@link ViewSync}): la vista realista guardada sale del 3D. Un diseño de
-     * una versión anterior se abre igual (ver {@code DesignJson}).
-     */
     public static final int SCHEMA_VERSION = 4;
 
     public DesignDocument {
@@ -45,15 +31,10 @@ public record DesignDocument(int schemaVersion, BodyType bodyType, Long productI
         cut = cut == null ? GarmentCut.DEFAULT : cut;
     }
 
-    /** La vista realista guardada o, si el diseño es anterior a la Etapa 7, la predeterminada. */
     public RealisticSpec realisticOrDefault() {
         return realistic != null ? realistic : RealisticSpec.defaults();
     }
 
-    /**
-     * true si las fotos de la vista realista muestran todo lo que se compra (sin avisos de {@link ViewSync#view}:
-     * corte, tela, colores, textos y escudo). Si no, las fotos del diseño (y del pedido) salen de la Vista 3D.
-     */
     public boolean realisticPhotosMatch() {
         return ViewSync.realisticMatches(this);
     }
@@ -73,8 +54,6 @@ public record DesignDocument(int schemaVersion, BodyType bodyType, Long productI
     public Optional<DesignElement> element(String id) {
         return elements.stream().filter(e -> e.id().equals(id)).findFirst();
     }
-
-    // ---------------------------------------------------------------- Cambios (devuelven un documento nuevo)
 
     public DesignDocument withBodyType(BodyType type) {
         return new DesignDocument(schemaVersion, type, productId, colors, patterns, materials, elements, realistic, cut);
@@ -113,10 +92,6 @@ public record DesignDocument(int schemaVersion, BodyType bodyType, Long productI
         return new DesignDocument(schemaVersion, bodyType, productId, colors, patterns, materials, elements, spec, cut);
     }
 
-    /**
-     * Cambia el corte. Si cambia el largo del short, los números del short que siguen en la posición por defecto del
-     * largo anterior pasan a la del nuevo (a media altura de lo que se ve); los que el cliente movió no se tocan.
-     */
     public DesignDocument withCut(GarmentCut c) {
         GarmentCut next = c == null ? GarmentCut.DEFAULT : c;
         List<DesignElement> list = elements;
@@ -150,7 +125,6 @@ public record DesignDocument(int schemaVersion, BodyType bodyType, Long productI
         return withElements(elements.stream().filter(e -> !e.id().equals(id)).toList());
     }
 
-    /** Sube (+1) o baja (-1) una capa. */
     public DesignDocument moveLayer(String id, int delta) {
         List<DesignElement> list = new ArrayList<>(elements);
         for (int i = 0; i < list.size(); i++) {

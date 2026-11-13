@@ -10,10 +10,6 @@ import javafx.scene.layout.FlowPane;
 
 import java.util.List;
 
-/**
- * Control segmentado: Camiseta · Short · Medias · Zapatillas · Accesorios. Siempre hay una prenda elegida.
- * Si no cabe en una fila (p. ej. en el panel de 360 px del diseñador) pasa a dos filas en lugar de recortar texto.
- */
 public class GarmentPicker extends FlowPane {
 
     private final ObjectProperty<Garment> selected = new SimpleObjectProperty<>(this, "selected");
@@ -41,7 +37,6 @@ public class GarmentPicker extends FlowPane {
 
         group.selectedToggleProperty().addListener((obs, old, toggle) -> {
             if (toggle == null) {
-                // No se permite quedar sin prenda: se revierte la deselección.
                 group.selectToggle(old);
             } else {
                 selected.set((Garment) toggle.getUserData());

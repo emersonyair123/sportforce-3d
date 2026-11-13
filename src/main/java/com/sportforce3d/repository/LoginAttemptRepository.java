@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/** Intentos fallidos de inicio de sesión por correo (tabla login_attempts). */
 public class LoginAttemptRepository implements LoginThrottle.Store {
 
     private final Database db;

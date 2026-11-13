@@ -1,6 +1,5 @@
 package com.sportforce3d.model;
 
-/** Estado de un intento de pago (tabla payments). */
 public enum PaymentStatus {
     PENDIENTE("Pendiente"),
     EN_VERIFICACION("En verificación"),

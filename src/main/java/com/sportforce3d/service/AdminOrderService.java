@@ -32,12 +32,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Pedidos para el ADMIN: lista filtrable, detalle, cambios de estado con nota e historial, y el uniforme
- * personalizado de cada línea (copia congelada) con su ficha técnica y archivos originales.
- * <p>
- * Un pedido nunca pasa a "Pagado" desde aquí: solo al aprobar su pago ({@link PaymentService#approve}).
- */
 public class AdminOrderService {
 
     private static final Logger log = LoggerFactory.getLogger(AdminOrderService.class);
@@ -52,7 +46,6 @@ public class AdminOrderService {
     private final Session session;
     private final Clock clock;
 
-    /** Uniforme de una línea de pedido, tal como se compró. */
     public record OrderDesign(long orderId, String orderNumber, OrderItem item, DesignDocument document,
                               TechSheet sheet, Map<String, Material> materials, List<DesignAsset> assets) {
     }
@@ -84,10 +77,6 @@ public class AdminOrderService {
         return orders.findDetail(orderId).orElseThrow(() -> new ServiceException("No encontramos ese pedido."));
     }
 
-    /**
-     * Estados a los que el ADMIN puede llevar el pedido a mano. "Pagado" no está: se alcanza aprobando el pago.
-     * Cancelar solo antes del pago (después habría que gestionar una devolución, fuera del sistema).
-     */
     public static List<OrderStatus> nextStates(OrderStatus current) {
         return switch (current) {
             case PENDIENTE_PAGO, PAGO_EN_VERIFICACION -> List.of(OrderStatus.CANCELADO);
@@ -132,8 +121,6 @@ public class AdminOrderService {
         return orders.findDetail(orderId).orElseThrow();
     }
 
-    // ------------------------------------------------------------------ Uniforme personalizado
-
     public OrderDesign design(long orderItemId) {
         session.requireRole(Role.ADMIN);
         OrderRepository.ItemWithOrder found = orders.findItem(orderItemId)
@@ -153,11 +140,6 @@ public class AdminOrderService {
                 TechSheet.of(doc, materials, names), materials, List.copyOf(assets.values()));
     }
 
-    /**
-     * Guarda en {@code parent} una carpeta con todo lo necesario para producir el uniforme: diseño en JSON,
-     * capturas de frente y espalda, ficha técnica (CSV) y los logos originales que subió el cliente.
-     * Devuelve la carpeta creada.
-     */
     public Path exportDesign(long orderItemId, Path parent) {
         OrderDesign d = design(orderItemId);
         Path dir = parent.resolve(d.orderNumber() + "-linea-" + d.item().id());

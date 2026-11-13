@@ -13,10 +13,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.kordamp.ikonli.feather.Feather;
 
-/**
- * Línea de tiempo horizontal de un pedido. Cada paso dice su estado con texto e icono
- * (hecho ✓, actual •, pendiente vacío), no solo con color. CANCELADO marca el paso donde se detuvo.
- */
 public class StatusTimeline extends HBox {
 
     private static final PseudoClass DONE = PseudoClass.getPseudoClass("done");
@@ -24,7 +20,6 @@ public class StatusTimeline extends HBox {
     private static final PseudoClass CANCELLED = PseudoClass.getPseudoClass("cancelled");
 
     private final ObjectProperty<OrderStatus> status = new SimpleObjectProperty<>(this, "status");
-    /** Último estado alcanzado antes de cancelar (para dibujar dónde se detuvo). */
     private OrderStatus cancelledAt = OrderStatus.PENDIENTE_PAGO;
 
     public StatusTimeline() {

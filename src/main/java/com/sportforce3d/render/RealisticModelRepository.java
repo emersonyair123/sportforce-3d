@@ -18,25 +18,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Lee {@code /models/realista/modelos.json} y carga las capas de cada modelo una sola vez (caché en memoria).
- * Las imágenes se leen con {@link Image} y {@link javafx.scene.image.PixelReader}; se puede llamar desde
- * cualquier hilo (conviene hacerlo en segundo plano: la primera carga de un modelo decodifica 5–6 imágenes).
- * <p>
- * Para reemplazar una máscara por otra recortada a mano basta con dejar el PNG con el mismo nombre y tamaño
- * en {@code src/main/resources/models/realista/<modelo>/}.
- */
 public final class RealisticModelRepository {
 
     public static final String ROOT = "/models/realista/";
 
-    /** Convierte un archivo de imagen en píxeles ARGB. */
     @FunctionalInterface
     public interface ImageDecoder {
         ArgbImage decode(InputStream in) throws IOException;
     }
 
-    /** Decodificador de JavaFX (PixelReader). */
     public static final ImageDecoder JAVAFX = in -> {
         Image img = new Image(in);
         if (img.isError() || img.getPixelReader() == null) {
@@ -64,7 +54,6 @@ public final class RealisticModelRepository {
         this.models = Collections.unmodifiableMap(readIndex(this.root));
     }
 
-    /** Modelos en el orden de {@code modelos.json}. */
     public List<RealisticModel> models() {
         return List.copyOf(models.values());
     }
@@ -77,20 +66,16 @@ public final class RealisticModelRepository {
         return find(key).orElseThrow(() -> new IllegalArgumentException("No existe el modelo " + key));
     }
 
-    /** El modelo de la otra vista (frente ↔ espalda), si existe. Los buzos y productos no tienen. */
     public Optional<RealisticModel> otherView(RealisticModel model) {
         return find(model.otherViewKey());
     }
 
-    /** Capas del modelo; la primera vez las decodifica y luego las devuelve de la caché. */
     public ModelLayers layers(String key) {
         RealisticModel model = require(key);
         ModelLayers cached = layers.get(key);
         if (cached != null) {
             return cached;
         }
-        // Fuera de computeIfAbsent: decodificar tarda y no debe bloquear a otros modelos. Si dos hilos lo cargan
-        // a la vez, gana el primero que termina y el otro resultado se descarta.
         ModelLayers loaded = load(model);
         ModelLayers previous = layers.putIfAbsent(key, loaded);
         return previous != null ? previous : loaded;

@@ -5,15 +5,7 @@ import javafx.scene.shape.VertexFormat;
 
 import java.util.List;
 
-/**
- * Malla de triángulos lista para JavaFX con formato POINT_NORMAL_TEXCOORD (normales explícitas, suaves).
- * Puntos y normales ya están en coordenadas JavaFX (Y hacia abajo, el frente del maniquí hacia -Z, es decir,
- * hacia la cámara en la vista frontal). Se construye fuera del hilo de la interfaz; {@link #toTriangleMesh()}
- * se llama en el hilo de JavaFX.
- */
 public record MeshData(float[] points, float[] normals, float[] texCoords, int[] faces) {
-
-    /** Enteros por cara: (punto, normal, texcoord) × 3. */
     public static final int FACE_STRIDE = 9;
 
     public int pointCount() {
@@ -33,7 +25,6 @@ public record MeshData(float[] points, float[] normals, float[] texCoords, int[]
         return mesh;
     }
 
-    /** Une varias mallas en una sola (p. ej. suela + tacos), reindexando caras. */
     public static MeshData merge(List<MeshData> parts) {
         int p = 0;
         int n = 0;

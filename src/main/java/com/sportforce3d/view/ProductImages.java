@@ -14,12 +14,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-/** Carga imágenes del almacenamiento local en segundo plano, con una caché pequeña por tamaño. */
 final class ProductImages {
 
     private static final Logger log = LoggerFactory.getLogger(ProductImages.class);
     private static final int MAX_ENTRIES = 120;
-    /** Ancho de la miniatura realista (2 × el ancho de la tarjeta). */
     static final int REALISTIC_THUMB_WIDTH = 520;
     private static final Map<String, Image> CACHE = new LinkedHashMap<>(64, 0.75f, true) {
         @Override
@@ -31,7 +29,6 @@ final class ProductImages {
     private ProductImages() {
     }
 
-    /** Devuelve null si no hay ruta o el archivo ya no existe (la tarjeta muestra la ilustración). */
     static Image load(StorageService storage, String relativePath, double width, double height) {
         if (relativePath == null) {
             return null;
@@ -52,7 +49,6 @@ final class ProductImages {
         if (!Files.isRegularFile(file)) {
             return null;
         }
-        // Escala "cover": llena el recuadro manteniendo proporción.
         Image image = new Image(file.toUri().toString(), width * 2, height * 2, true, true, true);
         synchronized (CACHE) {
             CACHE.put(key, image);
@@ -60,11 +56,6 @@ final class ProductImages {
         return image;
     }
 
-    /**
-     * Foto realista recoloreada para una tarjeta (miniatura al doble del ancho, nítida en pantallas con escala).
-     * Si ya está en la caché se entrega al instante; si no, se calcula en un Task. Si falla (modelo inexistente,
-     * color inválido) entrega null y la tarjeta muestra la ilustración.
-     */
     static void realistic(RecolorService recolor, RealisticLook look, Consumer<Image> onImage) {
         RecolorRequest req;
         try {
@@ -85,10 +76,6 @@ final class ProductImages {
         });
     }
 
-    /**
-     * Captura de un diseño (cuerpo completo con el encuadre del visor) recortada al centro con la proporción del
-     * recuadro, para que el uniforme se vea grande en miniaturas. Null si no hay archivo.
-     */
     static javafx.scene.image.ImageView designCapture(StorageService storage, String relativePath, double w, double h) {
         Image image = load(storage, relativePath, w * 2, h * 2);
         if (image == null) {

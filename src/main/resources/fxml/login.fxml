@@ -15,7 +15,6 @@
       fx:controller="com.sportforce3d.view.LoginController"
       styleClass="sf-page">
 
-    <!-- Marca -->
     <StackPane styleClass="sf-band" HBox.hgrow="ALWAYS" minWidth="420">
         <VBox spacing="24" maxWidth="520" alignment="CENTER_LEFT">
             <padding><Insets top="48" right="48" bottom="48" left="48"/></padding>
@@ -31,7 +30,6 @@
         </VBox>
     </StackPane>
 
-    <!-- Formulario -->
     <StackPane HBox.hgrow="ALWAYS" minWidth="440">
         <padding><Insets top="24" right="24" bottom="24" left="24"/></padding>
         <VBox styleClass="sf-auth-panel" maxWidth="420" maxHeight="-Infinity">

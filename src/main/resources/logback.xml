@@ -1,5 +1,4 @@
 <configuration>
-    <!-- Launcher define sportforce.logdir (carpeta "logs" junto al .db); sin él (pruebas) se usa la carpeta temporal. -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} %-5level [%thread] %logger{24} - %msg%n</pattern>

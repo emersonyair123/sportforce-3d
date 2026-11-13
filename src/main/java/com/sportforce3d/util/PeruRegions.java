@@ -2,7 +2,6 @@ package com.sportforce3d.util;
 
 import java.util.List;
 
-/** Departamentos del Perú para el formulario de dirección (más la Provincia Constitucional del Callao). */
 public final class PeruRegions {
 
     public static final List<String> DEPARTMENTS = List.of(

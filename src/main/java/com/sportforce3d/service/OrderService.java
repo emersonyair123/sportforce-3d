@@ -36,13 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Convierte el carrito en un pedido: congela precios y dirección, reserva stock y crea el pago pendiente,
- * todo en una sola transacción. Nunca marca un pedido como pagado: eso lo hace un ADMIN al verificar el pago.
- * <p>
- * Las líneas personalizadas guardan una copia inmutable del diseño: el JSON de la versión actual y sus capturas
- * copiadas a {@code storage/orders/}. Así el pedido no cambia aunque el cliente edite o borre el diseño después.
- */
 public class OrderService {
 
     private static final Logger log = LoggerFactory.getLogger(OrderService.class);
@@ -62,7 +55,6 @@ public class OrderService {
     private final Session session;
     private final Clock clock;
 
-    /** Copia del diseño preparada antes de la transacción. */
     private record DesignCopy(String name, int version, String json, String front, String back) {
     }
 
@@ -99,7 +91,6 @@ public class OrderService {
         String now = clock.instant().toString();
         int year = clock.instant().atZone(LIMA).getYear();
 
-        // Copias de los diseños (archivos) fuera de la transacción; si algo falla se borran.
         List<String> created = new ArrayList<>();
         Map<Long, DesignCopy> copies = new HashMap<>();
         try {
@@ -121,7 +112,7 @@ public class OrderService {
                 .filter(x -> x.userId() == me.id() && !x.deleted())
                 .orElseThrow(() -> new ServiceException("El diseño de " + line.productName()
                         + " ya no existe. Quítalo del carrito para continuar."));
-        DesignJson.read(d.documentJson()); // valida antes de congelarlo
+        DesignJson.read(d.documentJson());
         return new DesignCopy(d.summary().name(), d.summary().version(), d.documentJson(),
                 copyFile(d.summary().thumbnailFront(), created), copyFile(d.summary().thumbnailBack(), created));
     }
@@ -152,7 +143,6 @@ public class OrderService {
                     if (copy == null) {
                         throw new ServiceException("Tu carrito cambió mientras confirmabas. Revísalo e inténtalo de nuevo.");
                     }
-                    // El recargo se congela con la versión que se copia.
                     line = line.withSurcharge(DesignPricing.surchargeCents(DesignJson.read(copy.json()), materials,
                             line.garment()));
                 }
@@ -174,7 +164,6 @@ public class OrderService {
 
             for (CartLine line : lines) {
                 if (!orders.reserveStock(c, line.variantId(), line.quantity())) {
-                    // Cualquier excepción revierte la transacción completa: sin pedido ni reservas a medias.
                     CartService.checkStock(line.productName() + " (talla " + line.sizeName() + ")",
                             line.quantity(), line.available());
                     throw new ServiceException("No hay stock suficiente de " + line.productName() + ".");
@@ -199,7 +188,6 @@ public class OrderService {
         return orders.findByUser(session.requireUser().id());
     }
 
-    /** Detalle visible para el dueño del pedido o un ADMIN. A otros se les responde como si no existiera. */
     public OrderDetail order(long orderId) {
         User me = session.requireUser();
         return orders.findDetail(orderId)
@@ -207,7 +195,6 @@ public class OrderService {
                 .orElseThrow(() -> new ServiceException("No encontramos ese pedido."));
     }
 
-    /** Cancela un pedido aún no pagado y libera el stock reservado. */
     public OrderDetail cancel(long orderId, String reason) {
         User me = session.requireUser();
         OrderDetail order = order(orderId);

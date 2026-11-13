@@ -6,10 +6,6 @@ import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
-/**
- * Raíz de cada ventana: capa de contenido + capa de diálogos (con scrim) + capa de notificaciones.
- * {@link Toast} y {@link ConfirmDialog} la buscan desde cualquier nodo de la escena.
- */
 public class AppRoot extends StackPane {
 
     private final StackPane contentLayer = new StackPane();
@@ -43,7 +39,6 @@ public class AppRoot extends StackPane {
         return toastLayer;
     }
 
-    /** Busca la AppRoot de la escena del nodo, o null si no está en una. */
     static AppRoot of(Node node) {
         if (node == null) {
             return null;

@@ -8,10 +8,6 @@ import org.kordamp.ikonli.Ikon;
 
 import java.util.Locale;
 
-/**
- * Botón del sistema de diseño. {@link Variant#ACCENT} es el único CTA principal por vista.
- * Quita la clase "button" de Modena para que solo apliquen los estilos de components.css.
- */
 public class SfButton extends Button {
 
     public enum Variant { ACCENT, PRIMARY, GHOST, DANGER, ICON }
@@ -52,10 +48,6 @@ public class SfButton extends Button {
         return this;
     }
 
-    /**
-     * Deshabilita el botón y lo dice en texto visible (los tooltips no aparecen en controles deshabilitados):
-     * así no quedan botones decorativos.
-     */
     public SfButton comingSoon() {
         setDisable(true);
         SfBadge badge = new SfBadge("Próximamente");

@@ -1,10 +1,3 @@
--- SPORTFORCE 3D · Datos de prueba
---
--- Usuarios SOLO PARA DESARROLLO (cámbialos o elimínalos antes de usar la tienda en serio):
---   ADMIN    admin@sportforce3d.pe    Admin123!
---   CLIENTE  cliente@sportforce3d.pe  Cliente123!
--- Los hashes son BCrypt (coste 12) de esas contraseñas.
-
 INSERT INTO roles (id, code, name) VALUES
     (1, 'ADMIN', 'Administrador'),
     (2, 'CLIENTE', 'Cliente');
@@ -22,10 +15,6 @@ INSERT INTO customers (id, user_id, document_type, document_number) VALUES
 
 INSERT INTO addresses (customer_id, label, recipient, phone, department, province, district, line1, reference, is_default) VALUES
     (1, 'Casa', 'Lucía Quispe', '987654321', 'Puno', 'Juliaca', 'Juliaca', 'Jr. Mariano Núñez 245', 'Frente al parque', 1);
-
--- ---------------------------------------------------------------------------
--- Catálogo base
--- ---------------------------------------------------------------------------
 
 INSERT INTO categories (id, slug, name, description, sort_order) VALUES
     (1, 'camisetas-deportivas', 'Camisetas deportivas', 'Camisetas para competir y entrenar.', 1),
@@ -67,7 +56,6 @@ INSERT INTO sizes (code, name, size_group, sort_order) VALUES
     ('MED-L', '39–44', 'MEDIAS', 21),
     ('UNICA', 'Única', 'UNICA', 30);
 
--- Telas (design/prendas-y-materiales.md). roughness/sheen/metalness guían el PhongMaterial del diseñador 3D.
 INSERT INTO materials (code, name, composition, usage, scope, suitable_for, surcharge_cents, roughness, sheen, metalness, preview_pattern, sort_order) VALUES
     ('DRY_FIT', 'Dry-Fit', '100 % poliéster microperforado', 'Transpira y seca rápido', 'TEXTIL', 'JERSEY,SHORTS,KIT', 0, 0.55, 0.30, 0, 'DOTS', 1),
     ('MALLA', 'Malla (Mesh)', 'Poliéster con agujeros', 'Ventilación máxima', 'TEXTIL', 'JERSEY,SHORTS,KIT', 500, 0.65, 0.20, 0, 'MESH', 2),
@@ -81,10 +69,6 @@ INSERT INTO materials (code, name, composition, usage, scope, suitable_for, surc
     ('CAUCHO', 'Caucho', 'Caucho natural', 'Agarre en cancha', 'CALZADO', 'shoe_sole', 0, 0.85, 0, 0.0, 'RUBBER', 13),
     ('TPU_TACOS', 'TPU con tacos', 'Poliuretano termoplástico', 'Tracción en grass natural o sintético', 'CALZADO', 'shoe_sole', 2000, 0.30, 0, 0.1, 'STUDS', 14),
     ('REFLECTIVO', 'Reflectivo', 'Película retrorreflectante', 'Visibilidad nocturna', 'CALZADO', 'shoe_logo,shoe_heel', 600, 0.20, 0, 0.6, 'REFLECTIVE', 15);
-
--- ---------------------------------------------------------------------------
--- Productos de ejemplo (26)
--- ---------------------------------------------------------------------------
 
 INSERT INTO products (id, category_id, sport_id, sku, slug, name, description, garment_type, base_price_cents, compare_at_price_cents, customizable, is_new, featured) VALUES
     (1, 1, 6, 'SF-CAM-001', 'camiseta-pro-dry-fit', 'Camiseta Pro Dry-Fit', 'Tejido transpirable con secado rápido.', 'JERSEY', 7990, NULL, 1, 0, 1),
@@ -114,7 +98,6 @@ INSERT INTO products (id, category_id, sport_id, sku, slug, name, description, g
     (25, 10, 1, 'SF-ACC-003', 'guantes-de-arquero-grip', 'Guantes de Arquero Grip', 'Palma de látex de alto agarre.', 'ACCESSORY', 8990, 10990, 0, 0, 0),
     (26, 10, 6, 'SF-ACC-004', 'mochila-team-30-l', 'Mochila Team 30 L', 'Compartimento para zapatillas.', 'ACCESSORY', 11990, NULL, 1, 0, 0);
 
--- Una variante por talla en el color principal de cada producto.
 WITH product_colors (product_id, color_name, color_hex) AS (
     VALUES
         (1, 'Azul eléctrico', '#1F5FFF'), (2, 'Negro', '#0B0E13'), (3, 'Verde neón', '#39FF88'),
@@ -138,8 +121,6 @@ JOIN sizes s ON s.size_group = CASE p.garment_type
                                    ELSE 'ROPA'
                                END;
 
--- Stock determinista (3 a 39 unidades). Las Zapatillas Running Pulse quedan agotadas
--- y la talla XXL de la Camiseta Pro con stock bajo, para probar los estados de la interfaz.
 INSERT INTO inventory (variant_id, quantity, low_stock_threshold)
 SELECT v.id,
        CASE
@@ -150,7 +131,6 @@ SELECT v.id,
        5
 FROM product_variants v;
 
--- Materiales permitidos por producto según la prenda; el primero de la lista es el predeterminado.
 INSERT INTO product_materials (product_id, material_id, is_default)
 SELECT p.id, m.id,
        CASE

@@ -1,18 +1,3 @@
--- SPORTFORCE 3D · Etapa 7: catálogo realista (fotos con la prenda recoloreada en vivo).
---
--- Campos nuevos de products:
---   model_key      carpeta de resources/models/realista (modelos.json)
---   zone_colors    JSON {zona: "#rrggbb"} (camiseta, short, paneles, medias, principal)
---   pattern        diseño de la camiseta (liso, rayas, franjas, dinamico, geometrico, minimal, banda)
---   pattern_color  color del diseño ("#rrggbb"), null si es liso
---
--- Carga los 44 productos de sportforce-realista/catalogo.json (las filas de realistic_catalog se generaron de
--- ese archivo):
---   * si ya existe un producto con el mismo nombre, se actualiza: categoría, precio, novedad, diseño 3D, modelo y
---     colores, y el color de sus variantes. Conserva su SKU, descripción, variantes y stock.
---   * si no, se inserta con una variante por talla y stock inicial de ejemplo.
--- Todos los precios del archivo vienen marcados "precioEsEjemplo": el ADMIN debe revisarlos (ver README).
-
 ALTER TABLE products ADD COLUMN model_key TEXT CHECK (model_key IS NULL OR model_key GLOB '[a-z]*');
 ALTER TABLE products ADD COLUMN zone_colors TEXT CHECK (zone_colors IS NULL OR json_valid(zone_colors));
 ALTER TABLE products ADD COLUMN pattern TEXT NOT NULL DEFAULT 'liso'
@@ -20,7 +5,6 @@ ALTER TABLE products ADD COLUMN pattern TEXT NOT NULL DEFAULT 'liso'
 ALTER TABLE products ADD COLUMN pattern_color TEXT
     CHECK (pattern_color IS NULL OR pattern_color GLOB '#[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]');
 
--- Categorías que usa catalogo.json. Vóley, básquet y shorts ya venían en V2 (no se duplican); falta "Niños".
 INSERT INTO categories (slug, name, description, sort_order)
 SELECT c.slug, c.name, c.description, c.sort_order
 FROM (SELECT 'uniformes-voley' AS slug, 'Uniformes de vóley' AS name,
@@ -51,8 +35,6 @@ CREATE TEMP TABLE realistic_catalog (
     sample_price  INTEGER NOT NULL
 );
 
--- sku, nombre, slug, descripción, categoría, deporte, prenda, precio (céntimos), nuevo, personalizable,
--- modelo, colores por zona, diseño, color del diseño, nombre y HEX del color principal, niños, precio de ejemplo
 INSERT INTO realistic_catalog (sku, name, slug, description, category, sport, garment_type, price_cents, is_new,
                                customizable, model_key, zone_colors, pattern, pattern_color, color_name, color_hex,
                                kids, sample_price) VALUES
@@ -101,7 +83,6 @@ INSERT INTO realistic_catalog (sku, name, slug, description, category, sport, ga
     ('SF-043', 'Medias Pro Compresión', 'medias-pro-compresion', 'Caña alta con compresión ligera. Colores: Verde neón.', 'Accesorios', 'futbol', 'SOCKS', 2490, 0, 0, 'producto_medias', '{"principal":"#39ff88"}', 'liso', NULL, 'Verde neón', '#39FF88', 0, 1),
     ('SF-044', 'Canilleras Pro', 'canilleras-pro', 'Carcasa rígida y espuma EVA. Colores: Negro.', 'Accesorios', 'futbol', 'ACCESSORY', 3990, 0, 0, 'producto_canilleras', '{"principal":"#0b0e13"}', 'liso', NULL, 'Negro', '#0B0E13', 0, 1);
 
--- Productos que ya existían con el mismo nombre.
 CREATE TEMP TABLE realistic_matched AS
 SELECT p.id AS product_id, rc.sku AS catalog_sku
 FROM products p
@@ -128,7 +109,6 @@ FROM realistic_matched m
 JOIN realistic_catalog rc ON rc.sku = m.catalog_sku
 WHERE product_variants.product_id = m.product_id;
 
--- Productos nuevos.
 INSERT INTO products (category_id, sport_id, sku, slug, name, description, garment_type, base_price_cents,
                       customizable, is_new, model_key, zone_colors, pattern, pattern_color, search_key)
 SELECT (SELECT c.id FROM categories c WHERE c.name = rc.category),
@@ -145,7 +125,6 @@ FROM realistic_catalog rc
 WHERE rc.sku NOT IN (SELECT catalog_sku FROM realistic_matched)
 ORDER BY rc.sku;
 
--- Una variante por talla en el color principal. Niños y niñas: XS a L.
 INSERT INTO product_variants (product_id, size_id, color_name, color_hex, sku)
 SELECT p.id, s.id, rc.color_name, rc.color_hex, p.sku || '-' || s.code
 FROM products p
@@ -160,7 +139,6 @@ WHERE (rc.kids = 0 OR s.code IN ('XS', 'S', 'M', 'L'))
   AND p.id NOT IN (SELECT product_id FROM realistic_matched)
 ORDER BY p.id, s.sort_order;
 
--- Stock inicial de ejemplo, determinista (5 a 40 unidades por talla).
 INSERT INTO inventory (variant_id, quantity, low_stock_threshold)
 SELECT v.id, (v.id * 7) % 36 + 5, 5
 FROM product_variants v
@@ -168,7 +146,6 @@ JOIN products p ON p.id = v.product_id
 JOIN realistic_catalog rc ON rc.sku = p.sku
 WHERE NOT EXISTS (SELECT 1 FROM inventory i WHERE i.variant_id = v.id);
 
--- Materiales permitidos de los productos nuevos personalizables (misma regla que V2).
 INSERT INTO product_materials (product_id, material_id, is_default)
 SELECT p.id, m.id,
        CASE

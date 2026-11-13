@@ -13,10 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-/** Fila de ColorSwatch + campo HEX (estilo code). El valor elegido está en {@link #valueProperty()}. */
 public class ColorSwatchGroup extends VBox {
-
-    /** Paleta del probador de referencia (design/referencia/frente.png). */
     public static final Map<String, Color> DEFAULT_PALETTE = palette();
 
     private static final Pattern HEX = Pattern.compile("^#?[0-9A-Fa-f]{6}$");

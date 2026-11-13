@@ -1,4 +1,3 @@
-"""Simulación de tela (Cloth) y acabado de la prenda: ribete del cuello, subdivisión, grosor y zonas."""
 import bmesh
 import bpy
 from mathutils.bvhtree import BVHTree
@@ -7,10 +6,9 @@ from malla import isla
 
 
 class Ajustes:
-    """Tela de poliéster de camiseta deportiva (punto liso, liviana, poco elástica)."""
     cuadros = 45
     calidad = 10
-    masa = 0.08             # kg por vértice (Blender)
+    masa = 0.08
     tension = 18.0
     compresion = 18.0
     corte = 8.0
@@ -32,7 +30,6 @@ def preparar_colision(obj, grosor=0.002):
 
 
 def simular(obj, ajustes=Ajustes, fijar="fijar"):
-    """Deja caer la tela con gravedad sobre los objetos con colisión; aplica el resultado del último cuadro."""
     sc = bpy.context.scene
     mod = obj.modifiers.new("Tela", 'CLOTH')
     st = mod.settings
@@ -69,9 +66,6 @@ def simular(obj, ajustes=Ajustes, fijar="fijar"):
 
 
 def alisar(obj, centros, radio, piel, pasadas=12, holgura=0.004):
-    """Alisa la tela alrededor de ``centros`` (índices de vértices) sin mover los bordes: quita el pequeño pliegue
-    que la simulación deja en las esquinas de la V (la tela se comprime en el ángulo cóncavo del recorte). Después
-    saca de la piel lo que haya quedado dentro."""
     bm = bmesh.new()
     bm.from_mesh(obj.data)
     bm.verts.ensure_lookup_table()
@@ -80,7 +74,6 @@ def alisar(obj, centros, radio, piel, pasadas=12, holgura=0.004):
     for _ in range(pasadas):
         nuevo = {}
         for v in zona:
-            # El borde se alisa a lo largo del borde (sigue siendo el escote); el interior, con todos sus vecinos.
             vec = [e.other_vert(v).co for e in v.link_edges if not v.is_boundary or e.is_boundary]
             media = sum(vec, v.co * 0) / len(vec)
             peso = 1 - min((v.co - c).length for c in origen) / radio
@@ -99,7 +92,6 @@ def alisar(obj, centros, radio, piel, pasadas=12, holgura=0.004):
 
 
 def penetraciones(obj, piel, margen=0.0):
-    """Vértices de la tela que quedan dentro de la piel (rayo hacia afuera por la normal que sí choca)."""
     me = obj.data
     bvh = BVHTree.FromObject(piel, bpy.context.evaluated_depsgraph_get())
     dentro = 0
@@ -111,10 +103,7 @@ def penetraciones(obj, piel, margen=0.0):
 
 
 def ribete_cuello(obj, bucle, ancho=0.008, zona="jersey_collar"):
-    """Agrega el ribete plano del cuello V: una tira pegada a la tela a lo largo del escote que dobla hacia adentro.
 
-    ``bucle``: índices de los vértices del borde del escote (en orden). La tira empieza en la punta de la V.
-    """
     me = obj.data
     bm = bmesh.new()
     bm.from_mesh(me)
@@ -124,7 +113,6 @@ def ribete_cuello(obj, bucle, ancho=0.008, zona="jersey_collar"):
     pts = [bm.verts[i].co.copy() for i in bucle]
     nrm = [bm.verts[i].normal.copy() for i in bucle]
     n = len(pts)
-    # Empezar en la punta de la V (lo más bajo adelante) y avanzar hacia +x (izquierda de la persona).
     frente = [i for i in range(n) if pts[i].y < 0]
     k0 = min(frente, key=lambda i: pts[i].z)
     orden = list(range(k0, n)) + list(range(0, k0))
@@ -133,12 +121,7 @@ def ribete_cuello(obj, bucle, ancho=0.008, zona="jersey_collar"):
     pts = [pts[i] for i in orden]
     nrm = [nrm[i] for i in orden]
     filas = []
-    # (desplazamiento sobre la tela hacia afuera del escote, separación por la normal)
     perfil = [(ancho, 0.0010), (ancho * 0.5, 0.0013), (0.0, 0.0014), (0.0, -0.0003), (ancho * 0.45, -0.0025)]
-    # Dirección sobre la tela, perpendicular al borde: normal × tangente apunta siempre al mismo lado del borde;
-    # el sentido (hacia la tela, no hacia el hueco del cuello) se decide por mayoría, no punto por punto (en las
-    # esquinas cerradas la prueba falla y la tira se daba vuelta). Se suaviza a lo largo del borde, salvo en la
-    # punta de la V, para que la tira no se quiebre en las esquinas.
     dirs = [nrm[i].normalized().cross((pts[(i + 1) % n] - pts[i - 1]).normalized()).normalized() for i in range(n)]
     voto = 0
     for i in range(n):
@@ -154,8 +137,6 @@ def ribete_cuello(obj, bucle, ancho=0.008, zona="jersey_collar"):
         b = (dirs[i] - nn * dirs[i].dot(nn)).normalized()
         fila = []
         for desp, sep in perfil:
-            # Sin pegar al punto más cercano de la tela: en las esquinas de la V la tela hace un pequeño pliegue y
-            # la tira saltaba al otro lado de él (asomaba una astilla). En 8 mm la tela es casi plana.
             fila.append(p + b * desp + nn * sep)
         filas.append(fila)
     largo = [0.0]
@@ -179,7 +160,6 @@ def ribete_cuello(obj, bucle, ancho=0.008, zona="jersey_collar"):
             for loop, (u, v) in zip(f.loops, ((us[0], r), (us[1], r), (us[1], r + 1), (us[0], r + 1))):
                 uu, vv = isla("cuello", u, v / (len(perfil) - 1))
                 loop[capa].uv = (uu, 1.0 - vv)
-    # Que la cara de afuera de la tira mire como la tela de abajo (hacia afuera del cuerpo).
     bm.normal_update()
     igual = 0
     for f in exteriores:
@@ -201,12 +181,10 @@ def subdividir(obj, niveles):
 
 
 def grosor(obj, espesor=0.0016, grupo="doble"):
-    """Solidify hacia adentro con borde cerrado; donde la tela va doblada (basta, puños, pretina) el doble."""
     mod = obj.modifiers.new("Grosor", 'SOLIDIFY')
     mod.thickness = espesor * 2
     mod.offset = -1.0
     mod.use_rim = True
-    # Sin espesor parejo y con tope: en las esquinas agudas (punta de la V, sisas) no salen púas.
     mod.use_even_offset = False
     mod.thickness_clamp = 0.5
     mod.use_quality_normals = True
@@ -225,7 +203,6 @@ def aplicar(obj, nombre_mod):
 
 
 def separar_zonas(obj):
-    """Fija las normales actuales como normales propias (no cambian al separar) y separa un objeto por zona."""
     me = obj.data
     me.normals_split_custom_set_from_vertices([v.normal for v in me.vertices])
     bpy.context.view_layer.objects.active = obj

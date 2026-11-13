@@ -11,12 +11,6 @@ import javafx.scene.shape.MeshView;
 
 import java.util.List;
 
-/**
- * Suelo circular del estudio con sombra de contacto horneada. JavaFX no proyecta sombras, así que se calcula
- * un mapa de "oclusión" a partir de los vértices del modelo cercanos al piso (suelas y tacos) más una sombra
- * amplia y suave bajo la figura, y se pinta en la textura. El material usa autoiluminación para que el suelo
- * se vea exactamente del tono del fondo y se funda con él en el borde.
- */
 public final class StudioFloor {
 
     static final double RADIUS = 1.6;
@@ -25,11 +19,6 @@ public final class StudioFloor {
     private StudioFloor() {
     }
 
-    /**
-     * @param contactPoints puntos del modelo en coordenadas JavaFX (Y abajo), se usan los cercanos al piso
-     * @param figureCenterX centro horizontal de la figura (para la sombra amplia)
-     * @param figureCenterZ centro en profundidad de la figura
-     */
     public static MeshView create(List<float[]> contactPoints, double figureCenterX, double figureCenterZ,
                                   Color background, Color floorCenter) {
         MeshView view = new MeshView(disc().toTriangleMesh());
@@ -54,7 +43,6 @@ public final class StudioFloor {
         return g.build(1, (r, c) -> 0, (r, c, island, out) -> {
             double rad = (double) r / (rows - 1);
             double a = 2 * Math.PI * c / cols;
-            // Misma proyección que la textura: x → u, z (JavaFX = -z del modelo) → v.
             out[0] = (float) (0.5 + 0.5 * rad * Math.sin(a));
             out[1] = (float) (0.5 + 0.5 * rad * -Math.cos(a));
         });
@@ -62,7 +50,6 @@ public final class StudioFloor {
 
     private static WritableImage texture(List<float[]> pts, double cx, double cz, Color bg, Color center) {
         double[] occ = new double[TEX * TEX];
-        // 1) Contacto: cada vértice a menos de 3 cm del piso deja una marca.
         for (float[] p : pts) {
             double height = -p[1];
             if (height > 0.03) {
@@ -90,11 +77,9 @@ public final class StudioFloor {
             for (int x = 0; x < TEX; x++) {
                 double u = (double) x / (TEX - 1) - 0.5;
                 double v = (double) y / (TEX - 1) - 0.5;
-                double r = Math.sqrt(u * u + v * v) * 2; // 0 centro → 1 borde
-                // 2) Piso: un poco más claro al centro, se funde con el fondo antes del borde.
+                double r = Math.sqrt(u * u + v * v) * 2;
                 double glow = Math.pow(Math.max(0, 1 - r / 0.82), 1.6);
                 Color base = bg.interpolate(center, glow);
-                // 3) Sombra amplia bajo la figura (elipse suave).
                 double sx = (u * 2 * RADIUS - cx) / 0.34;
                 double sz = (v * 2 * RADIUS - cz) / 0.24;
                 double ambientShadow = 0.38 * Math.exp(-(sx * sx + sz * sz) * 1.4);
@@ -108,7 +93,6 @@ public final class StudioFloor {
         return img;
     }
 
-    /** Desenfoque gaussiano separable (radio en píxeles). */
     static double[] blur(double[] src, int radius) {
         double sigma = radius / 2.0;
         double[] k = new double[radius * 2 + 1];

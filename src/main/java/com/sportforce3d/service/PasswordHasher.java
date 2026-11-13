@@ -5,7 +5,6 @@ import com.sportforce3d.util.Validators;
 
 import java.util.Arrays;
 
-/** BCrypt con coste 12. Los arreglos de caracteres recibidos se limpian después de usarse. */
 public class PasswordHasher {
 
     public static final int DEFAULT_COST = 12;
@@ -19,7 +18,6 @@ public class PasswordHasher {
 
     public PasswordHasher(int cost) {
         this.cost = cost;
-        // Se usa cuando el correo no existe, para que la respuesta tarde lo mismo y no revele qué cuentas existen.
         this.dummyHash = BCrypt.withDefaults().hashToString(cost, "sportforce-dummy".toCharArray());
     }
 
@@ -33,7 +31,6 @@ public class PasswordHasher {
 
     public boolean verify(char[] password, String hash) {
         try {
-            // Más de 72 bytes nunca pudo registrarse (Validators.newPassword); BCrypt lanzaría una excepción.
             if (Validators.utf8Length(password) > Validators.PASSWORD_MAX) {
                 BCrypt.verifyer().verify("x".toCharArray(), dummyHash);
                 return false;

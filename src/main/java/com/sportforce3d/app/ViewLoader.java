@@ -9,10 +9,6 @@ import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.util.Objects;
 
-/**
- * Carga /fxml/{nombre}.fxml. Los controladores reciben el {@link AppContext} por constructor,
- * así no usan estáticos ni buscan dependencias por su cuenta.
- */
 public final class ViewLoader {
 
     public record Loaded<C>(Parent root, C controller) {

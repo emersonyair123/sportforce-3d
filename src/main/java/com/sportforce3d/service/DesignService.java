@@ -30,15 +30,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Diseños del cliente: guardar (con versión y capturas), abrir, duplicar, eliminar, logos subidos y borrador
- * local. Cada diseño pertenece a un usuario; solo su dueño (o un ADMIN, para revisar pedidos) puede abrirlo.
- */
 public class DesignService {
 
     private static final Logger log = LoggerFactory.getLogger(DesignService.class);
 
-    /** Diseño abierto: datos guardados y documento. */
     public record OpenedDesign(DesignSummary summary, DesignDocument document) {
     }
 
@@ -57,10 +52,6 @@ public class DesignService {
         this.clock = clock;
     }
 
-    /**
-     * Guarda un diseño nuevo ({@code designId} null) o una versión nueva de uno existente. Las capturas frontal y
-     * posterior (PNG) se copian al almacenamiento; las anteriores se borran.
-     */
     public DesignSummary save(Long designId, String name, DesignDocument doc, Path frontPng, Path backPng) {
         User me = session.requireUser();
         String cleanName = name == null ? "" : name.trim();
@@ -125,9 +116,6 @@ public class DesignService {
         designs.softDelete(designId, clock.instant());
     }
 
-    // ---------------------------------------------------------------- Logos
-
-    /** Sube un logo (PNG o SVG, máx. 5 MB). El cliente debe declarar que tiene derecho a usarlo. */
     public DesignAsset uploadLogo(Path file, boolean rightsDeclared) {
         User me = session.requireUser();
         if (file == null || !Files.isRegularFile(file)) {
@@ -160,8 +148,6 @@ public class DesignService {
         return designs.findAssets(session.requireUser().id());
     }
 
-    // ---------------------------------------------------------------- Borrador
-
     public void saveDraft(Long designId, String name, DesignDocument doc) {
         User me = session.requireUser();
         drafts.save(me.id(), new DraftStore.Draft(designId, name, DesignJson.write(doc), clock.instant().toString()));
@@ -174,8 +160,6 @@ public class DesignService {
     public void discardDraft() {
         session.current().ifPresent(u -> drafts.delete(u.id()));
     }
-
-    // ---------------------------------------------------------------- Ayudas
 
     private StoredDesign owned(User me, long designId, boolean adminCanRead) {
         StoredDesign d = designs.find(designId).filter(x -> !x.deleted())

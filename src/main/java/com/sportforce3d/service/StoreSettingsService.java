@@ -12,16 +12,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-/**
- * Administración → Configuración: los datos de pago que ve el cliente (Yape, Plin y transferencia). Solo ADMIN.
- * Los valores se guardan normalizados: celulares "987 654 321" y CCI "002-191-000000000000-00".
- */
 public class StoreSettingsService {
 
     private static final Logger log = LoggerFactory.getLogger(StoreSettingsService.class);
-    /** Celular peruano: 9 dígitos que empiezan con 9 (se aceptan espacios, guiones y el prefijo +51). */
     private static final Pattern MOBILE = Pattern.compile("^9\\d{8}$");
-    /** Titulares y bancos: letras (con tildes), números y la puntuación de una razón social. */
     private static final Pattern NAME = Pattern.compile("^[\\p{L}0-9][\\p{L}0-9 .,&'()\\-–—]*$");
     private static final Pattern ACCOUNT = Pattern.compile("^[0-9][0-9 -]*[0-9]$");
     public static final int HOLDER_MAX = 80;
@@ -45,7 +39,6 @@ public class StoreSettingsService {
         return settings.paymentInstructions();
     }
 
-    /** Valida todos los campos (errores por campo) y guarda. Devuelve lo guardado, ya normalizado. */
     public PaymentInstructions savePaymentSettings(PaymentInstructions form) {
         User admin = session.requireRole(Role.ADMIN);
         if (form == null) {
@@ -69,8 +62,6 @@ public class StoreSettingsService {
         log.info("ADMIN {} actualizó los datos de pago", admin.id());
         return settings.paymentInstructions();
     }
-
-    // ------------------------------------------------------------------ Validación
 
     static String mobile(Map<String, String> errors, String field, String value, String method) {
         String digits = value == null ? "" : value.replaceAll("[\\s-]", "");

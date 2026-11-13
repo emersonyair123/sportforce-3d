@@ -7,7 +7,6 @@ import com.sportforce3d.view.ComponentGallery;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
 
-/** Cambia la pantalla principal de la ventana: inicio de sesión, registro o la tienda (shell). */
 public final class Navigator {
 
     public static final String APP_TITLE = "SPORTFORCE 3D";

@@ -16,10 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-/** Acceso a users, user_roles y customers. No aplica reglas de negocio ni de permisos: eso es de la capa service. */
 public class UserRepository {
-
-    /** Usuario junto con su hash BCrypt, solo para verificar contraseñas. */
     public record StoredUser(User user, String passwordHash) {
     }
 
@@ -86,7 +83,6 @@ public class UserRepository {
         });
     }
 
-    /** Inserta el usuario con sus roles y, si es CLIENTE, su ficha en customers. Todo o nada. */
     public User create(String email, String passwordHash, String fullName, String phone, Set<Role> roles) {
         long id = db.inTransaction(c -> {
             long userId;
@@ -144,7 +140,6 @@ public class UserRepository {
         });
     }
 
-    /** Reemplaza los roles del usuario. Si gana CLIENTE se le crea su ficha de cliente. */
     public void replaceRoles(long id, Set<Role> roles) {
         db.inTransaction(c -> {
             try (PreparedStatement ps = c.prepareStatement("DELETE FROM user_roles WHERE user_id = ?")) {

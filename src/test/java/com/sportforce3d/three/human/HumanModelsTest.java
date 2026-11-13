@@ -9,7 +9,6 @@ import java.io.InputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Las cuatro personas empaquetadas se leen completas: geometría, materiales y texturas existentes. */
 class HumanModelsTest {
 
     @ParameterizedTest
@@ -24,7 +23,6 @@ class HumanModelsTest {
             assertThat(r.materials()).as("material %s en el MTL", g.material()).containsKey(g.material());
         });
         assertThat(r.groups()).anySatisfy(g -> assertThat(g.material()).isEqualTo("Eye_brown"));
-        // Los pies tocan el piso y el frente mira a +Z (la nariz está más adelante que los talones).
         assertThat(r.min()[1]).isBetween(-0.01, 0.01);
         assertThat(r.max()[2]).isGreaterThan(-r.min()[2]);
         double expected = switch (persona) {

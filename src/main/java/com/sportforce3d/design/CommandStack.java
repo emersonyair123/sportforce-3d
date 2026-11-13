@@ -6,19 +6,11 @@ import java.util.Deque;
 import java.util.Objects;
 import java.util.function.UnaryOperator;
 
-/**
- * Historial deshacer/rehacer con el patrón Command. Cada comando aplica una transformación al diseño y guarda
- * el estado anterior (memento): como {@link DesignDocument} es inmutable, deshacer es exacto y barato.
- *
- * <p>Los cambios continuos (arrastrar un logo, mover un deslizador) usan una {@code mergeKey}: si llegan
- * seguidos (menos de {@link #MERGE_WINDOW_MS} entre sí) y con la misma clave, se fusionan en un solo paso.
- */
 public final class CommandStack {
 
     public static final long MERGE_WINDOW_MS = 800;
     public static final int LIMIT = 100;
 
-    /** Un paso del historial. */
     public record Command(String label, DesignDocument before, DesignDocument after, String mergeKey, long at) {
     }
 
@@ -37,11 +29,6 @@ public final class CommandStack {
         return current;
     }
 
-    /**
-     * Ejecuta un cambio. Si no cambia nada, no se registra. Devuelve el documento resultante.
-     *
-     * @param mergeKey null para pasos independientes
-     */
     public DesignDocument execute(String label, UnaryOperator<DesignDocument> change, String mergeKey) {
         DesignDocument after = change.apply(current);
         if (after.equals(current)) {
@@ -65,7 +52,6 @@ public final class CommandStack {
         return current;
     }
 
-    /** Cierra el paso en curso (fin de un arrastre): el próximo cambio con la misma clave será un paso nuevo. */
     public void seal() {
         sealed = true;
     }
@@ -108,7 +94,6 @@ public final class CommandStack {
         return current;
     }
 
-    /** Reemplaza el diseño sin historial (abrir un diseño guardado o recuperar un borrador). */
     public void reset(DesignDocument doc) {
         undo.clear();
         redo.clear();

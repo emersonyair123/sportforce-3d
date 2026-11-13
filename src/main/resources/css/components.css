@@ -1,23 +1,8 @@
-/*
- * SPORTFORCE 3D · Estilos de componentes.
- * Regla: aquí solo se usan los tokens de tokens-dark.css / tokens-light.css (-sf-*). Nunca un HEX suelto.
- *
- * Notas de JavaFX 21:
- *  - Cada peso de fuente se registra como una familia distinta ("Barlow SemiBold", "Barlow Condensed ExtraBold"…),
- *    por eso se usa -fx-font-family con el nombre exacto en lugar de -fx-font-weight.
- *  - No hay letter-spacing ni text-transform: las mayúsculas se escriben en el texto.
- *  - No hay transiciones CSS: las animaciones (120/200/320 ms) están en component/Motion.java.
- *  - El interlineado se aproxima con -fx-line-spacing (espacio extra sobre la altura natural ≈ 1.2 × tamaño).
- */
-
-/* ---------------------------------------------------------------- Base */
-
 .root {
     -fx-font-family: "Barlow";
     -fx-font-size: 14px;
     -fx-background-color: -sf-bg-000;
 
-    /* Puente con Modena para los controles estándar (tablas, menús, scroll). */
     -fx-base: -sf-bg-200;
     -fx-background: -sf-bg-000;
     -fx-control-inner-background: -sf-bg-200;
@@ -46,65 +31,62 @@
     -fx-text-fill: -sf-ink;
 }
 
-/* ---------------------------------------------------------------- Tipografía (tokens type.*) */
-
 .display-xl {
     -fx-font-family: "Barlow Condensed ExtraBold";
     -fx-font-size: 72px;
-    -fx-line-spacing: -20px;  /* line-height 0.92 */
+    -fx-line-spacing: -20px;
 }
 
 .display-l {
     -fx-font-family: "Barlow Condensed ExtraBold";
     -fx-font-size: 48px;
-    -fx-line-spacing: -12px;  /* line-height 0.95 */
+    -fx-line-spacing: -12px;
 }
 
 .heading-m {
     -fx-font-family: "Barlow Condensed";
     -fx-font-weight: bold;
     -fx-font-size: 28px;
-    -fx-line-spacing: -2px;   /* 32px */
+    -fx-line-spacing: -2px;
 }
 
 .price {
     -fx-font-family: "Barlow Condensed";
     -fx-font-weight: bold;
     -fx-font-size: 24px;
-    -fx-line-spacing: -1px;   /* 28px */
+    -fx-line-spacing: -1px;
 }
 
 .title-s {
     -fx-font-family: "Barlow SemiBold";
     -fx-font-size: 18px;
-    -fx-line-spacing: 2px;    /* 24px */
+    -fx-line-spacing: 2px;
 }
 
 .body {
     -fx-font-family: "Barlow";
     -fx-font-size: 16px;
-    -fx-line-spacing: 5px;    /* 24px */
+    -fx-line-spacing: 5px;
 }
 
 .body-s {
     -fx-font-family: "Barlow";
     -fx-font-size: 14px;
-    -fx-line-spacing: 3px;    /* 20px */
+    -fx-line-spacing: 3px;
 }
 
 .label-text {
     -fx-font-family: "Barlow SemiBold";
     -fx-font-size: 12px;
-    -fx-line-spacing: 2px;    /* 16px */
+    -fx-line-spacing: 2px;
 }
 
 .code {
     -fx-font-family: "JetBrains Mono Medium";
     -fx-font-size: 13px;
-    -fx-line-spacing: 4px;    /* 20px */
+    -fx-line-spacing: 4px;
 }
 
-/* Colores de texto (Label usa -fx-text-fill, Text usa -fx-fill). */
 .ink         { -fx-text-fill: -sf-ink;         -fx-fill: -sf-ink; }
 .ink-muted   { -fx-text-fill: -sf-ink-muted;   -fx-fill: -sf-ink-muted; }
 .ink-subtle  { -fx-text-fill: -sf-ink-subtle;  -fx-fill: -sf-ink-subtle; }
@@ -125,8 +107,6 @@
 .sf-icon-muted {
     -fx-icon-color: -sf-ink-muted;
 }
-
-/* ---------------------------------------------------------------- Superficies */
 
 .sf-page {
     -fx-background-color: -sf-bg-000;
@@ -196,8 +176,6 @@
     -fx-effect: dropshadow(gaussian, -sf-shadow-card, 16, 0, 0, 6);
 }
 
-/* ---------------------------------------------------------------- SfButton */
-
 .sf-btn {
     -fx-background-color: transparent;
     -fx-background-radius: 10;
@@ -262,7 +240,6 @@
     -fx-background-color: -sf-bg-300;
 }
 
-/* Botón de icono sin borde (barra superior, stepper, cerrar). */
 .sf-btn-icon {
     -fx-background-color: transparent;
     -fx-background-radius: 999;
@@ -279,7 +256,6 @@
     -fx-translate-y: 0;
 }
 
-/* Anillo de foco de 2 px con 2 px de separación, solo al navegar con teclado. */
 .sf-btn:focus-visible {
     -fx-border-color: transparent, -sf-focus;
     -fx-border-width: 1, 2;
@@ -290,7 +266,6 @@
 .sf-btn-danger:focus-visible { -fx-border-color: -sf-danger, -sf-focus; }
 .sf-btn-icon:focus-visible { -fx-border-radius: 999, 999; }
 
-/* Enlace como botón ("¿No tienes cuenta? Regístrate"). */
 .sf-link {
     -fx-background-color: transparent;
     -fx-padding: 2 0 2 0;
@@ -305,8 +280,6 @@
 }
 .sf-link:hover { -fx-underline: true; }
 .sf-link:focus-visible { -fx-border-color: -sf-focus; }
-
-/* ---------------------------------------------------------------- SfBadge */
 
 .sf-badge {
     -fx-font-family: "Barlow SemiBold";
@@ -347,8 +320,6 @@
     -fx-border-color: -sf-success;
 }
 .sf-badge-success .ikonli-font-icon { -fx-icon-color: -sf-success; }
-
-/* ---------------------------------------------------------------- SfTextField */
 
 .sf-field {
     -fx-spacing: 4;
@@ -415,7 +386,6 @@
 }
 .sf-field-error .ikonli-font-icon { -fx-icon-color: -sf-danger; }
 
-/* Campo de búsqueda de la barra superior. */
 .sf-search {
     -fx-background-color: -sf-bg-200;
     -fx-background-radius: 999;
@@ -431,8 +401,6 @@
     -fx-text-fill: -sf-ink;
     -fx-prompt-text-fill: -sf-ink-subtle;
 }
-
-/* ---------------------------------------------------------------- CheckBox */
 
 .check-box {
     -fx-text-fill: -sf-ink;
@@ -463,8 +431,6 @@
     -fx-border-radius: 4, 8;
 }
 
-/* ---------------------------------------------------------------- ProductCard */
-
 .sf-product-card {
     -fx-background-color: -sf-bg-200;
     -fx-background-radius: 16;
@@ -494,8 +460,6 @@
     -fx-fill: -sf-ink-subtle;
 }
 
-/* ---------------------------------------------------------------- ColorSwatch */
-
 .sf-swatch {
     -fx-min-width: 32;
     -fx-min-height: 32;
@@ -521,8 +485,6 @@
 .sf-swatch-group {
     -fx-spacing: 8;
 }
-
-/* ---------------------------------------------------------------- GarmentPicker (segmentado) */
 
 .sf-seg {
     -fx-background-color: -sf-bg-200;
@@ -554,8 +516,6 @@
     -fx-border-insets: -2;
     -fx-border-radius: 999;
 }
-
-/* ---------------------------------------------------------------- MaterialPicker */
 
 .sf-mats {
     -fx-spacing: 8;
@@ -604,8 +564,6 @@
     -fx-background-radius: 6;
 }
 
-/* ---------------------------------------------------------------- QuantityStepper */
-
 .sf-stepper {
     -fx-background-color: -sf-bg-200;
     -fx-background-radius: 999;
@@ -622,8 +580,6 @@
     -fx-min-width: 32;
     -fx-alignment: center;
 }
-
-/* ---------------------------------------------------------------- StatusTimeline */
 
 .sf-timeline-dot {
     -fx-min-width: 22;
@@ -671,16 +627,12 @@
 }
 .sf-timeline-line:done { -fx-background-color: -sf-brand; }
 
-/* ---------------------------------------------------------------- EmptyState */
-
 .sf-empty {
     -fx-spacing: 12;
     -fx-alignment: center;
     -fx-padding: 48 24 48 24;
 }
-.sf-empty > .ikonli-font-icon { -fx-icon-color: -sf-ink-subtle; } /* solo el icono grande, no el del botón */
-
-/* ---------------------------------------------------------------- Toast */
+.sf-empty > .ikonli-font-icon { -fx-icon-color: -sf-ink-subtle; }
 
 .sf-toast-host {
     -fx-spacing: 8;
@@ -707,8 +659,6 @@
 .sf-toast-error { -fx-border-color: -sf-danger; }
 .sf-toast-error .ikonli-font-icon { -fx-icon-color: -sf-danger; }
 
-/* ---------------------------------------------------------------- ConfirmDialog */
-
 .sf-scrim {
     -fx-background-color: -sf-scrim;
 }
@@ -722,8 +672,6 @@
     -fx-spacing: 16;
     -fx-effect: dropshadow(gaussian, -sf-shadow-card, 32, 0, 0, 12);
 }
-
-/* ---------------------------------------------------------------- SidebarNav */
 
 .sf-sidebar {
     -fx-background-color: -sf-bg-100;
@@ -775,8 +723,6 @@
     -fx-border-color: -sf-line;
 }
 
-/* ---------------------------------------------------------------- Barra superior y logotipo */
-
 .sf-topbar {
     -fx-background-color: -sf-bg-100;
     -fx-border-color: transparent transparent -sf-line transparent;
@@ -806,7 +752,6 @@
     -fx-alignment: center;
 }
 
-/* MenuButton del usuario y menús contextuales. */
 .sf-user-menu {
     -fx-background-color: transparent;
     -fx-background-radius: 999;
@@ -857,8 +802,6 @@
 .menu-item:focused .label { -fx-text-fill: -sf-ink; }
 .separator-menu-item .line { -fx-border-color: -sf-line transparent transparent transparent; }
 
-/* ---------------------------------------------------------------- Vistas */
-
 .sf-hero {
     -fx-background-color: -sf-bg-100;
     -fx-background-radius: 16;
@@ -900,8 +843,6 @@
 .sf-alert-error .label { -fx-text-fill: -sf-danger; -fx-font-size: 14px; }
 .sf-alert-error .ikonli-font-icon { -fx-icon-color: -sf-danger; }
 
-/* ---------------------------------------------------------------- Tablas (admin) */
-
 .table-view {
     -fx-background-color: -sf-bg-200;
     -fx-background-radius: 16;
@@ -932,11 +873,6 @@
     -fx-alignment: center-left;
     -fx-padding: 0 12 0 12;
 }
-/*
- * Filas: solo una hairline horizontal (line) entre filas; nunca bordes verticales entre celdas.
- * Modena dibuja el borde derecho de cada celda con -fx-table-cell-border-color y lo recolorea en
- * hover, selección y foco, así que se anula en todos esos estados.
- */
 .table-row-cell,
 .table-row-cell:hover,
 .table-row-cell:selected,
@@ -977,9 +913,6 @@
 }
 .table-view .placeholder .label { -fx-text-fill: -sf-ink-muted; }
 
-/* ================================================================ Etapa 2 */
-
-/* Filtros del catálogo sobre bg-100 */
 .scroll-pane.sf-band,
 .scroll-pane.sf-band > .viewport {
     -fx-background-color: -sf-bg-100;
@@ -989,7 +922,6 @@
     -fx-border-width: 0 1 0 0;
 }
 
-/* FilterChip */
 .sf-filter-chip {
     -fx-background-color: -sf-bg-200;
     -fx-background-radius: 999;
@@ -1015,7 +947,6 @@
 }
 .sf-filter-chip:disabled { -fx-opacity: 1; -fx-text-fill: -sf-ink-subtle; -fx-cursor: default; }
 
-/* Chip de categoría que navega (inicio) */
 .sf-chip-link { -fx-cursor: hand; }
 .sf-chip-link:hover { -fx-text-fill: -sf-ink; -fx-background-color: -sf-bg-300; }
 .sf-chip-link:focus-visible {
@@ -1025,7 +956,6 @@
     -fx-border-radius: 999, 999;
 }
 
-/* ChoiceCards (direcciones y métodos de pago) */
 .sf-choice {
     -fx-background-color: -sf-bg-200;
     -fx-background-radius: 10;
@@ -1071,7 +1001,6 @@
 .sf-choice:selected .sf-choice-radio { -fx-border-color: -sf-brand; }
 .sf-choice:selected .sf-choice-dot { -fx-background-color: -sf-brand; }
 
-/* Miniaturas (carrito, tablas, imágenes de producto) */
 .sf-thumb {
     -fx-background-color: -sf-bg-300;
     -fx-background-radius: 10;
@@ -1081,7 +1010,6 @@
     -fx-background-radius: 16;
 }
 
-/* Filas de lista que navegan (Mis pedidos) */
 .sf-row-link:hover { -fx-background-color: -sf-bg-300; }
 .sf-row-link:focus-visible {
     -fx-border-color: -sf-line, -sf-focus;
@@ -1090,7 +1018,6 @@
     -fx-border-radius: 16, 20;
 }
 
-/* Campos compactos (precio de filtros, editor de variantes, inventario) */
 .text-field.sf-input-sm {
     -fx-background-color: -sf-bg-200;
     -fx-background-radius: 6;
@@ -1110,7 +1037,6 @@
 }
 .text-field.sf-input-sm.code { -fx-font-family: "JetBrains Mono Medium"; -fx-font-size: 13px; }
 
-/* TextArea (notas, descripción) */
 .text-area.sf-textarea {
     -fx-background-color: -sf-bg-200;
     -fx-background-radius: 10;
@@ -1130,7 +1056,6 @@
     -fx-padding: 8 10 8 10;
 }
 
-/* ComboBox */
 .combo-box {
     -fx-background-color: -sf-bg-200;
     -fx-background-radius: 10;
@@ -1165,13 +1090,10 @@
     -fx-background-color: -sf-bg-300;
 }
 
-/* ================================================================ Etapa 3: diseñador 3D */
-
 .sf-designer-stage {
     -fx-background-color: -sf-bg-000;
 }
 
-/* Barra flotante en píldora sobre el visor: bg-200 al 90 %. */
 .sf-designer-toolbar {
     -fx-background-color: derive(-sf-bg-200, 0%);
     -fx-opacity: 0.96;
@@ -1228,8 +1150,6 @@
     -fx-padding: 8 12 8 12;
 }
 
-/* ================================================================ Etapa 4: personalización */
-
 .sf-designer-side {
     -fx-border-color: transparent transparent transparent -sf-line;
 }
@@ -1254,7 +1174,6 @@
     -fx-effect: dropshadow(gaussian, -sf-shadow-card, 24, 0, 0, 8);
 }
 
-/* Fila de zona: muestra de color + nombre; la elegida con borde brand. */
 .sf-zone-row {
     -fx-background-color: -sf-bg-200;
     -fx-background-radius: 8;
@@ -1302,7 +1221,6 @@
     -fx-padding: 16;
 }
 
-/* Pestaña Texto: una tarjeta por opción (nombre o número) con su editor debajo del botón. */
 .sf-text-card {
     -fx-background-color: -sf-bg-200;
     -fx-background-radius: 12;
@@ -1329,7 +1247,6 @@
 }
 .sf-emblem-btn:hover { -fx-border-color: -sf-brand; }
 
-/* Deslizadores (tamaño, giro, contorno, ancho del patrón). */
 .slider .track {
     -fx-background-color: -sf-bg-300;
     -fx-background-radius: 999;
@@ -1348,9 +1265,7 @@
     -fx-background-insets: -3, 0;
 }
 
-/* Mis diseños */
 .sf-design-card {
-    /* 1 px para que la captura no tape el borde line de la tarjeta (radius-lg 16). */
     -fx-padding: 1 1 0 1;
 }
 .sf-design-thumb {
@@ -1361,14 +1276,10 @@
     -fx-padding: 14 16 16 16;
 }
 
-/* Pestañas del panel del diseñador: cuatro en 312 px, sin recortar el texto. */
 .sf-designer-tabs .sf-seg-item {
     -fx-padding: 8 6 8 6;
 }
 
-/* ================================================================ Etapa 5: pagos, pedidos y dashboard */
-
-/* Comprobante o captura: marco bg-000 con borde line. */
 .sf-proof {
     -fx-background-color: -sf-bg-000;
     -fx-background-radius: 10;
@@ -1390,7 +1301,6 @@
 
 .sf-kpi:hover { -fx-border-color: -sf-line-strong; }
 
-/* Gráficos: serie principal brand, comparación accent, rejilla line, sin fondo propio. */
 .sf-chart {
     -fx-padding: 0;
 }
@@ -1443,7 +1353,6 @@
     -fx-background-radius: 5;
     -fx-padding: 4;
 }
-/* La serie de comparación va sin puntos: solo la línea discontinua. */
 .sf-chart .default-color1.chart-line-symbol {
     -fx-background-color: transparent;
 }
@@ -1461,9 +1370,6 @@
     -fx-bar-fill: -sf-brand-hover;
 }
 
-/* ================================================================ Etapa 6: reportes y configuración */
-
-/* Aviso (p. ej. datos de pago de prueba): borde warning, texto ink. El estado se dice con texto e icono. */
 .sf-alert-warning {
     -fx-background-color: -sf-bg-200;
     -fx-background-radius: 10;
@@ -1475,7 +1381,6 @@
 }
 .sf-alert-warning .ikonli-font-icon { -fx-icon-color: -sf-warning; }
 
-/* DatePicker: mismo aspecto que los campos (bg-200, borde line-strong, radio 10). */
 .date-picker {
     -fx-background-color: -sf-bg-200;
     -fx-background-radius: 10;
@@ -1556,11 +1461,8 @@
 }
 .date-picker-popup .date-cell:disabled { -fx-opacity: 0.4; }
 
-/* Tablas de reportes: se dibujan completas dentro de la página (sin barra propia). */
 .sf-report-table .virtual-flow .scroll-bar:vertical { -fx-opacity: 0; -fx-pref-width: 0; }
 
-/* ================================================================ Etapa 7: vista realista del diseñador */
-/* Avisos de lo que una vista no puede mostrar (Etapa 11): "Medias tobilleras: ver en Vista 3D". */
 .sf-realistic-notices {
     -fx-background-color: -sf-bg-200;
     -fx-background-radius: 8;

@@ -33,7 +33,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.function.Consumer;
 
-/** Acciones del ADMIN sobre un pago: aprobar, rechazar con motivo, ver y descargar el comprobante. */
 final class PaymentActions {
 
     private PaymentActions() {
@@ -113,7 +112,6 @@ final class PaymentActions {
         };
     }
 
-    /** Miniatura del comprobante (o ícono de PDF). Clic: verlo grande y descargarlo. */
     static Node proofThumb(AppContext context, PaymentProof proof, double w, double h) {
         StackPane box = new StackPane();
         box.getStyleClass().add("sf-proof");
@@ -174,7 +172,6 @@ final class PaymentActions {
                 });
     }
 
-    /** Copia el archivo original a donde elija el ADMIN. */
     static boolean download(AppContext context, Node owner, PaymentProof proof) {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Guardar comprobante");

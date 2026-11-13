@@ -23,10 +23,9 @@ import java.nio.file.Path;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Diseñador → carrito → pedido con copia inmutable del diseño → visor y descarga del ADMIN. */
 class DesignOrderTest {
 
-    private static final String KIT_SKU = "SF-UFU-001-M"; // Uniforme Fútbol Pro, S/ 149.90
+    private static final String KIT_SKU = "SF-UFU-001-M";
 
     @TempDir
     Path tempDir;
@@ -49,7 +48,6 @@ class DesignOrderTest {
     }
 
     private DesignSummary saveHalcones() {
-        // Halcones usa Jacquard (+15) en la camiseta; el short y las medias van con su material de serie.
         DesignDocument doc = SampleDesigns.halcones().withProduct(f.productId("SF-UFU-001"));
         return f.designs.save(null, "Los Halcones", doc, front, back);
     }
@@ -69,7 +67,6 @@ class DesignOrderTest {
         assertThat(line.surchargeCents()).isEqualTo(1500);
         assertThat(cart.surchargeCents()).isEqualTo(3 * 1500);
 
-        // Mismo diseño y talla: suma la cantidad. El mismo producto sin diseño va en otra línea.
         f.cart.addDesign(d.id(), f.variantId(KIT_SKU), 1);
         CartSummary both = f.cart.add(f.variantId(KIT_SKU), 1);
         assertThat(both.lines()).hasSize(2);
@@ -86,15 +83,12 @@ class DesignOrderTest {
         f.designs.save(d.id(), "Los Halcones", malla, null, null);
         assertThat(f.cart.summary().lines().get(0).surchargeCents()).isEqualTo(500);
 
-        // La microfibra (de buzos) no está permitida en el uniforme de fútbol.
         DesignDocument microfibra = malla.withMaterial(MaterialSlot.JERSEY, "MICROFIBRA");
         DesignSummary d2 = f.designs.save(null, "Microfibra", microfibra, null, null);
         assertThatThrownBy(() -> f.cart.addDesign(d2.id(), f.variantId(KIT_SKU), 1))
                 .hasMessageContaining("Microfibra interlock").hasMessageContaining("no está disponible");
-        // Un producto que no se personaliza.
         assertThatThrownBy(() -> f.cart.addDesign(d.id(), f.variantId("SF-CAM-003-M"), 1))
                 .hasMessageContaining("no se puede personalizar");
-        // El diseño de otro cliente.
         f.loginNewClient("otra@correo.pe");
         assertThatThrownBy(() -> f.cart.addDesign(d.id(), f.variantId(KIT_SKU), 1))
                 .hasMessage("No encontramos ese diseño.");
@@ -102,8 +96,6 @@ class DesignOrderTest {
 
     @Test
     void theFourFabricsOfTheDesignerUseTheCatalogSurcharges() {
-        // Sección TELA (Etapa 10B): la tela va en camiseta y short; Dry-fit, Poliéster liso y Algodón sin recargo,
-        // Malla deportiva +S/ 5.00 por prenda (las medias siguen con su licra de serie).
         java.util.Map<String, Long> expected = java.util.Map.of("DRY_FIT", 0L, "POLIESTER_LISO", 0L, "ALGODON", 0L,
                 "MALLA", 1000L);
         expected.forEach((code, cents) -> {
@@ -134,7 +126,6 @@ class DesignOrderTest {
         assertThat(Files.exists(f.storage.resolve(item.designFrontPath()))).isTrue();
         DesignDocument frozen = DesignJson.read(item.designSnapshotJson());
 
-        // El cliente cambia y borra el diseño: el pedido no cambia.
         DesignDocument green = frozen.withColor(Zone.JERSEY_BODY, "#0E7C3A");
         f.designs.save(d.id(), "Otro nombre", green, png(tempDir.resolve("f2.png")), png(tempDir.resolve("b2.png")));
         f.designs.delete(d.id());

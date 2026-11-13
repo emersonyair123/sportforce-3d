@@ -21,10 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-/** Editor de producto del ADMIN: datos de referencia, carga, guardado e imágenes. */
 public class AdminProductEditViewModel {
-
-    /** Listas para los selectores del formulario. */
     public record ReferenceData(List<Category> categories, List<Sport> sports, List<Size> sizes,
                                 List<Material> textiles, List<Material> shoeMaterials) {
     }
@@ -33,7 +30,6 @@ public class AdminProductEditViewModel {
     private final CatalogService catalog;
     private final ObjectProperty<ReferenceData> reference = new SimpleObjectProperty<>();
     private final ObjectProperty<ProductDetail> product = new SimpleObjectProperty<>();
-    /** Foto realista del producto (null si no tiene). Se fija antes que {@link #product}. */
     private final ObjectProperty<RealisticLook> look = new SimpleObjectProperty<>();
     private final BooleanProperty saving = new SimpleBooleanProperty(false);
 
@@ -42,7 +38,6 @@ public class AdminProductEditViewModel {
         this.catalog = catalog;
     }
 
-    /** Carga los datos de referencia y, si {@code productId} no es null, el producto. */
     public void load(Long productId, Consumer<String> onError) {
         Async.run(() -> {
                     ReferenceData data = new ReferenceData(catalog.categories(), catalog.sports(), catalog.sizes(),
@@ -65,7 +60,6 @@ public class AdminProductEditViewModel {
     private record Saved(ProductDetail detail, RealisticLook look) {
     }
 
-    /** Guarda el producto y, si cambiaron, los colores por zona de su foto realista ({@code zoneColors} vacío = no). */
     public void save(ProductForm form, Map<String, String> zoneColors, Consumer<ProductDetail> onSuccess, Consumer<Map<String, String>> onFieldErrors,
                      Consumer<String> onError) {
         saving.set(true);

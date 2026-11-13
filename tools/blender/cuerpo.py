@@ -1,8 +1,3 @@
-"""Cuerpo de una persona de MakeHuman: importación, piel para colisiones y medidas.
-
-Todo el cálculo de las prendas se hace en el espacio del modelo de la app (metros, Y arriba, +Z frente,
-+X = izquierda de la persona). Blender trabaja con Z arriba: ``a_blender`` y ``a_modelo`` convierten.
-"""
 import math
 
 import bpy
@@ -12,7 +7,6 @@ from mathutils.bvhtree import BVHTree
 
 
 def a_blender(p):
-    """Modelo (x, y arriba, z frente) → Blender (x, -z, y)."""
     return Vector((p[0], -p[2], p[1]))
 
 
@@ -21,7 +15,6 @@ def a_modelo(v):
 
 
 def importar(ruta_obj):
-    """Importa el OBJ de la persona y separa la piel (material con más caras). Devuelve (piel, otros)."""
     antes = set(bpy.data.objects)
     bpy.ops.wm.obj_import(filepath=str(ruta_obj), forward_axis='NEGATIVE_Z', up_axis='Y')
     nuevos = [o for o in bpy.data.objects if o not in antes]
@@ -30,7 +23,6 @@ def importar(ruta_obj):
         o.select_set(True)
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
     obj = nuevos[0]
-    # Un objeto por material: piel, pelo, ojos.
     bpy.ops.object.select_all(action='DESELECT')
     obj.select_set(True)
     bpy.context.view_layer.objects.active = obj
@@ -47,7 +39,6 @@ def importar(ruta_obj):
 
 
 class Cuerpo:
-    """Malla de la piel en espacio del modelo, con un BVH para rayos y cortes horizontales."""
 
     def __init__(self, piel):
         me = piel.data
@@ -63,10 +54,7 @@ class Cuerpo:
         self.alto = float(self.v[:, 1].max()) - self.suelo
         self._medir()
 
-    # ------------------------------------------------------------ consultas
-
     def rayo(self, origen, direccion, dist=2.0):
-        """Primer choque con la piel: (punto, normal, distancia) o None."""
         d = Vector(direccion).normalized()
         loc, nrm, _, dist_hit = self.bvh.ray_cast(Vector(origen), d, dist)
         if loc is None:
@@ -78,7 +66,6 @@ class Cuerpo:
         return np.array(loc), np.array(nrm), d
 
     def corte(self, y):
-        """Puntos (x, z) donde las aristas de los triángulos cruzan el plano horizontal y."""
         v = self.v
         a, b, c = v[self.t[:, 0]], v[self.t[:, 1]], v[self.t[:, 2]]
         pts = []
@@ -90,7 +77,6 @@ class Cuerpo:
         return np.concatenate(pts) if pts else np.zeros((0, 2))
 
     def segmentos(self, y):
-        """Segmentos del contorno en el plano y: array (n, 2, 2) de pares de puntos (x, z), uno por triángulo."""
         v = self.v
         a, b, c = v[self.t[:, 0]], v[self.t[:, 1]], v[self.t[:, 2]]
         lados = []
@@ -108,11 +94,7 @@ class Cuerpo:
         return np.concatenate(segs) if segs else np.zeros((0, 2, 2))
 
     def tramos_x(self, y, hueco=0.008):
-        """Tramos de x ocupados por el contorno en el plano y (lista de [x0, x1] ordenados).
 
-        Une los intervalos de x de cada segmento: en una malla de pocos polígonos los puntos sueltos dejan
-        huecos falsos donde la superficie es casi horizontal (hombros).
-        """
         segs = self.segmentos(y)
         if len(segs) == 0:
             return []
@@ -127,7 +109,6 @@ class Cuerpo:
         return tramos
 
     def torso_corte(self, y):
-        """Puntos (x, z) del torso a la altura y: el tramo de x que contiene a x = 0 (sin brazos)."""
         pts = self.corte(y)
         for t in self.tramos_x(y):
             if t[0] <= 0.0 <= t[1]:
@@ -136,12 +117,10 @@ class Cuerpo:
         return np.zeros((0, 2))
 
     def pierna_corte(self, y, signo):
-        """Puntos (x, z) de la pierna de un lado (signo +1 izquierda, -1 derecha) bajo la entrepierna."""
         pts = self.corte(y)
         if len(pts) == 0:
             return pts
         pts = pts[pts[:, 0] * signo > 0]
-        # La mano (pose A) puede cruzar el plano: se queda el tramo más cercano al centro.
         tramos = [t for t in self.tramos_x(y) if (t[0] + t[1]) / 2 * signo > 0]
         if not tramos:
             return np.zeros((0, 2))
@@ -149,18 +128,14 @@ class Cuerpo:
         m = (pts[:, 0] >= t[0] - 1e-6) & (pts[:, 0] <= t[1] + 1e-6)
         return pts[m]
 
-    # ------------------------------------------------------------ medidas
-
     def _medir(self):
         s, h = self.suelo, self.alto
         ys = np.arange(s + 0.30 * h, s + 0.70 * h, 0.002)
-        # Entrepierna: la altura más baja en que el plano corta la piel en x = 0.
         self.entrepierna = None
         for y in ys:
             if any(t[0] <= 0.0 <= t[1] for t in self.tramos_x(y)):
                 self.entrepierna = float(y)
                 break
-        # Axila: la más alta en que, en ambos lados, el torso y el brazo están separados.
         self.axila = None
         for y in np.arange(s + 0.84 * h, s + 0.66 * h, -0.002):
             tr = self.tramos_x(y)
@@ -168,8 +143,6 @@ class Cuerpo:
             if centro and sum(1 for t in tr if t[0] > centro[0][1]) and sum(1 for t in tr if t[1] < centro[0][0]):
                 self.axila = float(y)
                 break
-        # Cuello: ancho del torso por altura, de la axila hacia arriba; base del cuello donde el ancho se
-        # acerca al del cuello (medido 4 % de la altura más arriba).
         def ancho(y):
             p = self.torso_corte(y)
             return (p[:, 0].max() - p[:, 0].min()) / 2 if len(p) else 0.0
@@ -184,7 +157,6 @@ class Cuerpo:
         p = self.torso_corte(y_cuello + 0.02 * h)
         self.cuello_centro = np.array([0.0, (p[:, 1].max() + p[:, 1].min()) / 2])
         self.cuello_radio = np.array([(p[:, 0].max() - p[:, 0].min()) / 2, (p[:, 1].max() - p[:, 1].min()) / 2])
-        # Perfil superior de los hombros: altura de la piel vista desde arriba en x, en el centro del torso.
         self.hombro = {}
         for signo in (1, -1):
             perfil = []
@@ -192,8 +164,6 @@ class Cuerpo:
                 hit = self.rayo((x * signo, s + h + 0.1, self.cuello_centro[1]), (0, -1, 0), 1.0)
                 if hit is not None and hit[0][1] > self.axila:
                     perfil.append((float(x), float(hit[0][1])))
-            # Acromion: donde la pendiente del hombro pasa a ser la del brazo (más de 35° hacia abajo); por debajo
-            # de la base del cuello (la pendiente del cuello al trapecio también es empinada).
             perfil = [q for q in perfil if q[1] <= self.base_cuello + 0.005]
             acromion = perfil[-1]
             for (x0, y0), (x1, y1) in zip(perfil, perfil[1:]):
@@ -205,7 +175,6 @@ class Cuerpo:
         self._torso_eje()
 
     def _brazos(self):
-        """Eje de cada brazo (recta ajustada a los centros de sus cortes horizontales bajo la axila)."""
         s, h = self.suelo, self.alto
         self.brazo = {}
         for signo in (1, -1):
@@ -230,11 +199,10 @@ class Cuerpo:
             _, _, vt = np.linalg.svd(c - media)
             d = vt[0]
             if d[1] > 0:
-                d = -d  # hacia la mano (abajo)
+                d = -d
             self.brazo[signo] = (media, d / np.linalg.norm(d))
 
     def brazo_punto(self, signo, s):
-        """Punto del eje del brazo a s metros del hombro (s = 0 en el acromion proyectado sobre el eje)."""
         media, d = self.brazo[signo]
         y = self.hombro[signo][1]
         a = np.array((self.hombro[signo][0] * signo, y, self.torso_z(y)))
@@ -242,7 +210,6 @@ class Cuerpo:
         return media + d * (s0 + s)
 
     def rodilla(self):
-        """Altura de la rodilla: la sección más angosta de la pierna entre el 22 % y el 34 % del alto."""
         s, h = self.suelo, self.alto
         mejor = None
         for y in np.arange(s + 0.22 * h, s + 0.34 * h, 0.003):
@@ -255,10 +222,6 @@ class Cuerpo:
         return mejor[0]
 
     def brazo_eje(self, signo, s_max):
-        """Eje del brazo hasta ``s_max`` (m desde el acromion) para la manga larga: la recta del brazo superior
-        (``brazo_punto``) cerca del hombro y, desde ahí, los centros de los cortes horizontales suavizados, que
-        siguen el codo y el antebrazo (en pose A el antebrazo se aparta unos 2–3 cm de la recta). Devuelve una
-        función s → (punto, tangente)."""
         media, d = self.brazo[signo]
         a0 = self.brazo_punto(signo, 0.0)
         muestras = []
@@ -284,7 +247,6 @@ class Cuerpo:
         muestras.sort(key=lambda q: q[0])
         ss = np.array([q[0] for q in muestras])
         ps = np.array([q[1] for q in muestras])
-        # Suavizado (media móvil de ~5 cm): los cortes del codo y la muñeca no son elipses perfectas.
         grilla = np.arange(0.0, s_max + 0.0101, 0.01)
         medidos = np.stack([np.interp(grilla, ss, ps[:, i]) for i in range(3)], axis=1)
         suave = np.array([medidos[max(0, i - 2):i + 3].mean(axis=0) for i in range(len(grilla))])
@@ -303,13 +265,11 @@ class Cuerpo:
         return en
 
     def brazo_radio(self, signo, s, direccion):
-        """Distancia del eje del brazo a la piel en una dirección perpendicular."""
         c = self.brazo_punto(signo, s)
         hit = self.rayo(c, direccion, 0.2)
         return hit[2] if hit else 0.05
 
     def _torso_eje(self):
-        """Centro (z) del torso por altura, de la entrepierna a la base del cuello."""
         self._ejes = []
         for y in np.arange(self.entrepierna + 0.005, self.base_cuello + 0.05, 0.005):
             p = self.torso_corte(y)
@@ -341,7 +301,6 @@ class Cuerpo:
 
 
 def hull2d(pts):
-    """Envolvente convexa (Andrew) de puntos 2D, en sentido antihorario."""
     p = sorted(set(map(tuple, np.round(pts, 6))))
     if len(p) <= 2:
         return np.array(p)
@@ -362,7 +321,6 @@ def hull2d(pts):
 
 
 def radio_polar(hull, centro, angulos):
-    """Radio de un polígono convexo (x, z) desde ``centro`` en cada ángulo (0 = +z frente, 90° = +x)."""
     a = np.asarray(angulos, dtype=float)
     dx, dz = np.sin(a), np.cos(a)
     out = np.zeros(len(a))
@@ -381,11 +339,6 @@ def radio_polar(hull, centro, angulos):
 
 
 class TablaPolar:
-    """Radio de la envolvente convexa del torso por altura y ángulo, alrededor del centro (0, z) de cada altura.
-
-    ``recorte``: |x| máximo de los puntos del corte (sin los brazos sobre la axila); un número o una función de y
-    (None = sin recorte a esa altura).
-    """
 
     def __init__(self, cuerpo, y0, y1, paso=0.004, recorte=None, n_ang=720):
         self.y0, self.paso = y0, paso
@@ -397,8 +350,6 @@ class TablaPolar:
             p = cuerpo.torso_corte(y)
             xmax = recorte(y) if callable(recorte) else recorte
             if xmax is not None and len(p):
-                # Se descartan (no se aplastan contra el límite): así la envolvente no toma la profundidad del
-                # brazo y la espalda no hace escalón sobre la axila.
                 p = p[np.abs(p[:, 0]) <= xmax]
             filas.append(radio_polar(hull2d(p), np.array((0.0, zc)), self.ang) if len(p) >= 3 else np.zeros(n_ang))
         self.R = np.array(filas)
@@ -423,14 +374,12 @@ class TablaPolar:
         return r0 * (1 - f) + r1 * f
 
     def dentro(self, q):
-        """True para los puntos (n, 3) que quedan dentro de la envolvente de su altura."""
         q = np.atleast_2d(q)
         zc = self.centro_z(q[:, 1])
         th = np.arctan2(q[:, 0], q[:, 2] - zc)
         return np.hypot(q[:, 0], q[:, 2] - zc) < self.radio(q[:, 1], th)
 
     def salida(self, origen, direccion, largo=0.5, paso=0.001):
-        """Primer punto (±0,5 mm) de un rayo que parte de dentro y sale de la envolvente; None si no sale."""
         t = np.arange(paso, largo, paso)
         q = origen[None, :] + direccion[None, :] * t[:, None]
         fuera = ~self.dentro(q)

@@ -11,7 +11,6 @@ import java.nio.file.Path;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Administración → Configuración: datos de pago reales, con validación y solo para ADMIN. */
 class StoreSettingsServiceTest {
 
     @TempDir
@@ -52,7 +51,6 @@ class StoreSettingsServiceTest {
         assertThat(saved.bankCci()).isEqualTo("002-191-001234567801-23");
         assertThat(saved.reviewed()).isTrue();
 
-        // El cliente ve los datos nuevos al registrar su pago.
         f.loginClient();
         PaymentInstructions seen = f.payments.instructions();
         assertThat(seen.forMethod(PaymentMethod.YAPE)).isEqualTo("Yapea al 912 345 678 (María Quispe Huamán).");

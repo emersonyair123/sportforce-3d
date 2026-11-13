@@ -2,13 +2,6 @@ package com.sportforce3d.three.geom;
 
 import java.util.List;
 
-/**
- * Tubo de sección elíptica variable a lo largo de una espina suave (Catmull-Rom por puntos de control).
- * Sirve para brazos, piernas y cuello. Los radios y el desplazamiento frontal se dan como curvas sobre la
- * fracción de longitud (0 = inicio, 1 = final).
- *
- * <p>Ángulo de la sección: 0 = frente (+Z), π/2 = lado exterior (hacia {@code outward}), π = atrás.
- */
 public final class Tube {
 
     private static final int SAMPLES = 800;
@@ -20,13 +13,6 @@ public final class Tube {
     private final Curve frontShift;
     private final Vec3 outward;
 
-    /**
-     * @param control    puntos de control de la espina (≥ 2)
-     * @param rx         radio hacia el lado exterior según la fracción de longitud
-     * @param rz         radio hacia el frente según la fracción de longitud
-     * @param frontShift desplazamiento del centro hacia el frente (positivo) o atrás
-     * @param outward    dirección "exterior" aproximada (p. ej. +X para el brazo izquierdo)
-     */
     public Tube(List<Vec3> control, Curve rx, Curve rz, Curve frontShift, Vec3 outward) {
         this.rx = rx;
         this.rz = rz;
@@ -54,7 +40,6 @@ public final class Tube {
         return len[SAMPLES];
     }
 
-    /** Centro de la espina (sin desplazamiento frontal) en la fracción {@code f}. */
     public Vec3 spine(double f) {
         double target = Math.max(0, Math.min(1, f)) * length();
         int lo = 0;
@@ -79,7 +64,6 @@ public final class Tube {
         return b.sub(a).normalize();
     }
 
-    /** Eje frontal de la sección: +Z proyectado perpendicular a la espina. */
     public Vec3 frontAxis(double f) {
         Vec3 t = tangent(f);
         Vec3 front = Vec3.FRONT.sub(t.mul(t.dot(Vec3.FRONT)));
@@ -89,7 +73,6 @@ public final class Tube {
         return front.normalize();
     }
 
-    /** Eje lateral (hacia afuera) de la sección. */
     public Vec3 sideAxis(double f) {
         Vec3 t = tangent(f);
         Vec3 front = frontAxis(f);
@@ -109,7 +92,6 @@ public final class Tube {
         return rz.at(f);
     }
 
-    /** Punto de la superficie con un espesor extra {@code extra} (para prendas sobre el cuerpo). */
     public Vec3 point(double f, double angle, double extra) {
         Vec3 c = center(f);
         double s = Math.sin(angle);

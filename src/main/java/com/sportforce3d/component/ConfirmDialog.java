@@ -9,10 +9,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
-/**
- * Diálogo de confirmación modal dentro de la ventana, sobre el scrim. Esc o "Cancelar" lo cierran;
- * el foco empieza en "Cancelar" para que Enter no confirme una acción destructiva por accidente.
- */
 public final class ConfirmDialog {
 
     private ConfirmDialog() {

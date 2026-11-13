@@ -16,13 +16,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Genera las capturas de referencia del visor en docs/capturas (frente, espalda, lateral y detalles) con
- * SubScene.snapshot. Uso: {@code mvnw compile exec} o la configuración "Capturas 3D" de IntelliJ.
- * Argumentos opcionales: carpeta de salida y tipo de cuerpo (ADULTO_HOMBRE, ADULTO_MUJER, JUVENIL o ALL), ETAPA4
- * (uniforme de ejemplo), PERSONAS (las personas 3D de la Etapa 8), UNIFORMES / DEFECTO (Etapa 8B) o TELA (Etapa 9A:
- * la tela simulada en Blender).
- */
 public final class CaptureTool {
 
     private record Shot(String name, ViewPreset view, Garment focus, int width, int height) {
@@ -78,7 +71,6 @@ public final class CaptureTool {
         }
     }
 
-    /** Uniforme de ejemplo de la Etapa 4 (colores, franjas, nombre, número y emblema): frente, espalda y detalles. */
     private static void captureSampleDesign(Path out) throws Exception {
         java.nio.file.Path tmp = java.nio.file.Files.createTempDirectory("sf-capturas");
         com.sportforce3d.db.Database db = new com.sportforce3d.db.Database(tmp.resolve("tmp.db"));
@@ -125,7 +117,6 @@ public final class CaptureTool {
         }
     }
 
-    /** Etapa 8: las cuatro personas 3D (sin uniforme) de frente, espalda, costado y un detalle de la cara. */
     private static void capturePersons(Path out) throws Exception {
         CountDownLatch started = new CountDownLatch(1);
         Platform.startup(started::countDown);
@@ -164,11 +155,6 @@ public final class CaptureTool {
         }
     }
 
-    /**
-     * Etapa 8B: cada persona con un uniforme distinto ({@code SampleDesigns.forPersons}) puesto: frente, espalda,
-     * costado y detalle de la camiseta. Con {@code defaults}, el diseño con que abre el diseñador (prefijo
-     * "defecto-"): frente, espalda y detalle de la espalda.
-     */
     private static void captureDressed(Path out, boolean defaults) throws Exception {
         java.util.Map<String, com.sportforce3d.model.Material> materials = materials();
         CountDownLatch started = new CountDownLatch(1);
@@ -196,11 +182,6 @@ public final class CaptureTool {
         }
     }
 
-    /**
-     * Etapa 9: cada persona con la camiseta, el short y las medias simulados en Blender y su uniforme de ejemplo:
-     * frente, espalda, ambos costados (la franja lateral debe verse igual) y detalles de la camiseta; además el frente
-     * con el diseño con que abre el diseñador ("-defecto-frente").
-     */
     private static void captureSimulated(Path out) throws Exception {
         java.util.Map<String, com.sportforce3d.model.Material> materials = materials();
         CountDownLatch started = new CountDownLatch(1);
@@ -225,7 +206,6 @@ public final class CaptureTool {
         }
     }
 
-    /** Un visor por persona: crear uno por toma agota la memoria de video de Prism (no se libera a tiempo). */
     private static void renderDressed(com.sportforce3d.three.human.OutfitFitter.DressedPerson dressed,
                                       com.sportforce3d.design.DesignDocument doc,
                                       java.util.Map<String, com.sportforce3d.model.Material> materials,
@@ -255,14 +235,12 @@ public final class CaptureTool {
         }
         onFx(() -> {
             Stage stage = (Stage) viewer.getScene().getWindow();
-            // Sin escena el visor detiene su AnimationTimer; si no, el temporizador lo retiene con sus texturas.
             stage.getScene().setRoot(new javafx.scene.Group());
             stage.close();
             return null;
         });
     }
 
-    /** Materiales del catálogo (una base temporal con las migraciones). */
     private static java.util.Map<String, com.sportforce3d.model.Material> materials() throws Exception {
         java.nio.file.Path tmp = java.nio.file.Files.createTempDirectory("sf-capturas");
         com.sportforce3d.db.Database db = new com.sportforce3d.db.Database(tmp.resolve("tmp.db"));

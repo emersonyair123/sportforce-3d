@@ -6,10 +6,6 @@ import com.sportforce3d.three.model.Zone;
 
 import java.util.List;
 
-/**
- * Dónde se elige material: una tela por prenda textil y, en la zapatilla, la capellada y la suela por separado.
- * {@code suitableKey} se compara con materials.suitable_for.
- */
 public enum MaterialSlot {
     JERSEY("Tela de la camiseta", Garment.JERSEY, Material.Scope.TEXTIL, "JERSEY", "DRY_FIT",
             List.of(Zone.JERSEY_BODY, Zone.JERSEY_SLEEVES, Zone.JERSEY_SIDES)),
@@ -55,7 +51,6 @@ public enum MaterialSlot {
         return defaultCode;
     }
 
-    /** Solo los materiales válidos para esta ranura (la licra no aparece en zapatillas). */
     public boolean accepts(Material m) {
         return m.scope() == scope && m.suitableFor().contains(suitableKey);
     }

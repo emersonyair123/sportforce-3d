@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-/** Reglas del diseñador (design/prendas-y-materiales.md). Las usa el service al guardar y la vista al editar. */
 public final class DesignRules {
 
     public static final int NAME_MAX = 12;
@@ -16,14 +15,12 @@ public final class DesignRules {
     private DesignRules() {
     }
 
-    /** Nombre de jugador: mayúsculas, máx. 12 caracteres (letras, espacios, punto, guion y apóstrofo). */
     public static String cleanName(String text) {
         String t = text == null ? "" : text.toUpperCase(java.util.Locale.forLanguageTag("es-PE"));
         t = t.replaceAll("[^A-ZÁÉÍÓÚÜÑ .'\\-]", "");
         return t.length() > NAME_MAX ? t.substring(0, NAME_MAX) : t;
     }
 
-    /** Número 0–99 o null si no es válido. */
     public static String cleanNumber(String text) {
         String t = text == null ? "" : text.replaceAll("[^0-9]", "");
         if (t.isEmpty()) {
@@ -39,7 +36,6 @@ public final class DesignRules {
         return s != null && HEX.matcher(s).matches();
     }
 
-    /** Lista de problemas; vacía si el diseño es válido. */
     public static List<String> problems(DesignDocument d) {
         List<String> out = new ArrayList<>();
         if (d.schemaVersion() != DesignDocument.SCHEMA_VERSION) {

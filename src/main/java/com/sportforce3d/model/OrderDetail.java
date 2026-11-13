@@ -15,7 +15,6 @@ public record OrderDetail(long id, String orderNumber, long userId, String custo
         payments = List.copyOf(payments);
     }
 
-    /** Último intento de pago (el vigente), o null. */
     public Payment currentPayment() {
         return payments.isEmpty() ? null : payments.get(payments.size() - 1);
     }
@@ -28,7 +27,6 @@ public record OrderDetail(long id, String orderNumber, long userId, String custo
         return shipLine1 + ", " + shipDistrict + ", " + shipProvince + ", " + shipDepartment;
     }
 
-    /** Último estado alcanzado antes de cancelar (para la línea de tiempo). */
     public OrderStatus lastStatusBeforeCancel() {
         OrderStatus last = OrderStatus.PENDIENTE_PAGO;
         for (StatusChange change : history) {

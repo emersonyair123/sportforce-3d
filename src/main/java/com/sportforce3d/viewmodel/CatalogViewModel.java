@@ -23,7 +23,6 @@ import javafx.collections.ObservableSet;
 import java.util.List;
 import java.util.Set;
 
-/** Estado del catálogo: filtros, orden, página actual y resultados. */
 public class CatalogViewModel {
 
     private record ReferenceData(List<Category> categories, List<Sport> sports, List<Size> sizes) {
@@ -54,7 +53,6 @@ public class CatalogViewModel {
         this.catalog = catalog;
     }
 
-    /** Carga categorías, deportes y tallas y luego busca. */
     public void start(Runnable onReferenceData) {
         Async.run(() -> new ReferenceData(catalog.categories(), catalog.sports(), catalog.sizes()),
                 data -> {
@@ -72,14 +70,14 @@ public class CatalogViewModel {
         try {
             query = buildQuery(page);
         } catch (IllegalArgumentException e) {
-            return; // priceError ya explica el problema
+            return;
         }
         int id = ++requestId;
         loading.set(true);
         error.set("");
         Async.run(() -> catalog.search(query),
                 page1 -> {
-                    if (id == requestId) { // descarta respuestas de búsquedas anteriores
+                    if (id == requestId) {
                         result.set(page1);
                         loading.set(false);
                     }

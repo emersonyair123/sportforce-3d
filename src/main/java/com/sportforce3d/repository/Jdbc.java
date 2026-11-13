@@ -6,7 +6,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.List;
 
-/** Ayudas pequeñas para JDBC con parámetros que pueden ser null. */
 final class Jdbc {
 
     private Jdbc() {

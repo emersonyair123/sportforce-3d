@@ -48,7 +48,7 @@ class CartServiceTest {
     @Test
     void cannotAddMoreThanAvailableStock() {
         f.loginClient();
-        long xxl = f.variantId("SF-CAM-001-XXL"); // el seed deja 2 unidades
+        long xxl = f.variantId("SF-CAM-001-XXL");
 
         assertThatThrownBy(() -> f.cart.add(xxl, 3)).hasMessage("Solo quedan 2 unidades de Camiseta Pro Dry-Fit (talla XXL).");
         f.cart.add(xxl, 2);
@@ -73,7 +73,6 @@ class CartServiceTest {
         long itemId = summary.lines().get(0).itemId();
         assertThat(f.cart.updateQuantity(itemId, 4).lines().get(0).quantity()).isEqualTo(4);
 
-        // Otro usuario no puede tocar esa línea.
         f.loginNewClient("otro@correo.pe");
         assertThatThrownBy(() -> f.cart.updateQuantity(itemId, 1)).hasMessageContaining("ya no está en tu carrito");
         f.cart.remove(itemId);
@@ -86,12 +85,12 @@ class CartServiceTest {
     @Test
     void shippingIsFlatUntilTheFreeThreshold() {
         f.loginClient();
-        CartSummary cheap = f.cart.add(f.variantId("SF-ACC-002-UNICA"), 1); // S/ 19.90
+        CartSummary cheap = f.cart.add(f.variantId("SF-ACC-002-UNICA"), 1);
         assertThat(cheap.shippingCents()).isEqualTo(1500);
         assertThat(cheap.totalCents()).isEqualTo(1990 + 1500);
         assertThat(cheap.missingForFreeShipping()).isEqualTo(29900 - 1990);
 
-        CartSummary big = f.cart.add(f.variantId("SF-ZAP-001-40"), 2); // 2 × S/ 249.90
+        CartSummary big = f.cart.add(f.variantId("SF-ZAP-001-40"), 2);
         assertThat(big.shippingCents()).isZero();
         assertThat(big.missingForFreeShipping()).isZero();
     }

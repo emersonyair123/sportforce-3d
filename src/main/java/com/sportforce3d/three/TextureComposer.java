@@ -39,51 +39,28 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Compone la textura de cada prenda y la entrega como imagen para el diffuseMap:
- * <ol>
- *     <li>color base de cada zona en sus islas UV (con un margen de "sangrado" para que el filtrado de la
- *     textura no deje costuras de otro color);</li>
- *     <li>patrón (franjas, diagonales, degradado, cuadros, sublimado) en las zonas principales;</li>
- *     <li>elementos en orden de capa: nombre, número, emblemas y logos, recortados a su zona.</li>
- * </ol>
- * Cada zona dibuja en metros reales sobre la prenda (px por metro horizontal y vertical propios), así un número
- * no sale estirado aunque la isla del short sea alta y angosta.
- * <p>
- * Se dibuja con Java2D en memoria (CPU) y solo el resultado sube a la GPU. Un Canvas de JavaFX crea en la GPU una
- * máscara del tamaño de todo el lienzo por cada recorte; con texturas de 2048 px eso agotaba la memoria de vídeo
- * de JavaFX (512 MB) en gráficos integrados. Debe usarse en el hilo de JavaFX (escribe en WritableImage).
- */
 public final class TextureComposer {
-
-    /** Zonas que reciben el patrón de su prenda. */
     static final Map<Garment, Set<Zone>> PATTERNED = Map.of(
             Garment.JERSEY, Set.of(Zone.JERSEY_BODY, Zone.JERSEY_SLEEVES),
             Garment.SHORTS, Set.of(Zone.SHORTS_BASE),
             Garment.SOCKS, Set.of(Zone.SOCKS_LEG));
 
-    /** Tamaño físico aproximado (ancho, alto en m) de cada isla con patrón. */
     private static final Map<UvRect, double[]> PHYSICAL = physical();
     private static final Map<String, Font> FONTS = new ConcurrentHashMap<>();
-    /** Mismo valor que -sf-focus en tokens-dark.css (design/tokens.json): el resaltado del elemento elegido. */
     private static final Color FOCUS = new Color(0x5C, 0x9B, 0xFF);
 
     private final ElementImages images;
     private final Map<Garment, BufferedImage> rasters = new EnumMap<>(Garment.class);
     private final Map<Garment, WritableImage[]> buffers = new EnumMap<>(Garment.class);
     private final Map<Garment, Integer> flip = new EnumMap<>(Garment.class);
-    /** Copia en Java2D de cada imagen de emblema o logo (se libera con la imagen). */
     private final Map<Image, BufferedImage> awtImages = new WeakHashMap<>();
-    /** Caja de cada elemento en UV de su prenda: [u0, v0, u1, v1]. */
     private final Map<String, double[]> bounds = new HashMap<>();
-    /** Elemento elegido en el diseñador: se dibuja con un contorno sutil (nunca en capturas ni en pedidos). */
     private String highlight;
 
     public TextureComposer(ElementImages images) {
         this.images = images;
     }
 
-    /** Textura de 2048 px para camiseta y short; 1024 para medias y zapatillas (islas más pequeñas). */
     public static int size(Garment g) {
         return g == Garment.JERSEY || g == Garment.SHORTS ? 2048 : 1024;
     }
@@ -92,7 +69,6 @@ public final class TextureComposer {
         return List.of(Garment.JERSEY, Garment.SHORTS, Garment.SOCKS, Garment.SHOES);
     }
 
-    /** Dibuja la prenda y devuelve la imagen (se alternan dos imágenes para que JavaFX note el cambio). */
     public Image compose(Garment garment, DesignDocument doc) {
         int s = size(garment);
         BufferedImage raster = rasters.computeIfAbsent(garment, g -> new BufferedImage(s, s, BufferedImage.TYPE_INT_ARGB_PRE));
@@ -106,7 +82,6 @@ public final class TextureComposer {
             g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
             g.setComposite(AlphaComposite.Src);
 
-            // 1. Fondo y colores de zona.
             g.setColor(awt(doc.color(mainZone(garment))));
             g.fillRect(0, 0, s, s);
             g.setComposite(AlphaComposite.SrcOver);
@@ -122,7 +97,6 @@ public final class TextureComposer {
                 }
             }
 
-            // 2. Patrón.
             PatternSpec pattern = doc.pattern(garment);
             if (pattern.type() != PatternType.LISO) {
                 for (Zone zone : PATTERNED.getOrDefault(garment, Set.of())) {
@@ -133,7 +107,6 @@ public final class TextureComposer {
                 }
             }
 
-            // 3. Elementos en orden de capa.
             bounds.keySet().removeIf(id -> doc.element(id).map(e -> e.area().garment() == garment).orElse(true));
             for (DesignElement e : doc.elements()) {
                 if (e.area().garment() == garment && e.visible()) {
@@ -152,7 +125,6 @@ public final class TextureComposer {
         return pair[i];
     }
 
-    /** Elemento visible más alto (última capa) bajo la coordenada UV, o null. */
     public String hit(Garment garment, double u, double v, DesignDocument doc) {
         List<DesignElement> list = doc.elements();
         for (int i = list.size() - 1; i >= 0; i--) {
@@ -170,7 +142,6 @@ public final class TextureComposer {
         return bounds.get(elementId);
     }
 
-    /** Elemento a resaltar en la próxima composición (null = ninguno). */
     public void setHighlight(String elementId) {
         this.highlight = elementId;
     }
@@ -178,8 +149,6 @@ public final class TextureComposer {
     public String highlight() {
         return highlight;
     }
-
-    // ---------------------------------------------------------------- Patrones
 
     private static void drawPattern(Graphics2D g0, int s, double bleed, UvRect r, double[] phys,
                                     PatternSpec p, Color base) {
@@ -239,7 +208,6 @@ public final class TextureComposer {
                     g.fill(new Rectangle2D.Double(x0, y0, w, h));
                 }
                 case SUBLIMADO -> {
-                    // Triángulos facetados en dos tonos del segundo color: sublimado geométrico.
                     physicalFrame(g, cx, cy, ax, ay);
                     int nx = (int) Math.ceil(phys[0] / m) + 2;
                     int ny = (int) Math.ceil(phys[1] / m) + 2;
@@ -247,7 +215,7 @@ public final class TextureComposer {
                     for (int i = -nx; i <= nx; i++) {
                         for (int j = -ny; j <= ny; j++) {
                             if (Math.floorMod(i * 3 + j * 5, 4) == 0) {
-                                continue; // huecos que dejan ver el color base
+                                continue;
                             }
                             double x = i * m;
                             double y = j * m;
@@ -270,13 +238,10 @@ public final class TextureComposer {
         }
     }
 
-    /** Marco en metros centrado en la isla: después de esto, 1 unidad = 1 m sobre la prenda. */
     private static void physicalFrame(Graphics2D g, double cx, double cy, double ax, double ay) {
         g.translate(cx, cy);
         g.scale(ax, ay);
     }
-
-    // ---------------------------------------------------------------- Elementos
 
     private void drawElement(Graphics2D g0, int s, DesignElement e) {
         Area area = e.area();
@@ -297,7 +262,6 @@ public final class TextureComposer {
 
             if (e.type().isText()) {
                 String text = e.text() == null ? "" : e.text();
-                // El tamaño se refiere a la altura de las mayúsculas (~72 % del cuerpo de la fuente).
                 Font font = font(e.font()).deriveFont((float) (hPx / 0.72));
                 FontRenderContext frc = g.getFontRenderContext();
                 double capHeight = -new TextLayout("H", font, frc).getBounds().getY();
@@ -307,7 +271,6 @@ public final class TextureComposer {
                 } else {
                     TextLayout layout = new TextLayout(text, font, frc);
                     wPx = layout.getAdvance();
-                    // Centrado horizontal por avance y vertical por la altura de las mayúsculas.
                     Shape outline = layout.getOutline(AffineTransform.getTranslateInstance(-wPx / 2, capHeight / 2));
                     if (stroke > 0 && e.accentColor() != null) {
                         g.setColor(awt(e.accentColor()));
@@ -340,7 +303,6 @@ public final class TextureComposer {
             g.dispose();
         }
 
-        // Caja alineada a los ejes del rectángulo girado y estirado, en UV.
         double rad = Math.toRadians(e.rotation());
         double cos = Math.abs(Math.cos(rad));
         double sin = Math.abs(Math.sin(rad));
@@ -349,10 +311,6 @@ public final class TextureComposer {
         bounds.put(e.id(), new double[]{(cx - bw) / s, (cy - bh) / s, (cx + bw) / s, (cy + bh) / s});
     }
 
-    /**
-     * Contorno redondeado en el color de foco con un halo suave, en el mismo marco girado del elemento: sigue su
-     * rotación y la curva de la prenda.
-     */
     private static void drawHighlight(Graphics2D g, double w, double h, int s) {
         double pad = s * 0.006;
         java.awt.geom.RoundRectangle2D box = new java.awt.geom.RoundRectangle2D.Double(-w / 2 - pad, -h / 2 - pad,
@@ -367,7 +325,6 @@ public final class TextureComposer {
         g.draw(box);
     }
 
-    /** Copia los píxeles de una imagen de JavaFX (ya cargada) a una imagen de Java2D. */
     private BufferedImage toAwt(Image img) {
         BufferedImage cached = awtImages.get(img);
         if (cached != null) {
@@ -385,7 +342,6 @@ public final class TextureComposer {
         return out;
     }
 
-    /** Fuente de Java2D cargada desde /fonts (las mismas TTF que usa la interfaz). */
     static Font font(String key) {
         return FONTS.computeIfAbsent(DesignFonts.file(key), file -> {
             try (InputStream in = TextureComposer.class.getResourceAsStream("/fonts/" + file)) {
@@ -429,7 +385,6 @@ public final class TextureComposer {
         m.put(UvLayout.JERSEY_BACK, new double[]{0.47, 0.58});
         m.put(UvLayout.JERSEY_SLEEVE_LEFT, new double[]{0.40, 0.17});
         m.put(UvLayout.JERSEY_SLEEVE_RIGHT, new double[]{0.40, 0.17});
-        // Antebrazo de la manga larga: el largo nominal con que lo mapea tools/blender/camiseta.py (ANTEBRAZO_H).
         m.put(UvLayout.JERSEY_FOREARM_LEFT, new double[]{0.40, 0.36});
         m.put(UvLayout.JERSEY_FOREARM_RIGHT, new double[]{0.40, 0.36});
         for (UvRect r : List.of(UvLayout.SHORTS_LEFT_FRONT, UvLayout.SHORTS_LEFT_BACK, UvLayout.SHORTS_RIGHT_FRONT,

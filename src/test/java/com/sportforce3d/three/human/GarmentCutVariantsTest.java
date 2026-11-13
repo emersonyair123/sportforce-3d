@@ -19,11 +19,6 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Etapa 10C: manga larga, short corto y largo y medias tobilleras y de media pierna simulados en Blender para cada
- * persona (tools/blender, {@code --variantes}): las mismas zonas e islas UV (más la del antebrazo), tela por fuera de
- * la piel, cada largo donde corresponde y la piel que queda a la vista según el largo.
- */
 class GarmentCutVariantsTest {
 
     private static final GarmentCut LONG = GarmentCut.DEFAULT.withSleeve(Sleeve.LARGA);
@@ -61,7 +56,6 @@ class GarmentCutVariantsTest {
                 }
             }));
         }
-        // El antebrazo de la manga larga usa su isla; la manga corta, nunca.
         assertThat(usesIsland(SimulatedGarments.load(p, LONG).get(Garment.JERSEY), UvLayout.JERSEY_FOREARM_LEFT)).isTrue();
         assertThat(usesIsland(SimulatedGarments.load(p).get(Garment.JERSEY), UvLayout.JERSEY_FOREARM_LEFT)).isFalse();
     }
@@ -71,8 +65,6 @@ class GarmentCutVariantsTest {
     void laTelaDeCadaVarianteQuedaPorFueraDeLaPiel(Persona p) {
         HumanModel human = OutfitFitterTest.geometryOnly(p);
         TriangleIndex.Query skin = TriangleIndex.of(List.of(OutfitFitter.skinOf(human).mesh()), 0.02).query();
-        // El pie de las medias queda dentro de la zapatilla (la app lo recorta): no cuenta, así la proporción de la
-        // tobillera (poca caña) es comparable con la de la media larga.
         double ankle = human.minY() + 0.08 * human.height();
         Map<GarmentCut, Garment> changed = Map.of(LONG, Garment.JERSEY, SHORT_SHORTS, Garment.SHORTS,
                 LONG_SHORTS, Garment.SHORTS, ANKLE, Garment.SOCKS, MID, Garment.SOCKS);
@@ -105,19 +97,14 @@ class GarmentCutVariantsTest {
     void cadaLargoLlegaDondeDebe(Persona p) {
         HumanModel human = OutfitFitterTest.geometryOnly(p);
         double h = human.height();
-        // Manga larga: llega a la muñeca. En pose A el brazo baja a ~45°, así que los ~30 cm más de manga se alejan
-        // del cuerpo en x algo más del 7 % del alto.
         double shortReach = maxAbsX(SimulatedGarments.load(p).get(Garment.JERSEY), Zone.JERSEY_CUFFS);
         double longReach = maxAbsX(SimulatedGarments.load(p, LONG).get(Garment.JERSEY), Zone.JERSEY_CUFFS);
         assertThat(longReach - shortReach).as("%s: la manga larga llega más lejos", p).isGreaterThan(0.07 * h);
-        // Short: corto (medio muslo) < medio (sobre la rodilla) < largo (a la rodilla), con al menos 3 % del alto
-        // entre uno y otro.
         double corto = minY(SimulatedGarments.load(p, SHORT_SHORTS).get(Garment.SHORTS), Zone.SHORTS_BASE);
         double medio = minY(SimulatedGarments.load(p).get(Garment.SHORTS), Zone.SHORTS_BASE);
         double largo = minY(SimulatedGarments.load(p, LONG_SHORTS).get(Garment.SHORTS), Zone.SHORTS_BASE);
         assertThat(corto - medio).as("%s: short corto sobre el medio", p).isGreaterThan(0.03 * h);
         assertThat(medio - largo).as("%s: short largo bajo el medio", p).isGreaterThan(0.03 * h);
-        // Medias: tobillera < media pierna < larga (el borde de la banda sube).
         double tob = maxY(SimulatedGarments.load(p, ANKLE).get(Garment.SOCKS), Zone.SOCKS_BAND);
         double mid = maxY(SimulatedGarments.load(p, MID).get(Garment.SOCKS), Zone.SOCKS_BAND);
         double larga = maxY(SimulatedGarments.load(p).get(Garment.SOCKS), Zone.SOCKS_BAND);
@@ -136,15 +123,10 @@ class GarmentCutVariantsTest {
         int ankle = skinFaces(OutfitFitter.fit(human, source, SimulatedGarments.load(p, ANKLE)));
         int shortShorts = skinFaces(OutfitFitter.fit(human, source, SimulatedGarments.load(p, SHORT_SHORTS)));
         assertThat(longSleeve).as("%s: la manga larga tapa el antebrazo", p).isLessThan(base);
-        // La piel bajo las medias nunca se oculta (van pegadas a la pierna): con tobilleras no se oculta más.
         assertThat(ankle).as("%s: con tobilleras se ve la pantorrilla", p).isGreaterThanOrEqualTo(base);
         assertThat(shortShorts).as("%s: con short corto se ve más muslo", p).isGreaterThan(base);
     }
 
-    /**
-     * El número del short (por defecto a media altura de lo que se ve, según el largo) queda entre el ruedo de la
-     * camiseta y la basta, con su media altura (3,5 cm) libre por arriba y por abajo, en las cuatro personas.
-     */
     @ParameterizedTest
     @EnumSource(Persona.class)
     void elNumeroDelShortQuedaALaVistaEnCadaLargo(Persona p) {
@@ -196,7 +178,6 @@ class GarmentCutVariantsTest {
             assertThat(y - 0.035).as("%s %s: el número no se sale por la basta", p, length).isGreaterThan(hemShorts);
             assertThat(Math.abs((y - hemShorts) - (hemJersey - y))).as("%s %s: a media altura", p, length)
                     .isLessThan(0.05);
-            // Sobre el muslo izquierdo (+x), no en la bragueta.
             assertThat(x).as("%s %s: en la pierna izquierda, lejos de la línea media", p, length)
                     .isGreaterThan(0.035 * OutfitFitterTest.geometryOnly(p).height());
         }
@@ -218,7 +199,6 @@ class GarmentCutVariantsTest {
         return false;
     }
 
-    /** Coordenadas del visor (JavaFX): y hacia abajo; se devuelven en el espacio del modelo (y arriba). */
     private static double maxAbsX(SimulatedGarments.Piece piece, Zone zone) {
         double m = 0;
         for (ModelData.Part part : piece.zones().get(zone)) {

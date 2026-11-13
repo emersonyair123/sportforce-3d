@@ -1,4 +1,3 @@
-"""Horneado con Cycles: oclusión ambiental y normal map (espacio tangente) en las UV de cada prenda."""
 import bpy
 
 
@@ -12,7 +11,6 @@ def _imagen(nombre, lado):
 
 
 def _destino(obj, img):
-    """Cada material de la prenda hornea en la misma imagen (las islas de las zonas no se superponen)."""
     for mat in obj.data.materials:
         mat.use_nodes = True
         nodos = mat.node_tree.nodes
@@ -43,7 +41,6 @@ def preparar(muestras=96, distancia_ao=0.12):
 
 
 def oclusion(baja, ocultar, ruta, lado=1024):
-    """AO de ``baja`` contra todo lo visible en la escena (cuerpo y la otra prenda); ``ocultar`` no cuenta."""
     img = _imagen("ao_" + baja.name, lado)
     _destino(baja, img)
     previos = [(o, o.hide_render) for o in ocultar]
@@ -60,10 +57,7 @@ def oclusion(baja, ocultar, ruta, lado=1024):
 
 
 def normales(baja, alta, ruta, lado=1024):
-    """Normal map de ``alta`` (la tela subdividida más) sobre ``baja`` (la malla que se exporta).
 
-    Verde invertido (−Y): en JavaFX la v de la textura crece hacia abajo.
-    """
     img = _imagen("normal_" + baja.name, lado)
     _destino(baja, img)
     alta.hide_render = False

@@ -37,12 +37,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
-/**
- * Capturas de la Etapa 7 (docs/capturas/etapa7): inicio y catálogo por categorías (ventana y lista completa,
- * 01–23), el diseñador realista con varias combinaciones (31–44) y el visor del uniforme del ADMIN (51–54).
- * Crea una base temporal.
- * Uso: configuración "Capturas catálogo realista" o {@code RealisticTour [carpeta] [todo|catalogo|disenador]}.
- */
 public final class RealisticTour {
 
     private static final int W = 1440;
@@ -104,8 +98,6 @@ public final class RealisticTour {
         });
     }
 
-    // ---------------------------------------------------------------- Catálogo
-
     private void catalogTour() throws Exception {
         shot("inicio");
         catalog("catalogo", null, null);
@@ -124,15 +116,11 @@ public final class RealisticTour {
     private void catalog(String name, String text, String category) throws Exception {
         Long categoryId = category == null ? null : categoryId(category);
         go(Routes.CATALOG, new Routes.CatalogParams(text, categoryId));
-        // Las fotos realistas se recolorean en segundo plano: se espera a que lleguen.
         pause(2200);
         shot(name);
         resultsShot(name + "-completo");
     }
 
-    // ---------------------------------------------------------------- Diseñador
-
-    /** Varias combinaciones de la vista realista, la vista 3D, un producto personalizado y el diseño guardado. */
     private void designerTour() throws Exception {
         go(Routes.DESIGNER, null);
         pause(2500);
@@ -157,12 +145,10 @@ public final class RealisticTour {
         look("hombre-buzo-solo-frente", "buzo_hombre_frente", Map.of("principal", "#0B2A6B", "paneles", "#39FF88"),
                 "liso", "#F2F5F8", null, null);
 
-        // El visor 3D de siempre, ahora en su pestaña.
         fx(() -> {
             toggle("Vista 3D").fire();
             return null;
         });
-        // La persona vestida (prendas simuladas + ajuste) tarda unos segundos la primera vez.
         pause(15000);
         shot("disenador-vista-3d");
         fx(() -> {
@@ -170,12 +156,10 @@ public final class RealisticTour {
             return null;
         });
 
-        // Personalizar un producto del catálogo: arranca con su modelo, colores y diseño.
         go(Routes.DESIGNER, new Routes.DesignerParams(null, null, productId("SF-009")));
         pause(3000);
         shot("disenador-desde-producto-rayas");
 
-        // Guardar: las capturas del diseño son las fotos realistas (Mis diseños las muestra).
         look("guardar-hombre-banda", "futbol_hombre_frente", Map.of("camiseta", "#F2F5F8", "short", "#0B0E13",
                 "paneles", "#D7141E", "medias", "#F2F5F8"), "banda", "#D7141E", "GUERRERO", 9);
         fx(() -> {
@@ -193,12 +177,6 @@ public final class RealisticTour {
         shot("mis-disenos-capturas-realistas");
     }
 
-    // ---------------------------------------------------------------- Visor del ADMIN
-
-    /**
-     * Pedidos con el diseño guardado en el recorrido (vista realista) y con uno anterior a la Etapa 7 (solo 3D),
-     * creados con los services como lo haría la interfaz; luego el ADMIN abre el uniforme de cada pedido.
-     */
     private void adminTour() throws Exception {
         long address = context.addressService().list().get(0).id();
         long saved = number("SELECT max(id) FROM designs");
@@ -236,7 +214,6 @@ public final class RealisticTour {
                 .filter(i -> i.hasDesign()).findFirst().orElseThrow().id();
     }
 
-    /** El panel lateral del visor del ADMIN completo (ficha técnica con scroll). */
     private void panelShot(String name) throws Exception {
         WritableImage img = fx(() -> {
             Node panel = stage.getScene().getRoot().lookup("#panel");
@@ -257,7 +234,6 @@ public final class RealisticTour {
         return Files.exists(p) ? p : null;
     }
 
-    /** Aplica una vista realista completa (como si el cliente la eligiera) y captura la pantalla. */
     private void look(String name, String model, Map<String, String> colors, String pattern, String patternColor,
                       String text, Integer number) throws Exception {
         fx(() -> {
@@ -309,8 +285,6 @@ public final class RealisticTour {
         throw new IllegalStateException("No hay pestaña " + text);
     }
 
-    // ---------------------------------------------------------------- Datos
-
     private long categoryId(String name) {
         return id("SELECT id FROM categories WHERE name = ?", name);
     }
@@ -344,8 +318,6 @@ public final class RealisticTour {
         });
     }
 
-    // ---------------------------------------------------------------- Recorrido
-
     private void login(String email, String password) throws Exception {
         fx(() -> {
             if (!context.session().isAuthenticated()) {
@@ -376,7 +348,6 @@ public final class RealisticTour {
         save(img, name);
     }
 
-    /** La lista de resultados entera, aunque no quepa en la ventana. */
     private void resultsShot(String name) throws Exception {
         WritableImage img = fx(() -> {
             Node scroll = stage.getScene().getRoot().lookup("#resultsScroll");

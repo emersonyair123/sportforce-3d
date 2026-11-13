@@ -1,6 +1,5 @@
 package com.sportforce3d.three.geom;
 
-/** Rectángulo de una isla UV dentro de la textura de una prenda (0..1). V crece hacia abajo, como en una imagen. */
 public record UvRect(double u0, double v0, double u1, double v1) {
 
     public UvRect {
@@ -9,7 +8,6 @@ public record UvRect(double u0, double v0, double u1, double v1) {
         }
     }
 
-    /** Punto de la isla para coordenadas locales (0..1, 0..1). */
     public float u(double local) {
         return (float) (u0 + (u1 - u0) * clamp(local));
     }

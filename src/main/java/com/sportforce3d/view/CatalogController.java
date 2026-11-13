@@ -177,7 +177,6 @@ public class CatalogController implements Router.Routable {
         });
     }
 
-    /** Chip de selección única: volver a pulsar el elegido no lo deja vacío ("Todas" sigue siendo una opción). */
     private FilterChip chip(String text, Long id, Long current, ToggleGroup group, Consumer<Long> onSelect) {
         FilterChip chip = new FilterChip(text);
         chip.setToggleGroup(group);

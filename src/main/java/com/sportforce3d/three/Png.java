@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/** Guarda imágenes de JavaFX como PNG sin depender de javafx-swing. */
 public final class Png {
 
     private Png() {

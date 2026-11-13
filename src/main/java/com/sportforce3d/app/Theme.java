@@ -5,7 +5,6 @@ import javafx.scene.Scene;
 import java.net.URL;
 import java.util.Objects;
 
-/** Hojas de estilo del sistema de diseño. El tema oscuro es el predeterminado; el claro es para comprobantes. */
 public enum Theme {
     DARK("/css/tokens-dark.css"),
     LIGHT("/css/tokens-light.css");

@@ -46,11 +46,6 @@ import org.kordamp.ikonli.feather.Feather;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Catálogo visual de los componentes del sistema de diseño en sus estados.
- * Permite alternar tema oscuro/claro y "Reducir animaciones". Ábrelo desde el menú de la cuenta
- * o con el argumento {@code --gallery}.
- */
 public final class ComponentGallery {
 
     private static Stage open;

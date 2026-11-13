@@ -6,7 +6,6 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.StrokeLineCap;
 
-/** Muestra cuadrada de una tela dibujada por código sobre el color de la prenda. */
 public class MaterialSample extends Canvas {
 
     private final Material.Pattern pattern;
@@ -23,7 +22,6 @@ public class MaterialSample extends Canvas {
         double s = getWidth();
         g.clearRect(0, 0, s, s);
         g.save();
-        // Esquinas de 6 px (radius-sm).
         g.beginPath();
         g.moveTo(6, 0);
         g.arcTo(s, 0, s, s, 6);
@@ -114,7 +112,6 @@ public class MaterialSample extends Canvas {
                 g.strokeLine(s * 0.15, s * 0.35, s * 0.55, s * 0.15);
             }
             case PLAIN -> {
-                // Algodón: punto mate de hilos finos (sin brillo).
                 g.setStroke(dark);
                 g.setLineWidth(0.7);
                 for (double y = 1.5; y < s; y += 3) {

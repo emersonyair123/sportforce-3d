@@ -51,12 +51,10 @@ class ObjModelProviderTest {
         assertThat(model.mannequin()).singleElement().satisfies(p -> {
             assertThat(p.name()).isEqualTo("mannequin_body");
             assertThat(p.mesh().faceCount()).as("cuadrilátero → 2 triángulos").isEqualTo(2);
-            // Y del OBJ (arriba) → JavaFX (abajo); V del OBJ (arriba) → JavaFX (abajo).
             assertThat(p.mesh().points()[1 + 3 * 2]).isEqualTo(-1.8f);
             assertThat(p.mesh().texCoords()[1]).isEqualTo(1f);
         });
         assertThat(model.zones()).containsOnlyKeys(Zone.JERSEY_BODY, Zone.SHOE_SOLE);
-        // Sin "vn": normales calculadas y normalizadas.
         float[] n = model.zones().get(Zone.JERSEY_BODY).get(0).mesh().normals();
         assertThat(Math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2])).isCloseTo(1.0, org.assertj.core.api.Assertions.within(1e-6));
         assertThat(model.height()).isEqualTo(1.8);
