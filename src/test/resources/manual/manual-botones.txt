@@ -1,0 +1,348 @@
+TITLE|Manual de Uso SPORTFORCE 3D
+SUB|Tienda de ropa deportiva con diseñador de uniformes realista y 3D. Guía de cada botón de la aplicación.
+SUB|Equipo: PGEY, HEPY y PPQH · Versión 1.0.0 · Noviembre de 2026
+TOC|
+PB|
+H1|1. Introducción
+P|SPORTFORCE 3D es una aplicación de escritorio para vender ropa deportiva. El **cliente** mira el catálogo, personaliza uniformes en un diseñador (foto realista y persona en 3D), compra y registra su pago con Yape, Plin o transferencia. El **administrador (ADMIN)** revisa y aprueba los pagos, cambia el estado de los pedidos, mantiene los productos y el stock, y saca reportes de ventas. Todo funciona en la misma computadora: los datos se guardan en un archivo de base de datos local, sin internet.
+P|Este manual muestra cada pantalla con una captura real. Cada botón, campo o pestaña lleva un **círculo rojo numerado** fuera de la imagen y una **flecha** que lo señala; la tabla de debajo explica para qué sirve cada número. Las marcas "solo ADMIN" y "pide confirmación" indican que el botón está reservado al administrador o que la aplicación pregunta antes de hacer el cambio. La sección 6 resume una compra completa citando los números de las figuras.
+H1|2. Requisitos e instalación
+TABLE|2400,3000,3626
+T|Elemento|Mínimo|Recomendado
+T|Sistema operativo|Windows 10 de 64 bits|Windows 11 de 64 bits
+T|Memoria RAM|8 GB|16 GB
+T|Espacio en disco|1 GB para la app instalada|3 GB si se trabaja con el código fuente
+T|Pantalla y video|1280 × 720, gráfica integrada con soporte 3D|1920 × 1080 y controladores de video actualizados
+ENDT|
+L|1.|Haz doble clic en el instalador **SPORTFORCE 3D-1.0.0.exe**. Si aparece "Windows protegió su PC", pulsa **Más información › Ejecutar de todas formas** (el instalador no está firmado).
+L|2.|En el asistente pulsa **Next**, deja la carpeta propuesta (C:\Program Files\SPORTFORCE 3D\) y pulsa **Install** y luego **Finish**. El instalador ya trae Java: no hay que instalar nada más.
+L|3.|Abre la aplicación desde **menú Inicio › SPORTFORCE 3D**. La primera vez se crea la base de datos con productos de ejemplo en %APPDATA%\SportForce3D\data\sportforce3d.db.
+L|4.|Para probarla usa las cuentas de la tabla. Desde el código fuente se abre con **mvnw.cmd javafx:run** (ver el documento "Para ejecutar").
+TABLE|2400,3400,3226
+T|Rol|Correo|Contraseña
+T|Administrador|admin@sportforce3d.pe|Admin123!
+T|Cliente|cliente@sportforce3d.pe|Cliente123!
+ENDT|
+P|Para desinstalar: **Configuración › Aplicaciones › Aplicaciones instaladas › SPORTFORCE 3D › Desinstalar**. Los datos de %APPDATA%\SportForce3D se conservan hasta que se borre esa carpeta.
+PB|
+H1|3. Inicio de sesión y registro
+H2|3.1 Iniciar sesión
+FIG|01-login|Pantalla de inicio de sesión.
+M|l_correo|acc=Correo|Correo|Escribe el correo con el que te registraste.
+M|l_pass|acc=Contraseña|Contraseña|Escribe tu contraseña; se oculta mientras escribes.
+M|l_entrar|id=loginButton|Iniciar sesión|Entra a la tienda. Se activa al llenar los dos campos; 5 fallos seguidos bloquean el correo 5 minutos.
+M|l_registro|id=registerLink|Regístrate|Abre el formulario para crear una cuenta nueva.
+END|
+H2|3.2 Crear una cuenta
+FIG|02-registro|Pantalla de registro de un cliente nuevo.
+M||acc=Nombre completo|Nombre completo|Tu nombre y apellido; aparece en tus pedidos.
+M||acc=Correo|Correo|Correo con el que iniciarás sesión; no puede estar registrado.
+M||acc=Celular (opcional)|Celular (opcional)|Número de 9 dígitos para coordinar la entrega.
+M||acc=Contraseña|Contraseña|Mínimo 8 caracteres, con letras y números.
+M||acc=Repite la contraseña|Repite la contraseña|Escribe la misma contraseña para confirmar que no hay errores.
+M||id=registerButton|Crear cuenta|Crea la cuenta de CLIENTE y entra directamente a la tienda.
+M||id=loginLink|Inicia sesión|Vuelve a la pantalla de inicio de sesión si ya tienes cuenta.
+END|
+PB|
+H1|4. Pantallas del CLIENTE
+H2|4.1 Barra superior y menú lateral
+P|La barra superior y el menú lateral aparecen en todas las pantallas. En la figura el menú de la cuenta está abierto.
+FIG|03-barra|Barra superior, menú de la cuenta abierto y menú lateral del cliente.
+M|s_buscar|acc=Buscar productos|Buscar productos|Escribe un nombre o SKU y pulsa Enter: abre el catálogo con los resultados (no importan las tildes).
+M|s_carrito|acc=Carrito, |Carrito|Abre el carrito; el número azul indica cuántos productos tienes.
+M||id=userMenu|Menú de la cuenta|Muestra las opciones de tu cuenta (tu nombre e iniciales).
+M||css=menu-item~1|Mi cuenta|Abre tus datos personales y el cambio de contraseña.
+M||css=menu-item~2|Mis pedidos|Abre la lista de tus pedidos.
+M||css=menu-item~3|Galería de componentes|Abre en otra ventana la muestra de botones y estilos de la aplicación (consulta).
+M||css=menu-item~4|Cerrar sesión|Sale de tu cuenta y vuelve al inicio de sesión.
+M||acc=Inicio tip|Inicio|Vuelve a la pantalla de bienvenida.
+M|s_catalogo|acc=Catálogo tip|Catálogo|Abre todos los productos con filtros.
+M||acc=Diseñador 3D tip|Diseñador 3D|Abre el diseñador para crear un uniforme nuevo.
+M||acc=Carrito tip|Carrito|Abre el carrito (igual que el botón de la barra superior).
+M||acc=Mis pedidos tip|Mis pedidos|Abre tus pedidos y su estado.
+M||acc=Mis diseños tip|Mis diseños|Abre los diseños que guardaste.
+M||acc=Mi cuenta tip|Mi cuenta|Abre tus datos y la contraseña.
+M||acc=Contraer menú|Contraer menú|Reduce el menú a solo íconos para ganar espacio; púlsalo otra vez para abrirlo.
+END|
+H2|4.2 Inicio
+FIG|04-inicio|Pantalla de inicio con categorías y productos destacados.
+M||id=designCta|Diseña tu uniforme 3D|Abre el diseñador con la camiseta lista para personalizar.
+M||id=catalogButton|Ver catálogo|Abre el catálogo completo.
+M||U:FlowPane#categoriesPane|Botones de categoría|Abren el catálogo filtrado por esa categoría (por ejemplo, Shorts).
+M||HepyProductCard && Camiseta Pro Dry-Fit|Tarjeta de producto|Clic en la foto o el nombre para abrir la ficha del producto.
+M||texto=Elegir talla~1|Elegir talla|Abre la ficha para escoger talla; si el producto tiene una sola talla dice "Agregar al carrito".
+END|
+H2|4.3 Catálogo
+P|En la figura se buscó la palabra "futbol" y se pasó a la página 2: los botones Anterior y Siguiente solo aparecen cuando hay más de 12 resultados.
+FIG|05-catalogo|Catálogo con filtros, búsqueda, orden y resultados.
+M||id=clearButton|Limpiar|Quita todos los filtros y la búsqueda.
+M|c_cat|U:FlowPane#categoryChips|Filtro Categoría|Muestra solo los productos de la categoría elegida.
+M||U:FlowPane#sportChips|Filtro Deporte|Muestra solo los productos de ese deporte.
+M||U:VBox#sizeGroups|Filtro Talla|Muestra productos con stock en esa talla de ropa o de calzado; se pueden marcar varias.
+M||prompt=Buscar en el catálogo|Buscar en el catálogo|Filtra por nombre, descripción o SKU mientras escribes.
+M||id=sortBox|Ordenar por|Cambia el orden: relevancia, novedades, precio o nombre.
+M|c_card|HepyProductCard~1|Tarjeta de producto|Abre la ficha con fotos, colores, tallas y stock.
+M||texto=Elegir talla|Elegir talla / Agregar al carrito|Abre la ficha para escoger la talla; en productos de talla única dice "Agregar al carrito" y lo agrega directo.
+M||texto=Anterior|Anterior|Muestra la página anterior de resultados.
+M||texto=Siguiente|Siguiente|Muestra la página siguiente de resultados.
+END|
+H2|4.4 Ficha de producto
+FIG|06-ficha|Ficha de un uniforme personalizable.
+M||id=backLink|Volver|Regresa a la pantalla anterior (catálogo o inicio).
+M|f_color|PgeyColorSwatch|Color|Elige el color; cambian las tallas disponibles y el stock.
+M|f_talla|U:acc=Talla|Talla|Elige la talla; debajo aparece el stock disponible.
+M||acc=Disminuir cantidad|Menos (–)|Resta una unidad a la cantidad.
+M|f_mas|acc=Aumentar cantidad|Más (+)|Suma una unidad; no deja pasar del stock disponible.
+M|f_agregar|texto=Agregar al carrito|Agregar al carrito|Agrega color, talla y cantidad al carrito. Se activa al elegir talla.
+M|f_personalizar|texto=Personalizar en 3D|Personalizar en 3D|Abre el diseñador con este producto para cambiar colores, nombre y número.
+END|
+H2|4.5 Diseñador: Vista realista
+P|La Vista realista recolorea una foto real del uniforme. Todos los cambios se ven al instante en el frente y la espalda.
+FIG|07-disenador-realista|Diseñador en la pestaña Vista realista con el diseño "Halcones 2026".
+M||acc=Deshacer|Deshacer|Quita el último cambio (Ctrl+Z).
+M||acc=Rehacer|Rehacer|Vuelve a aplicar el cambio deshecho (Ctrl+Y).
+M||acc=Guardar captura|Guardar captura (PNG)|Guarda una imagen PNG del uniforme en la carpeta que elijas.
+M||texto=Vista realista^T|Vista realista|Muestra la foto realista (esta pestaña).
+M||texto=Vista 3D^T|Vista 3D|Cambia a la persona 3D que se puede girar (Figura siguiente).
+M||U:texto=Hombre OR texto=Mujer OR texto=Niño OR texto=Niña|Categoría|Elige la persona de la foto: hombre, mujer, niño o niña.
+M||U:texto=Fútbol cuello V OR texto=Polo OR texto=Cuello redondo OR texto=Manga larga OR texto=Vóley OR texto=Básquet OR texto=Buzo OR texto=Short largo OR texto=Arquero OR texto=Compresión OR texto=Casaca|Corte|Elige el modelo de uniforme (cuello V, polo, vóley, arquero, etc.).
+M||U:ToggleButton && VBox#panel|Zonas de color|Elige qué parte vas a pintar: camiseta, short, paneles o medias.
+M||U:PgeyColorSwatchGroup|Colores|Pinta la zona elegida con uno de los colores de la tienda.
+M||acc=HEX|HEX|Escribe un color exacto en formato #RRGGBB.
+M||U:texto=Liso OR texto=Rayas OR texto=Franjas horizontales OR texto=Dinámico OR texto=Geométrico OR texto=Minimal OR texto=Banda diagonal|Diseño|Agrega un estampado: rayas, franjas, banda diagonal, etc.
+M||acc=Nombre (espalda)|Nombre (espalda)|Nombre que va en la espalda; máximo 12 letras.
+M||acc=Número|Número (0–99)|Número del jugador en la espalda.
+M|d_guardar|id=saveButton|Guardar diseño|Pide un nombre y guarda el diseño (o una versión nueva) en Mis diseños.
+M|d_carrito|id=cartButton|Agregar al carrito|Abre una ventana para elegir producto, talla y cantidad, y agrega el diseño al carrito.
+END|
+H2|4.6 Diseñador: Vista 3D
+P|Deshacer, Rehacer, Guardar captura, Guardar diseño y Agregar al carrito funcionan igual que en la [[fig:07-disenador-realista]].
+FIG|08-disenador-3d|Diseñador en la pestaña Vista 3D, pestaña Diseño.
+M||SubScene|Visor 3D|Arrastra para girar 360°, usa la rueda para acercar; arrastra un nombre, número o emblema para moverlo.
+M||texto=Frente|Frente|Gira la persona para verla de frente.
+M||texto=Espalda|Espalda|Gira la persona para ver la espalda (nombre y número).
+M||texto=Costado|Costado|Muestra la persona de lado.
+M||acc=Alejar|Alejar|Aleja la cámara.
+M||acc=Acercar|Acercar|Acerca la cámara.
+M||texto=Reiniciar|Reiniciar|Vuelve a la vista inicial de cuerpo completo.
+M||texto=Diseño && HBox#tabs^T|Pestaña Diseño|Prenda, persona, corte, colores, patrón, tela y "Restablecer diseño" (pide confirmación).
+M||texto=Texto && HBox#tabs^T|Pestaña Texto|Nombre y número en espalda, pecho y short: tipografía, color, contorno, tamaño y giro.
+M||texto=Logos && HBox#tabs^T|Pestaña Logos|Emblemas de la tienda y "Subir logo (PNG o SVG)"; debes declarar que tienes derecho a usarlo.
+M||texto=Capas && HBox#tabs^T|Pestaña Capas|Lista de nombres, números y logos: elegir, subir o bajar capa y eliminar.
+M||U:PgeyGarmentPicker|Prenda|Elige la prenda a editar: camiseta, short, medias o zapatillas.
+M||U:texto=Hombre OR texto=Mujer OR texto=Niño OR texto=Niña|Persona|Cambia la persona 3D; también cambia la de la Vista realista.
+M||U:texto=Corta OR texto=Larga OR texto=Corto OR texto=Medio OR texto=Largo OR texto=Tobillera OR texto=Media pierna|Corte|Largo de manga, short y medias; no cambia el precio.
+M||U:ToggleButton && VBox#panel|Zonas de color|Elige la parte de la prenda: cuerpo, mangas, cuello, puños o paneles.
+M||U:PgeyColorSwatchGroup|Colores|Pinta la zona elegida. Más abajo (barra de desplazamiento) siguen HEX, patrón y tela.
+END|
+H2|4.7 Mis diseños
+FIG|09-mis-disenos|Diseños guardados por el cliente.
+M||id=newButton|Nuevo diseño|Abre el diseñador vacío para empezar otro uniforme.
+M||css=sf-design-thumb|Miniatura|Clic para abrir el diseño en el diseñador.
+M||texto=Abrir|Abrir|Abre el diseño para seguir editándolo.
+M||acc=Duplicar|Duplicar|Crea una copia del diseño (útil para cada jugador del equipo).
+M||acc=Eliminar|Eliminar|Borra el diseño. Pide confirmación.
+END|
+H2|4.8 Carrito
+FIG|10-carrito|Carrito con un uniforme personalizado y uno de catálogo.
+M||css=sf-thumb~1|Miniatura|Abre el diseño (si es personalizado) o la ficha del producto.
+M||texto=Editar diseño|Editar diseño|Abre el diseño en el diseñador para cambiarlo antes de pagar.
+M||acc=Disminuir cantidad~1|Menos (–)|Resta una unidad de esa línea.
+M|k_mas|acc=Aumentar cantidad~1|Más (+)|Suma una unidad, hasta el stock disponible.
+M||acc=Quitar~1|Quitar|Saca esa línea del carrito.
+M|k_pagar|texto=Continuar al pago|Continuar al pago|Pasa a la pantalla para elegir dirección y método de pago.
+M||texto=Seguir comprando|Seguir comprando|Vuelve al catálogo sin perder el carrito.
+END|
+H2|4.9 Checkout (finalizar compra)
+FIG|11-checkout|Pantalla para elegir dirección y método de pago.
+M||texto=Volver al carrito|Volver al carrito|Regresa al carrito.
+M|o_dir|acc=Casa · predeterminada|Dirección|Clic para elegir a qué dirección se envía el pedido.
+M||acc=Editar Casa|Editar dirección|Abre el formulario para corregir la dirección.
+M||acc=Eliminar Casa|Eliminar dirección|Borra la dirección. Pide confirmación.
+M|o_nuevadir|texto=Agregar dirección|Agregar dirección|Muestra el formulario para registrar otra dirección.
+M|o_yape|acc=Yape,|Yape|Pagarás con Yape y luego registrarás el código de operación.
+M||acc=Plin,|Plin|Pagarás con Plin y luego registrarás el código de operación.
+M||acc=Transferencia bancaria,|Transferencia bancaria|Pagarás por transferencia y registrarás el número de operación.
+M||acc=Tarjeta de crédito|Tarjeta (Próximamente)|Deshabilitada: necesita una pasarela de pagos en internet.
+M|o_notas|acc=Notas para la tienda|Notas para la tienda|Indicaciones opcionales para la entrega.
+M|o_confirmar|texto=Confirmar pedido|Confirmar pedido|Crea el pedido, reserva el stock y vacía el carrito; queda "Pendiente de pago".
+END|
+H2|4.10 Mis pedidos
+FIG|12-mis-pedidos|Lista de pedidos del cliente con su estado.
+M|m_fila|acc=Pedido PED-2026-000002|Fila de pedido|Clic para abrir el detalle: productos, envío, pago y estado.
+END|
+H2|4.11 Detalle del pedido
+FIG|13-detalle-pedido|Detalle de un pedido pendiente de pago, con el formulario para registrar el pago.
+M||id=backLink|Mis pedidos|Regresa a la lista de pedidos.
+M|p_codigo|acc=Código de operación|Código de operación|Escribe el código que te dio Yape, Plin o el banco (4 a 40 caracteres).
+M|p_elegir|texto=Elegir comprobante|Elegir comprobante|Elige la captura o PDF del pago (PNG, JPG o PDF de hasta 5 MB).
+M|p_enviar|id=send-payment|Enviar comprobante|Envía el pago a revisión; el pedido pasa a "Pago en verificación".
+M||texto=Cancelar pedido|Cancelar pedido|Anula el pedido y libera el stock (solo antes de pagar). Pide confirmación.
+END|
+H2|4.12 Mi cuenta
+FIG|14-mi-cuenta|Datos personales, cambio de contraseña y preferencias.
+M||acc=Nombre completo|Nombre completo|Cambia tu nombre.
+M||acc=Celular|Celular|Cambia tu número de contacto.
+M||id=saveProfileButton|Guardar cambios|Guarda el nombre y el celular.
+M||acc=Contraseña actual|Contraseña actual|Escribe tu contraseña de ahora para confirmar que eres tú.
+M||acc=Nueva contraseña|Nueva contraseña|Mínimo 8 caracteres, con letras y números.
+M||acc=Repite la nueva contraseña|Repite la nueva contraseña|Repite la nueva contraseña para evitar errores.
+M||id=changePasswordButton|Cambiar contraseña|Cambia la contraseña si la actual es correcta.
+M||id=reduceMotionCheck|Reducir animaciones|Quita movimientos y el giro automático del 3D; se guarda en este equipo.
+END|
+PB|
+H1|5. Pantallas del ADMINISTRADOR
+P|Al iniciar sesión como ADMIN aparece en el menú lateral la sección **Administración**. Todas estas pantallas son **solo ADMIN**: la aplicación vuelve a comprobar el rol antes de cada acción.
+H2|5.1 Dashboard
+FIG|15-dashboard|Dashboard con el resumen de ventas y el menú de administración.
+M||acc=Dashboard tip|Dashboard|Abre este resumen de ventas (solo ADMIN).
+M||acc=Productos tip|Productos|Abre la lista de productos (solo ADMIN).
+M||acc=Inventario tip|Inventario|Abre el stock por talla y color (solo ADMIN).
+M||acc=Pedidos tip|Pedidos|Abre todos los pedidos de la tienda (solo ADMIN).
+M||acc=Pagos tip|Pagos|Abre los pagos por verificar (solo ADMIN).
+M||acc=Usuarios tip|Usuarios|Abre las cuentas de usuarios (solo ADMIN).
+M||acc=Reportes tip|Reportes|Abre los reportes de ventas (solo ADMIN).
+M||acc=Configuración tip|Configuración|Abre los datos de pago de la tienda (solo ADMIN).
+M||texto=Ir a Configuración|Ir a Configuración|Aparece si los datos de pago son de prueba; abre Configuración.
+M||interno=PAGOS POR VERIFICAR|Pagos por verificar|Tarjeta: clic para ir a Pagos.
+M||interno=POR PRODUCIR|Por producir|Tarjeta: clic para ver los pedidos pagados que faltan fabricar.
+END|
+H2|5.2 Productos
+FIG|16-productos|Lista de productos del ADMIN.
+M||acc=Buscar|Buscar|Filtra la lista por nombre o SKU.
+M||id=deletedCheck|Mostrar eliminados|Muestra también los productos eliminados para poder restaurarlos.
+M||id=newButton|Nuevo producto|Abre el formulario vacío para crear un producto.
+M||texto=Editar~1|Editar|Abre el formulario del producto (Figura siguiente).
+M||texto=Eliminar~1|Eliminar|Oculta el producto de la tienda; los pedidos antiguos lo conservan. Pide confirmación.
+END|
+H2|5.3 Formulario de producto
+FIG|17-producto-form|Formulario para editar un producto.
+M||id=backLink|Productos|Regresa a la lista sin guardar.
+M||valor=Mochila Team 30 L|Nombre|Nombre que ve el cliente.
+M||valor=SF-ACC-004 acc=SKU|SKU|Código único del producto.
+M||valor=HepyCategory|Categoría|Categoría del catálogo.
+M||valor=Entrenamiento prompt|Deporte|Deporte para los filtros.
+M||valor=ACCESSORY|Tipo de prenda|Define si se puede personalizar y qué telas acepta.
+M||acc=Precio (S/)|Precio (S/)|Precio base en soles.
+M||acc=Precio anterior|Precio anterior|Opcional: si se llena, la tienda muestra el descuento.
+M||TextArea|Descripción|Texto que aparece en la ficha.
+M||texto=Activo|Activo|Si se desmarca, el producto deja de venderse.
+M||texto=Personalizable|Personalizable en el diseñador 3D|Permite abrirlo en el diseñador (no aplica a buzos y accesorios).
+M||texto=Marcar como nuevo|Marcar como nuevo|Muestra la etiqueta NUEVO en la tarjeta.
+M||texto=Destacado en el inicio|Destacado en el inicio|Lo muestra en la pantalla de inicio.
+M||U:texto=Dry-Fit OR texto=Malla deportiva OR texto=Poliéster liso OR texto=Jacquard OR texto=Licra OR texto=Algodón peinado OR texto=Microfibra|Telas y materiales|Marca las telas que el cliente puede elegir y su recargo.
+M||acc=Talla^B|Talla|Talla de la variante.
+M||acc=Nombre del color^B|Color|Nombre del color de la variante.
+M||acc=Color HEX^B|HEX|Código del color (#RRGGBB).
+M||acc=SKU de la variante^B|SKU de la variante|Código único de esa talla y color.
+M||acc=Ajuste de precio^B|Ajuste S/|Monto que se suma al precio base (p. ej. tallas XXL).
+M||acc=Stock^B|Stock|Unidades en almacén; no puede bajar de lo reservado.
+M||acc=Aviso de stock bajo^B|Aviso|Bajo esta cantidad se marca "stock bajo".
+M||acc=Variante activa^B|Activa|Si se desmarca, esa talla no se vende.
+M||texto=Agregar variante|Agregar variante|Agrega una fila para otra talla o color.
+M||texto=Agregar todas las tallas|Agregar todas las tallas|Crea de una vez las filas de todas las tallas.
+M||U:PgeyColorSwatchGroup|Colores de la foto|Color de cada zona de la foto realista del catálogo.
+M||acc=HEX|HEX de la foto|Color exacto de la zona de la foto.
+M||texto=Agregar imagen|Agregar imagen|Sube una foto PNG o JPG (hasta 5 MB); la primera es la portada.
+M||texto=Cancelar|Cancelar|Sale sin guardar los cambios.
+M||texto=Guardar producto|Guardar producto|Guarda todos los datos del producto.
+END|
+H2|5.4 Inventario
+FIG|18-inventario|Stock por variante.
+M||acc=Buscar|Buscar|Filtra por producto o SKU.
+M||id=lowOnlyCheck|Solo stock bajo|Muestra solo las variantes con pocas unidades.
+M||acc=Stock de~1|Stock|Nuevas unidades en almacén de esa variante.
+M||acc=Aviso de stock bajo de~1|Aviso|Cantidad mínima antes de marcar "stock bajo".
+M||texto=Guardar~1|Guardar|Guarda los cambios de esa fila; se activa al modificarla.
+END|
+H2|5.5 Pedidos
+FIG|19-pedidos|Lista de pedidos de todos los clientes.
+M||acc=Buscar|Buscar|Busca por número de pedido, nombre o correo del cliente.
+M||U:FlowPane#statusChips|Filtros de estado|Muestra solo los pedidos de ese estado; el número indica cuántos hay.
+M||TableRow && interno=PED-2026-000002|Fila de pedido|Doble clic para abrir el pedido.
+M||texto=Abrir~1|Abrir|Abre el detalle del pedido (Figura siguiente).
+END|
+H2|5.6 Detalle del pedido (ADMIN)
+FIG|20-pedido-admin|Detalle de un pedido con el pago en verificación.
+M||id=backLink|Pedidos|Regresa a la lista de pedidos.
+M||texto=Ver uniforme 3D|Ver uniforme 3D y ficha técnica|Abre el visor del uniforme comprado (Figura siguiente).
+M||acc=Ver comprobante|Comprobante|Clic para ver el comprobante en grande y descargarlo.
+M|a_aprobar|texto=Aprobar|Aprobar|Abre una ventana para confirmar el pago; el pedido pasa a Pagado y se descuenta el stock.
+M||texto=Rechazar|Rechazar|Pide el motivo; el cliente debe registrar el pago otra vez.
+M|a_estado|ComboBox|Nuevo estado|Elige el siguiente estado: En producción, Enviado, Entregado o Cancelado.
+M||acc=Nota para el historial|Nota para el historial|Texto opcional que queda en el historial (p. ej. guía de envío).
+M|a_cambiar|texto=Cambiar estado|Cambiar estado|Aplica el estado elegido. Cancelar pide motivo y confirmación.
+END|
+H2|5.7 Visor del uniforme
+FIG|21-visor-uniforme|Visor de solo lectura del uniforme comprado, con su ficha técnica.
+M||SubScene|Visor 3D|Copia exacta del diseño comprado: arrastra para girar y usa la rueda para acercar.
+M||texto=Frente|Frente|Muestra el uniforme de frente.
+M||texto=Espalda|Espalda|Muestra la espalda.
+M||texto=Izquierda|Izquierda|Muestra el lado izquierdo.
+M||texto=Derecha|Derecha|Muestra el lado derecho.
+M||acc=Cuerpo completo|Cuerpo completo|Vuelve a encuadrar la persona entera.
+M||texto=Volver al pedido|Volver al pedido|Regresa al detalle del pedido.
+M||css=sf-proof~1|Captura de frente|Clic para verla en grande.
+M||css=sf-proof~2|Captura de espalda|Clic para verla en grande.
+M||texto=Descargar archivos|Descargar archivos|Guarda en una carpeta el diseño (JSON), las capturas y la ficha técnica (CSV).
+END|
+H2|5.8 Pagos
+FIG|22-pagos|Cola de pagos por verificar.
+M||U:FlowPane#chips|Por verificar / Aprobados / Rechazados|Cambia la lista de pagos que se muestra.
+M||acc=Ver comprobante|Comprobante|Clic para ampliarlo y compararlo con tu app o estado de cuenta.
+M||texto=PED-2026-000001|Número de pedido|Abre el detalle de ese pedido.
+M||texto=Aprobar|Aprobar|Confirma el pago: pedido Pagado y stock descontado.
+M||texto=Rechazar|Rechazar|Pide el motivo y devuelve el pedido a "Pendiente de pago".
+M||texto=Descargar comprobante|Descargar comprobante|Guarda el archivo del comprobante en tu computadora.
+END|
+H2|5.9 Reportes
+FIG|23-reportes|Reporte de ventas por rango de fechas.
+M||id=fromPicker|Desde|Fecha inicial del reporte.
+M||id=toPicker|Hasta|Fecha final del reporte (máximo 3 años de rango).
+M||id=generateButton|Generar reporte|Calcula ventas, pedidos, unidades y tablas del rango.
+M||id=pdfButton|Exportar PDF|Guarda el reporte en PDF para imprimir.
+M||id=excelButton|Exportar Excel|Guarda el reporte en Excel con hojas por día, categoría, producto y método.
+M||U:FlowPane#presets|Rangos rápidos|Llenan las fechas: hoy, 7 días, 30 días, este mes, mes anterior o este año.
+END|
+H2|5.10 Usuarios
+FIG|24-usuarios|Cuentas de usuarios.
+M||acc=Buscar|Buscar|Filtra por nombre o correo.
+M||id=refreshButton|Actualizar|Vuelve a cargar la lista.
+M||texto=Quitar admin|Quitar admin|Quita el rol ADMIN; deshabilitado en tu propia cuenta. Pide confirmación.
+M||texto=Desactivar~2|Desactivar|La cuenta ya no puede iniciar sesión; conserva pedidos y diseños. Pide confirmación.
+M||texto=Hacer admin|Hacer admin|Da el rol de administrador a esa cuenta. Pide confirmación.
+END|
+H2|5.11 Configuración
+FIG|25-configuracion|Datos de pago que ve el cliente.
+M||acc=Número de Yape|Número de Yape|Celular de 9 dígitos que empieza con 9.
+M||acc=Titular de Yape|Titular de Yape|Nombre que aparece al yapear.
+M||acc=Número de Plin|Número de Plin|Celular de 9 dígitos que empieza con 9.
+M||acc=Titular de Plin|Titular de Plin|Nombre que aparece en Plin.
+M||acc=Banco|Banco|Banco de la cuenta para transferencias.
+M||acc=Titular de la cuent|Titular de la cuenta|Razón social o nombre del titular.
+M||acc=Número de cuenta|Número de cuenta|Número de la cuenta bancaria.
+M||acc=CCI|CCI (20 dígitos)|Código de cuenta interbancario.
+M||id=saveButton|Guardar datos de pago|Valida y guarda los datos; desde ese momento el cliente ve los nuevos.
+M||id=resetButton|Descartar cambios|Vuelve a los datos guardados.
+END|
+PB|
+H1|6. Cómo hacer una compra
+L|1.|**Inicia sesión.** Escribe tu correo y contraseña en el [[l_correo]] y el [[l_pass]], y pulsa el [[l_entrar]]. Si no tienes cuenta, pulsa el [[l_registro]].
+L|2.|**Busca el producto.** Abre el catálogo con el [[s_catalogo]] o escribe en el [[s_buscar]] y pulsa Enter. Filtra con el [[c_cat]] y abre el producto con el [[c_card]].
+L|3.|**Elige color, talla y cantidad** con el [[f_color]], el [[f_talla]] y el [[f_mas]]. Pulsa el [[f_agregar]].
+L|4.|**(Opcional) Personaliza el uniforme.** Pulsa el [[f_personalizar]], cambia colores, nombre y número, guarda con el [[d_guardar]] y agrégalo con el [[d_carrito]].
+L|5.|**Revisa el carrito.** Ábrelo con el [[s_carrito]], ajusta las unidades con el [[k_mas]] y pulsa el [[k_pagar]].
+L|6.|**Finaliza la compra.** Elige la dirección con el [[o_dir]] (o crea otra con el [[o_nuevadir]]), elige Yape con el [[o_yape]], escribe una nota opcional en el [[o_notas]] y pulsa el [[o_confirmar]]. El pedido queda "Pendiente de pago" y el stock reservado.
+L|7.|**Paga y registra el pago.** En el detalle del pedido aparecen el monto y el número de Yape, Plin o la cuenta. Paga desde tu app, escribe el código en el [[p_codigo]], elige la captura con el [[p_elegir]] y pulsa el [[p_enviar]]. El pedido pasa a "Pago en verificación".
+L|8.|**Verificación del ADMIN.** El administrador compara el código y el comprobante y pulsa el [[a_aprobar]]. El pedido pasa a "Pagado" y se descuenta el stock. Ningún pedido se marca como pagado sin esta revisión.
+L|9.|**Seguimiento.** El ADMIN avanza el pedido con el [[a_estado]] y el [[a_cambiar]] (En producción › Enviado › Entregado). Tú ves cada cambio abriendo el pedido con el [[m_fila]].
+PB|
+H1|7. Errores comunes
+TABLE|3000,6026
+T|Problema|Solución
+T|"Demasiados intentos" al iniciar sesión|Tras 5 contraseñas incorrectas el correo se bloquea 5 minutos. Espera y revisa mayúsculas y la tecla Bloq Mayús.
+T|"Agregar al carrito" no se puede pulsar|Primero elige una talla. Si la talla no tiene stock, elige otra o espera a que el ADMIN reponga el inventario.
+T|"Confirmar pedido" muestra un error|Falta elegir una dirección o hay productos "no disponibles" en el carrito: quítalos y vuelve a intentar.
+T|No se acepta el comprobante|El código debe tener de 4 a 40 caracteres y no estar usado en otro pago; el archivo debe ser PNG, JPG o PDF de hasta 5 MB.
+T|La Vista 3D tarda o muestra un maniquí|La primera carga de cada persona tarda unos segundos. Si falta el modelo 3D se ve el maniquí de respaldo; actualiza los controladores de video.
+ENDT|
