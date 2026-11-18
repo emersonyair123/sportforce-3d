@@ -50,7 +50,11 @@ public final class ManualBotones extends ManualTour {
         try {
             ManualBotones tour = new ManualBotones(out);
             tour.open(db);
-            tour.run();
+            if (args.length > 2 && args[2].equals("disenador")) {
+                tour.soloDisenador();
+            } else {
+                tour.run();
+            }
             Files.write(out.resolve("fallos.txt"), tour.fallos, StandardCharsets.UTF_8);
             System.out.println("FALLOS: " + tour.fallos.size());
             tour.fallos.forEach(System.out::println);
@@ -190,6 +194,7 @@ public final class ManualBotones extends ManualTour {
         pantalla("06-ficha", -1100, 1800, () -> context.ppqhRouter().ppqhGo(PpqhRoutes.PPQH_PRODUCT, seed[0]));
         pantalla("07-disenador-realista", 1500, 3500, () -> context.ppqhRouter().ppqhGo(PpqhRoutes.PPQH_DESIGNER, null));
         pantalla("08-disenador-3d", 1500, 3000, () -> sinTexto("Cargando"), () -> click(text("Vista 3D")));
+        pestanasDisenador(seed[4]);
         pantalla("09-mis-disenos", -2000, 1800, () -> context.ppqhRouter().ppqhGo(PpqhRoutes.PPQH_DESIGNS, null));
         pantalla("10-carrito", -2000, 1500, () -> context.ppqhRouter().ppqhGo(PpqhRoutes.PPQH_CART, null));
         pantalla("11-checkout", -2000, 1500, () -> context.ppqhRouter().ppqhGo(PpqhRoutes.PPQH_CHECKOUT, null));
@@ -212,6 +217,48 @@ public final class ManualBotones extends ManualTour {
         pantalla("23-reportes", -2000, 2500, () -> context.ppqhRouter().ppqhGo(PpqhRoutes.PPQH_ADMIN_REPORTS, null));
         pantalla("24-usuarios", -1000, 1500, () -> context.ppqhRouter().ppqhGo(PpqhRoutes.PPQH_ADMIN_USERS, null));
         pantalla("25-configuracion", -2000, 1500, () -> context.ppqhRouter().ppqhGo(PpqhRoutes.PPQH_ADMIN_SETTINGS, null));
+    }
+
+    private void soloDisenador() throws Exception {
+        long[] seed = preparar();
+        login("cliente@sportforce3d.pe", "Cliente123!");
+        pestanasDisenador(seed[4]);
+    }
+
+    private Node pestana(String texto) {
+        return all(n -> n instanceof javafx.scene.control.ToggleButton t && t.getText() != null
+                && norm(t.getText()).equals(norm(texto)) && n.getParent() != null && "tabs".equals(n.getParent().getId()))
+                .stream().findFirst().orElseThrow(() -> new IllegalStateException("No hay pestaña " + texto));
+    }
+
+    private void panelAbajo() {
+        for (Node n : all(x -> x instanceof ScrollPane && "scroll".equals(x.getId()))) {
+            ((ScrollPane) n).setVvalue(1);
+        }
+    }
+
+    private void pestanasDisenador(long design) throws Exception {
+        go(PpqhRoutes.PPQH_DESIGNER, PpqhRoutes.PpqhDesignerParams.ppqhOpen(design));
+        pause(3000);
+        fx(() -> {
+            stage.setWidth(1340);
+            stage.setHeight(1500);
+            click(text("Vista 3D"));
+            return null;
+        });
+        esperar(() -> sinTexto("Cargando"), 60000);
+        pantalla("08b-diseno-abajo", 1500, 1500, () -> panelAbajo());
+        pantalla("08c-texto", 1500, 1500, () -> {
+            click(pestana("Texto"));
+            click(text("Nombre en la espalda"));
+        });
+        pantalla("08d-logos", 1500, 1500, () -> click(pestana("Logos")));
+        fx(() -> {
+            click(pestana("Capas"));
+            return null;
+        });
+        pause(1000);
+        pantalla("08e-capas", 1500, 1500, () -> click(all(n -> n.getStyleClass().contains("sf-layer-row")).get(0)));
     }
 
     private void ajustarAlto(int cap) throws Exception {

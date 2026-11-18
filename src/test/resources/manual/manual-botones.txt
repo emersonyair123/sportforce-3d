@@ -98,7 +98,7 @@ M|f_personalizar|texto=Personalizar en 3D|Personalizar en 3D|Abre el diseñador 
 END|
 H2|4.5 Diseñador: Vista realista
 P|La Vista realista recolorea una foto real del uniforme. Todos los cambios se ven al instante en el frente y la espalda.
-FIG|07-disenador-realista|Diseñador en la pestaña Vista realista con el diseño "Halcones 2026".
+FIG|07-disenador-realista|Diseñador en la pestaña Vista realista con un diseño nuevo.
 M||acc=Deshacer|Deshacer|Quita el último cambio (Ctrl+Z).
 M||acc=Rehacer|Rehacer|Vuelve a aplicar el cambio deshecho (Ctrl+Y).
 M||acc=Guardar captura|Guardar captura (PNG)|Guarda una imagen PNG del uniforme en la carpeta que elijas.
@@ -125,17 +125,65 @@ M||texto=Costado|Costado|Muestra la persona de lado.
 M||acc=Alejar|Alejar|Aleja la cámara.
 M||acc=Acercar|Acercar|Acerca la cámara.
 M||texto=Reiniciar|Reiniciar|Vuelve a la vista inicial de cuerpo completo.
-M||texto=Diseño && HBox#tabs^T|Pestaña Diseño|Prenda, persona, corte, colores, patrón, tela y "Restablecer diseño" (pide confirmación).
-M||texto=Texto && HBox#tabs^T|Pestaña Texto|Nombre y número en espalda, pecho y short: tipografía, color, contorno, tamaño y giro.
-M||texto=Logos && HBox#tabs^T|Pestaña Logos|Emblemas de la tienda y "Subir logo (PNG o SVG)"; debes declarar que tienes derecho a usarlo.
-M||texto=Capas && HBox#tabs^T|Pestaña Capas|Lista de nombres, números y logos: elegir, subir o bajar capa y eliminar.
+M||texto=Diseño && HBox#tabs^T|Pestaña Diseño|Prenda, persona, corte y colores (esta figura); patrón, tela y "Restablecer diseño" en la [[fig:08b-diseno-abajo]].
+M||texto=Texto && HBox#tabs^T|Pestaña Texto|Nombre y números de espalda, pecho y short ([[fig:08c-texto]]).
+M||texto=Logos && HBox#tabs^T|Pestaña Logos|Emblemas de la tienda y logos propios ([[fig:08d-logos]]).
+M||texto=Capas && HBox#tabs^T|Pestaña Capas|Orden y propiedades de nombres, números y logos ([[fig:08e-capas]]).
 M||U:PgeyGarmentPicker|Prenda|Elige la prenda a editar: camiseta, short, medias o zapatillas.
 M||U:texto=Hombre OR texto=Mujer OR texto=Niño OR texto=Niña|Persona|Cambia la persona 3D; también cambia la de la Vista realista.
 M||U:texto=Corta OR texto=Larga OR texto=Corto OR texto=Medio OR texto=Largo OR texto=Tobillera OR texto=Media pierna|Corte|Largo de manga, short y medias; no cambia el precio.
 M||U:ToggleButton && VBox#panel|Zonas de color|Elige la parte de la prenda: cuerpo, mangas, cuello, puños o paneles.
-M||U:PgeyColorSwatchGroup|Colores|Pinta la zona elegida. Más abajo (barra de desplazamiento) siguen HEX, patrón y tela.
+M||U:PgeyColorSwatchGroup|Colores|Pinta la zona elegida. Lo que sigue más abajo está en la [[fig:08b-diseno-abajo]].
 END|
-H2|4.7 Mis diseños
+H2|4.7 Diseñador: parte de abajo de la pestaña Diseño
+P|Se llega bajando la barra de desplazamiento del panel derecho. En la figura está abierto el diseño "Halcones 2026".
+FIG|08b-diseno-abajo|Parte de abajo de la pestaña Diseño: patrón, tela y restablecer.
+M||U:texto=Liso OR texto=Franjas horizontales OR texto=Franjas verticales OR texto=Diagonales OR texto=Degradado OR texto=Cuadros OR texto=Sublimado geométrico|Patrón|Estampado de la prenda: liso, franjas, diagonales, degradado, cuadros o sublimado.
+M||U:PgeyColorSwatchGroup|Segundo color|Color de las franjas o del estampado.
+M||acc=HEX|HEX|Segundo color exacto en formato #RRGGBB.
+M||css=slider|Ancho|Arrastra para cambiar el ancho de las franjas (en cm).
+M||U:PgeyMaterialPicker|Tela|Tela de camiseta y short; cambia el relieve en 3D. "Incluido" no suma; las demás suman su recargo.
+M||texto=Restablecer diseño|Restablecer diseño|Vuelve a colores y telas de fábrica y quita nombres, números y emblemas. Pide confirmación; se deshace con Ctrl+Z.
+END|
+H2|4.8 Diseñador: pestaña Texto
+FIG|08c-texto|Pestaña Texto con la sección "Nombre en la espalda" abierta.
+M||texto=Nombre en la espalda^T|Nombre en la espalda|Abre o cierra los ajustes del nombre.
+M||acc=Quitar nombre en la espalda^R|Quitar|Borra el nombre del uniforme.
+M||acc=Nombre (máx. 12)|Nombre|Texto que va en la espalda (máximo 12 letras).
+M||ComboBox|Tipografía|Elige el tipo de letra.
+M||BOX:1005,595,236,77|Color|Color de las letras.
+M||acc=HEX~1|HEX del color|Color exacto de las letras (#RRGGBB).
+M||BOX:1005,775,236,77|Contorno|Color del borde de las letras.
+M||acc=HEX~2|HEX del contorno|Color exacto del borde.
+M||acc=Contorno|Grosor|Arrastra para engrosar o adelgazar el borde.
+M||acc=Tamaño|Tamaño|Arrastra para agrandar o achicar el texto.
+M||acc=Giro|Giro|Arrastra para inclinar el texto.
+M||texto=Número en la espalda^B|Número en la espalda|Abre los mismos ajustes para el número; igual el del pecho y el del short.
+M||acc=Quitar número en la espalda^R|Quitar número|Borra ese número del uniforme.
+END|
+H2|4.9 Diseñador: pestaña Logos
+FIG|08d-logos|Pestaña Logos con los emblemas de la tienda.
+M||U:acc=Escudo clásico OR acc=Rayo OR acc=Alas OR acc=Hexágono OR acc=Llama OR acc=Corona OR acc=Pelota OR acc=Chevron|Emblemas|Clic para poner ese emblema en el pecho; luego se arrastra sobre la persona 3D.
+M||texto=Declaro|Declaración de derechos|Marca que el logo es tuyo o tienes permiso; sin esta marca no se puede subir.
+M||texto=Subir logo|Subir logo (PNG o SVG)|Elige tu logo (hasta 5 MB) y lo agrega al uniforme. Solo tú puedes usarlo.
+END|
+H2|4.10 Diseñador: pestaña Capas
+FIG|08e-capas|Pestaña Capas con el emblema seleccionado.
+M||BOX:1076,390,82,84^T|Capa|Clic en el nombre para elegir ese elemento; se marca en el 3D y abajo aparecen sus ajustes.
+M||acc=Ocultar~1^T|Ocultar|Esconde el elemento sin borrarlo (otra vez para mostrarlo).
+M||acc=Bloquear~1^T|Bloquear|Impide moverlo por error al arrastrar en el 3D.
+M||acc=Subir capa~1^T|Subir capa|Lo dibuja encima de los demás (deshabilitado en la primera).
+M||acc=Bajar capa~1^T|Bajar capa|Lo dibuja debajo de los demás.
+M||acc=Eliminar tip~1^T|Eliminar|Quita ese elemento del uniforme (se deshace con Ctrl+Z).
+M||acc=Eliminar (Supr)|Eliminar (Supr)|Quita el elemento elegido; también con la tecla Supr.
+M||acc=Deseleccionar|Deseleccionar|Cierra los ajustes y quita la marca del 3D.
+M||ComboBox|Zona|Parte de la prenda donde va: pecho, espalda, manga, short, etc.
+M||BOX:1005,902,236,77|Color principal|Color principal del emblema.
+M||acc=HEX~1|HEX principal|Color principal exacto (#RRGGBB).
+M||BOX:1005,1083,236,77|Color de acento|Segundo color del emblema; más abajo siguen tamaño y giro.
+M||acc=HEX~2|HEX de acento|Color de acento exacto.
+END|
+H2|4.11 Mis diseños
 FIG|09-mis-disenos|Diseños guardados por el cliente.
 M||id=newButton|Nuevo diseño|Abre el diseñador vacío para empezar otro uniforme.
 M||css=sf-design-thumb|Miniatura|Clic para abrir el diseño en el diseñador.
@@ -143,7 +191,7 @@ M||texto=Abrir|Abrir|Abre el diseño para seguir editándolo.
 M||acc=Duplicar|Duplicar|Crea una copia del diseño (útil para cada jugador del equipo).
 M||acc=Eliminar|Eliminar|Borra el diseño. Pide confirmación.
 END|
-H2|4.8 Carrito
+H2|4.12 Carrito
 FIG|10-carrito|Carrito con un uniforme personalizado y uno de catálogo.
 M||css=sf-thumb~1|Miniatura|Abre el diseño (si es personalizado) o la ficha del producto.
 M||texto=Editar diseño|Editar diseño|Abre el diseño en el diseñador para cambiarlo antes de pagar.
@@ -153,7 +201,7 @@ M||acc=Quitar~1|Quitar|Saca esa línea del carrito.
 M|k_pagar|texto=Continuar al pago|Continuar al pago|Pasa a la pantalla para elegir dirección y método de pago.
 M||texto=Seguir comprando|Seguir comprando|Vuelve al catálogo sin perder el carrito.
 END|
-H2|4.9 Checkout (finalizar compra)
+H2|4.13 Checkout (finalizar compra)
 FIG|11-checkout|Pantalla para elegir dirección y método de pago.
 M||texto=Volver al carrito|Volver al carrito|Regresa al carrito.
 M|o_dir|acc=Casa · predeterminada|Dirección|Clic para elegir a qué dirección se envía el pedido.
@@ -167,11 +215,11 @@ M||acc=Tarjeta de crédito|Tarjeta (Próximamente)|Deshabilitada: necesita una p
 M|o_notas|acc=Notas para la tienda|Notas para la tienda|Indicaciones opcionales para la entrega.
 M|o_confirmar|texto=Confirmar pedido|Confirmar pedido|Crea el pedido, reserva el stock y vacía el carrito; queda "Pendiente de pago".
 END|
-H2|4.10 Mis pedidos
+H2|4.14 Mis pedidos
 FIG|12-mis-pedidos|Lista de pedidos del cliente con su estado.
 M|m_fila|acc=Pedido PED-2026-000002|Fila de pedido|Clic para abrir el detalle: productos, envío, pago y estado.
 END|
-H2|4.11 Detalle del pedido
+H2|4.15 Detalle del pedido
 FIG|13-detalle-pedido|Detalle de un pedido pendiente de pago, con el formulario para registrar el pago.
 M||id=backLink|Mis pedidos|Regresa a la lista de pedidos.
 M|p_codigo|acc=Código de operación|Código de operación|Escribe el código que te dio Yape, Plin o el banco (4 a 40 caracteres).
@@ -179,7 +227,7 @@ M|p_elegir|texto=Elegir comprobante|Elegir comprobante|Elige la captura o PDF de
 M|p_enviar|id=send-payment|Enviar comprobante|Envía el pago a revisión; el pedido pasa a "Pago en verificación".
 M||texto=Cancelar pedido|Cancelar pedido|Anula el pedido y libera el stock (solo antes de pagar). Pide confirmación.
 END|
-H2|4.12 Mi cuenta
+H2|4.16 Mi cuenta
 FIG|14-mi-cuenta|Datos personales, cambio de contraseña y preferencias.
 M||acc=Nombre completo|Nombre completo|Cambia tu nombre.
 M||acc=Celular|Celular|Cambia tu número de contacto.
